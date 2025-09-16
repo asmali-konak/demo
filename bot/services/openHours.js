@@ -1,0 +1,158 @@
+/* ============================================================================
+   PPX Service: Open Hours & Slots (openHours.js) – v7.9.4
+   - parseSpanToText(span)
+   - hoursFromOpen()
+   - normalizeHoursLines(v)
+   - hmToMin(), minToHM()
+   - buildSlotsForDate(dateObj)  // 30-min Slots, heute mit 4h Lead
+   - groupSlots(mins)            // 1–3 Zeitgruppen wie im Original
+   ============================================================================ */
+(function () {
+  'use strict';
+
+  var W = window;
+  var PPX = W.PPX = W.PPX || {};
+  PPX.services = PPX.services || {};
+
+  function cfg() {
+    try { return (PPX.data && PPX.data.cfg && PPX.data.cfg()) || {}; } catch(e){ return {}; }
+  }
+
+  // ---- Helpers --------------------------------------------------------------
+  function hmToMin(s){
+    var a = String(s || '').trim().replace(/\s/g,'');
+    var m = a.match(/^(\d{1,2}):(\d{2})$/);
+    if (!m) return NaN;
+    var h = +m[1], mi = +m[2];
+    if (h === 24 && mi === 0) return 1440;
+    return h*60 + mi;
+  }
+
+  function minToHM(n){
+    var h = Math.floor(n/60), m = n%60;
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+  }
+
+  // span: ["11:00","22:00"] | {from/to|start/end} | "11:00 – 22:00"
+  function parseSpan(span){
+    var from, to;
+    if (Array.isArray(span)) { from = span[0]; to = span[1]; }
+    else if (span && typeof span === 'object') { from = span.from || span.start; to = span.to || span.end; }
+    else if (typeof span === 'string') {
+      var m = span.match(/(\d{1,2}:\d{2}).*?(\d{1,2}:\d{2})/);
+      if (m){ from = m[1]; to = m[2]; }
+    }
+    return { from: from || '', to: to || '' };
+  }
+
+  function parseSpanToText(span){
+    var p = parseSpan(span);
+    if (!p.from || !p.to) return 'geschlossen';
+    return p.from + ' – ' + p.to + ' Uhr';
+  }
+
+  function hoursFromOpen(){
+    var dnames = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+    var out = [], O = (cfg().OPEN || {});
+    for (var i=1;i<=6;i++){ out.push([dnames[i], parseSpanToText(O[String(i)])]); }
+    out.push([dnames[0], parseSpanToText(O['0'])]);
+    return out;
+  }
+
+  function normalizeHoursLines(v){
+    var out = [];
+    if (Array.isArray(v)){
+      v.forEach(function(it){
+        if (Array.isArray(it) && it.length >= 2){ out.push([ String(it[0]), String(it[1]) ]); }
+        else if (it && typeof it === 'object'){
+          var day = it.day || it.name || it.title || it[0];
+          var time = it.time || it.hours || it[1];
+          if (day && time) out.push([ String(day), String(time) ]);
+        }
+      });
+      return out;
+    }
+    if (v && typeof v === 'object'){
+      ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'].forEach(function(d){
+        if (v[d]) out.push([d, String(v[d])]);
+      });
+    }
+    return out;
+  }
+
+  // ---- Slots (30-min) -------------------------------------------------------
+  function buildSlotsForDate(d){
+    var C = cfg();
+    var O = C.OPEN || {};
+    var wd = d.getDay(); // 0=So … 6=Sa
+    var span = O[String(wd)] || null;
+    if (!span) return [];
+
+    var p = parseSpan(span);
+    if (!p.from || !p.to) return [];
+    var openMin = hmToMin(p.from), closeMin = hmToMin(p.to);
+    if (isNaN(openMin) || isNaN(closeMin)) return [];
+
+    // Letzter Start ist 60 min vor Schließung
+    var lastStartExclusive = closeMin - 60;
+    if (lastStartExclusive <= openMin) return [];
+
+    var slots = [];
+    for (var t=openMin; t<lastStartExclusive; t+=30){ slots.push(t); }
+
+    // Heute: 4h Lead
+    var now = new Date();
+    var isToday = now.getFullYear()===d.getFullYear() && now.getMonth()===d.getMonth() && now.getDate()===d.getDate();
+    if (isToday){
+      var lead = (now.getHours()*60 + now.getMinutes()) + 240;
+      slots = slots.filter(function(t){ return t >= lead; });
+    }
+    return slots;
+  }
+
+  // Gruppierung in 1–3 Buckets (zeitliche Segmente)
+  function groupSlots(mins){
+    if (!mins || !mins.length) return [];
+    var start = mins[0];
+    var lastStart = mins[mins.length - 1];
+    var endExclusive = lastStart + 30;
+    var L = endExclusive - start;
+    if (L <= 0) return [{ from:start, to:endExclusive, slots:mins }];
+
+    var G = (L <= 180) ? 1 : (L <= 360 ? 2 : 3);
+    if (G === 1) return [{ from:start, to:endExclusive, slots:mins }];
+
+    var step = Math.max(60, Math.round((L / G) / 30) * 30);
+    var cuts = [];
+    for (var i=1; i<G; i++){ cuts.push(start + step*i); }
+    cuts = cuts.map(function(c){
+      var onHour = Math.round(c / 60) * 60;
+      if (Math.abs(onHour - c) <= 30) return onHour;
+      return Math.round(c / 30) * 30;
+    }).filter(function(c){ return c>start && c<endExclusive; })
+      .sort(function(a,b){ return a-b; });
+
+    var bounds = [start].concat(cuts).concat([endExclusive]);
+    var groups = [];
+    for (var j=0; j<bounds.length-1; j++){
+      var a = bounds[j], b = bounds[j+1];
+      var gSlots = mins.filter(function(t){ return t>=a && t<b; });
+      if (gSlots.length >= 2){
+        groups.push({ from:a, to:b, slots:gSlots });
+      }
+    }
+    if (!groups.length) groups = [{ from:start, to:endExclusive, slots:mins }];
+    return groups;
+  }
+
+  // ---- export ---------------------------------------------------------------
+  PPX.services.openHours = {
+    parseSpanToText: parseSpanToText,
+    hoursFromOpen: hoursFromOpen,
+    normalizeHoursLines: normalizeHoursLines,
+    hmToMin: hmToMin,
+    minToHM: minToHM,
+    buildSlotsForDate: buildSlotsForDate,
+    groupSlots: groupSlots
+  };
+})();

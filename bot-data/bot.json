@@ -1,0 +1,169 @@
+{
+  "cfg": {
+    "brand": "Pizza Papa Hamburg",
+    "phone": "+49 40 1234567",
+    "email": "pizza.papa.hamburg@outlook.de",
+    "address": "Muster Str. XX, YYYYY Musterstadt",
+
+    "hoursLines": [
+      ["Montag", "11:00 – 22:00"],
+      ["Dienstag", "11:00 – 22:00"],
+      ["Mittwoch", "11:00 – 22:00"],
+      ["Donnerstag", "11:00 – 22:00"],
+      ["Freitag", "11:00 – 22:00"],
+      ["Samstag", "13:00 – 24:00"],
+      ["Sonntag", "15:00 – 21:00"]
+    ],
+
+    "OPEN": {
+      "0": ["15:00", "21:00"],
+      "1": ["11:00", "22:00"],
+      "2": ["11:00", "22:00"],
+      "3": ["11:00", "22:00"],
+      "4": ["11:00", "22:00"],
+      "5": ["11:00", "22:00"],
+      "6": ["13:00", "23:59"]
+    },
+
+    "BUCKETS": {
+      "mittag": ["12:00", "17:30"],
+      "frueh": ["18:00", "20:30"],
+      "spaet": ["21:00", "23:59"]
+    },
+
+    "EMAIL": {
+      "publicKey": "J1KTj7-7VJBsV-LHc",
+      "service": "service_ais7v5f",
+      "toTemplate": "template_m5baprd",
+      "autoReplyTemplate": "template_hnwo39i",
+      "contactTemplate": "template_cf_to_rest"
+    },
+
+    "menuOrder": ["antipasti", "pizza", "pasta", "drinks", "salads", "desserts"],
+    "menuPdf": "page/pdf/speisekarte_test.pdf",
+    "faqPdf": "page/pdf/pizza_papa_faq.pdf",
+    "orderUrl": "https://www.lieferando.de/pizza-papa-hamburg"
+  },
+
+  "dishes": {
+    "antipasti": [
+      { "id": "bruschetta",  "name": "Bruschetta Classica", "price": "6,90 €",  "info": "Knuspriges Brot, Tomaten, Basilikum, Knoblauch." },
+      { "id": "caprese",     "name": "Caprese",             "price": "8,90 €",  "info": "Tomate, Mozzarella, Basilikum, Olivenöl." },
+      { "id": "arancini",    "name": "Arancini",            "price": "7,50 €",  "info": "Gefüllte, frittierte Reisbällchen – hausgemacht." },
+      { "id": "misto",       "name": "Antipasto Misto",     "price": "13,90 €", "info": "Gemischte Vorspeisenplatte zum Teilen." },
+      { "id": "garlicbread", "name": "Knoblauchbrot",       "price": "5,50 €",  "info": "Warmer Ofenklassiker mit Knoblauch & Kräutern." }
+    ],
+    "pizza": [
+      { "id": "margherita", "name": "Margherita",              "price": "9,50 €",  "info": "Tomate, Mozzarella, Basilikum." },
+      { "id": "prosciutto", "name": "Prosciutto e Funghi",     "price": "12,50 €", "info": "Kochschinken, Champignons." },
+      { "id": "diavola",    "name": "Diavola (pikant)",        "price": "12,90 €", "info": "Scharfe Salami, Chili." },
+      { "id": "quattro",    "name": "Quattro Formaggi",        "price": "13,90 €", "info": "Vier Käsesorten." },
+      { "id": "verdure",    "name": "Verdure (Gemüse)",        "price": "11,90 €", "info": "Gemüse der Saison." },
+      { "id": "tonno",      "name": "Tonno e Cipolla",         "price": "12,50 €", "info": "Thunfisch, Zwiebeln." },
+      { "id": "parma",      "name": "Parma (Rucola & Grana)",  "price": "14,90 €", "info": "Parmaschinken, Rucola, Grana Padano." },
+      { "id": "calzone",    "name": "Calzone (gefüllt)",       "price": "13,90 €", "info": "Gefüllt, klassisch mit Tomate & Mozzarella." }
+    ],
+    "pasta": [
+      { "id": "pomodoro",   "name": "Pomodoro",            "price": "9,90 €",  "info": "Tomatensauce, Basilikum." },
+      { "id": "arrabbiata", "name": "Arrabbiata",          "price": "10,50 €", "info": "Tomate, Chili, Knoblauch." },
+      { "id": "carbonara",  "name": "Carbonara",           "price": "12,90 €", "info": "Ei, Speck/Guanciale, Pecorino." },
+      { "id": "bolognese",  "name": "Bolognese",           "price": "12,90 €", "info": "Ragù alla Bolognese." },
+      { "id": "pesto",      "name": "Pesto Genovese",      "price": "11,50 €", "info": "Basilikum-Pesto, Pinienkerne." },
+      { "id": "funghi",     "name": "Funghi (Pilze)",      "price": "11,90 €", "info": "Pilze, Kräuter (rahmig oder olio – je nach Hausart)." },
+      { "id": "gamberi",    "name": "Gamberi (Garnelen)",  "price": "15,90 €", "info": "Garnelen, Knoblauch, Olivenöl." },
+      { "id": "frutti",     "name": "Frutti di Mare",      "price": "16,90 €", "info": "Meeresfrüchte, Knoblauch, Petersilie." },
+      { "id": "alfredo",    "name": "Alfredo",             "price": "12,50 €", "info": "Butter, Parmesan, Sahne." },
+      { "id": "puttanesca", "name": "Puttanesca",          "price": "12,90 €", "info": "Oliven, Kapern, Sardellen, Tomate." }
+    ],
+    "salads": [
+      { "id": "caesar", "name": "Caesar",          "price": "10,50 €", "info": "Römersalat, Croûtons, Parmesan." },
+      { "id": "mista",  "name": "Insalata Mista",  "price": "7,90 €",  "info": "Gemischter Salat, Hausdressing." },
+      { "id": "rucola", "name": "Rucola e Grana",  "price": "9,50 €",  "info": "Rucola, Grana Padano, Balsamico." }
+    ],
+    "drinks": [
+      { "id": "water",     "name": "Mineralwasser (still/prickelnd)", "price": "2,90 € / 6,50 €", "info": "0,25 / 0,75 l – Marke je nach Bestand." },
+      { "id": "limonata",  "name": "Limonata / Aranciata",             "price": "3,50 €",         "info": "Zitronen- oder Orangenlimo." },
+      { "id": "cola",      "name": "Cola / Zero",                      "price": "3,20 €",         "info": "0,33 l" },
+      { "id": "espresso",  "name": "Espresso",                         "price": "2,40 €",         "info": "Einfach oder doppio." },
+      { "id": "cappuccino","name": "Cappuccino",                       "price": "3,20 €",         "info": "Mit Milchschaum." },
+      { "id": "whitewine", "name": "Hauswein Weiß (Glas/Fl.)",         "price": "6,90 € / 26,00 €", "info": "Trocken, fruchtig." },
+      { "id": "redwine",   "name": "Hauswein Rot (Glas/Fl.)",          "price": "6,90 € / 26,00 €", "info": "Feinherb bis trocken." },
+      { "id": "prosecco",  "name": "Prosecco (Glas)",                  "price": "6,50 €",         "info": "Perlend." },
+      { "id": "pils",      "name": "Pils (0,3 / 0,5)",                 "price": "3,90 € / 5,20 €", "info": "Vom Fass (sofern verfügbar)." },
+      { "id": "lager",     "name": "Helles / Lager (Fl.)",             "price": "4,80 €",         "info": "0,5 l" },
+      { "id": "nabeer",    "name": "Alkoholfreies Bier",               "price": "3,50 €",         "info": "Flasche 0,33 l" }
+    ],
+    "desserts": [
+      { "id": "tiramisu",   "name": "Tiramisu",    "price": "6,50 €", "info": "Klassisch, hausgemacht." },
+      { "id": "pannacotta", "name": "Panna Cotta", "price": "5,90 €", "info": "Mit Beerensauce." },
+      { "id": "gelato",     "name": "Gelato",      "price": "5,50 €", "info": "2 Kugeln nach Wahl." }
+    ]
+  },
+
+  "faqs": {
+    "title": "Pizza Papa – FAQ",
+    "pdfUrl": "page/pdf/pizza_papa_faq.pdf",
+    "cats": [
+      {
+        "key": "speisekarte",
+        "title": "Speisekarte",
+        "icon": "🍕",
+        "items": [
+          { "q": "Was ist eure beliebteste Pizza?", "a": "Margherita, Diavola und unser „Papa Special“ mit Salsiccia & Paprika gehören zu den Topsellern." },
+          { "q": "Gibt es glutenfreie Pizza?", "a": "Ja – auf Wunsch mit glutenfreiem Boden (+2,00 €). Hinweis: Spuren können produktionsbedingt nicht ausgeschlossen werden." },
+          { "q": "Kann ich halb/halb bestellen?", "a": "Ja. L-Pizzen ohne Aufpreis, XL gegen 1,00 € Aufpreis." }
+        ]
+      },
+      {
+        "key": "allergene",
+        "title": "Allergene",
+        "icon": "🧀",
+        "items": [
+          { "q": "Welche Allergene kommen häufig vor?", "a": "Gluten (Weizen), Milch, Ei; Spuren von Schalenfrüchten können vorkommen." },
+          { "q": "Habt ihr laktosefreie Optionen?", "a": "Ja – veganer Käse oder ohne Käse. Buffalo-Mozzarella ist laktoseärmer, aber nicht laktosefrei." },
+          { "q": "Sind eure Produkte nussfrei?", "a": "Wir setzen keine Nüsse als Standard ein; Spuren sind möglich." }
+        ]
+      },
+      {
+        "key": "lieferung",
+        "title": "Lieferung",
+        "icon": "🚗",
+        "items": [
+          { "q": "Wie lange dauert die Lieferung?", "a": "In der Regel 30–45 Minuten – abhängig von Auslastung und Wetter." },
+          { "q": "Welche Gebiete beliefert ihr?", "a": "Innenstadt & angrenzende Viertel: Altstadt (20095), St. Georg (20099), Neustadt (20354), HafenCity (20457), Eimsbüttel (20144/20253), Winterhude (20249), Altona-Altstadt (22765) u. a." },
+          { "q": "Mindestbestellwert?", "a": "12,00 € im gesamten Liefergebiet." },
+          { "q": "Lieferkosten?", "a": "Zone A 2,50 € (20095–20459, 20099), Zone B 3,90 € (20144, 20249, 20253, 22765). Ab 25,00 € versandkostenfrei." },
+          { "q": "Bietet ihr Abholung an?", "a": "Ja, jederzeit – ohne Mindestbestellwert." }
+        ]
+      },
+      {
+        "key": "oeffnungszeiten",
+        "title": "Öffnungszeiten",
+        "icon": "⏰",
+        "items": [
+          { "q": "Wann habt ihr geöffnet?", "a": "Die aktuellen Zeiten siehst du im Bot unter „Öffnungszeiten“ – wir zeigen sie dort direkt an." },
+          { "q": "Wo findet man euch?", "a": "Adresse laut Website unter „Kontaktdaten“. Per Klick öffnest du die Route in Google Maps." },
+          { "q": "Ist die Küche durchgehend geöffnet?", "a": "Unter der Woche bis 22:00 Uhr; am Wochenende bis 24:00 Uhr." }
+        ]
+      },
+      {
+        "key": "preise",
+        "title": "Preise",
+        "icon": "💳",
+        "items": [
+          { "q": "Welche Zahlarten akzeptiert ihr?", "a": "Bar, EC/Kreditkarte, Apple Pay und Google Pay." },
+          { "q": "Gibt es Mittagsdeals?", "a": "Ja – Mo–Fr 12:00–15:00: Pizza oder Pasta + Softdrink ab 9,90 €." },
+          { "q": "Fallen Onlinegebühren an?", "a": "Je nach Plattform können Servicegebühren anfallen – wir zeigen alles transparent vor Abschluss an." }
+        ]
+      },
+      {
+        "key": "bestellung",
+        "title": "Bestellung",
+        "icon": "📞",
+        "items": [
+          { "q": "Wie bestelle ich am schnellsten?", "a": "Du kannst unter dieser Nummer anrufen oder direkt über Lieferando bestellen.", "special": "orderQuick" }
+        ]
+      }
+    ]
+  }
+}
