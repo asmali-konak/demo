@@ -40,8 +40,8 @@
     },
 
     "menuOrder": ["antipasti", "pizza", "pasta", "drinks", "salads", "desserts"],
-    "menuPdf": "page/pdf/speisekarte_test.pdf",
-    "faqPdf": "page/pdf/pizza_papa_faq.pdf",
+    "menuPdf": "./pdf/speisekarte_test.pdf",
+    "faqPdf": "./pdf/pizza_papa_faq.pdf",
     "orderUrl": "https://www.lieferando.de/pizza-papa-hamburg"
   },
 
@@ -102,7 +102,7 @@
 
   "faqs": {
     "title": "Pizza Papa – FAQ",
-    "pdfUrl": "page/pdf/pizza_papa_faq.pdf",
+    "pdfUrl": "./pdf/pizza_papa_faq.pdf",
     "cats": [
       {
         "key": "speisekarte",
