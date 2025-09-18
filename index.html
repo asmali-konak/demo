@@ -65,7 +65,7 @@
   <section id="kontakt">
     <div class="container frame">
       <h2 class="section-title">Reservierung & Kontakt</h2>
-      <div class="section-sub">Wir freuen uns auf euch.</div>
+    <div class="section-sub">Wir freuen uns auf euch.</div>
       <p class="center" id="contact-block"><!-- auto --></p>
       <ul class="hours" id="hours-list"><!-- auto --></ul>
       <p class="center" style="margin-top:18px"><a class="cta" href="#top">Nach oben</a></p>
@@ -142,7 +142,7 @@
     <div class="ppx-brandbar">Powered by <strong>AI Elements</strong> ✨</div>
   </div>
 
-  <!-- Scripts: EmailJS zuerst, dann Bot-Loader -->
+  <!-- Scripts -->
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script defer src="bot/loader.js"
           data-ppx-loader
@@ -154,30 +154,30 @@
   <script>
   (function () {
     const on = (fn) => document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn);
-    const $ = (s) => document.querySelector(s);
+    const $  = (s) => document.querySelector(s);
 
     on(() => {
       // CTA öffnet Bot
       const cta = $('#cta-open-bot');
       if (cta) cta.addEventListener('click', (e) => {
         e.preventDefault();
-        const launch = $('#ppx-launch');
-        if (launch) launch.click();
+        const launch = $('#ppx-launch'); if (launch) launch.click();
       });
 
       // JSON laden (unabhängig vom Bot)
       fetch('bot-data/bot.json?v=7', {cache:'no-store'})
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
         .then((PPX) => {
-          // Kontakt
           const c = (PPX && PPX.cfg) || {};
+
+          // Kontakt
           const contact = $('#contact-block');
           if (contact) {
             const telText = c.phone || '';
             const telHref = 'tel:' + (telText || '').replace(/\s+/g,'');
-            const mail = c.email || '';
-            const addr = c.address || '';
-            const maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
+            const mail    = c.email || '';
+            const addr    = c.address || '';
+            const maps    = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
             contact.innerHTML =
               'Telefon: <strong><a href="'+telHref+'">'+telText+'</a></strong><br>' +
               'WhatsApp: <strong><a href="'+telHref+'">'+telText+'</a></strong><br>' +
@@ -192,18 +192,22 @@
             ).join('');
           }
 
-          // Speisekarte
-          const menuWrap = $('#menu-auto');
-          if (menuWrap && PPX.dishes) {
-            const order = (c.menuOrder) || [];
+          // Speisekarte: Name (bold) + Info (normal) inline, Preis rechts
+          const wrap = $('#menu-auto');
+          if (wrap && PPX.dishes) {
+            const order  = c.menuOrder || [];
             const titles = {
               meze: 'Meze – Vorspeisen', pide: 'Pide', kebap: 'Kebap vom Grill',
               guevec: 'Güveç & Ofengerichte', vegetarisch: 'Vegetarisch',
               beilagen: 'Beilagen', getraenke: 'Getränke', desserts: 'Desserts'
             };
             const fmtItem = (d) =>
-              '<li><span class="name">'+d.name+'</span><span class="dots"></span><span class="price">'+d.price+'</span>' +
-              (d.info ? '<div class="info small">'+d.info+'</div>' : '') + '</li>';
+              '<li class="dish">'+
+                '<span class="name">'+d.name+'</span>'+
+                (d.info ? '<span class="info"> '+d.info+'</span>' : '')+
+                '<span class="dots" aria-hidden="true"></span>'+
+                '<span class="price">'+d.price+'</span>'+
+              '</li>';
             const renderCat = (key) => {
               const list = PPX.dishes[key] || [];
               if (!list.length) return '';
@@ -212,13 +216,12 @@
                      '<ul class="menu-list">'+ list.map(fmtItem).join('') + '</ul>' +
                      '</div>';
             };
-            menuWrap.innerHTML = order.map(renderCat).join('');
+            wrap.innerHTML = order.map(renderCat).join('');
           }
         })
         .catch(() => {
-          // Fallback: Hinweis, falls bot.json nicht geladen werden konnte
-          const menuWrap = $('#menu-auto');
-          if (menuWrap) menuWrap.innerHTML = '<p class="center small">Speisekarte derzeit nicht verfügbar.</p>';
+          const wrap = document.querySelector('#menu-auto');
+          if (wrap) wrap.innerHTML = '<p class="center small">Speisekarte derzeit nicht verfügbar.</p>';
         });
 
       // Cookie Consent (unverändert)
