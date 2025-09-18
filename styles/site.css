@@ -63,14 +63,27 @@ h2.section-title{
 .menu-section{margin:22px 0;padding:18px}
 .menu-title{font-family:"Cinzel",serif;color:var(--wine);margin:0 0 8px;text-align:center;font-size:24px}
 ul.menu-list{list-style:none;margin:0;padding:0}
-ul.menu-list li{display:flex;gap:10px;align-items:center;padding:10px 6px;border-bottom:1px dotted #d6c9b3}
-.name{font-weight:600}
+
+/* Layout neu: Name fett + Info inline, Preis rechts */
+ul.menu-list li.dish{
+  display:flex;align-items:baseline;gap:10px;padding:10px 6px;border-bottom:1px dotted #d6c9b3;flex-wrap:wrap
+}
+.name{font-weight:700}
+.info{font-weight:400;opacity:.95}
 .dots{
-  flex:1;height:2px;opacity:.9;align-self:center;margin:0 6px;
+  flex:1;min-width:40px;height:2px;opacity:.9;align-self:center;margin:0 6px;
   background-image:radial-gradient(#bda98a 1.2px, transparent 1.2px);
   background-size:8px 2px;background-repeat:repeat-x;background-position:center
 }
-.price{white-space:nowrap;font-weight:700}
+.price{
+  margin-left:auto;white-space:nowrap;font-weight:700;text-align:right;min-width:96px
+}
+
+/* Mobile Tuning */
+@media (max-width:640px){
+  .price{min-width:80px}
+  ul.menu-list li.dish{gap:8px}
+}
 
 /* --- Galerie --------------------------------------------------------------- */
 #galerie .frame{padding-bottom:34px}
