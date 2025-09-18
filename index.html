@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Asmali Konak</title>
   <meta name="description" content="Asmali Konak in Köln-Kalk: Meze, Pide & Kebap aus dem Steinofen. Reservieren per Bot oder Telefon. Täglich ab 12 Uhr, Samstag bis 01 Uhr.">
-  <!-- Self-Hosting Fonts empfohlen: in styles/site.css per @font-face einbinden -->
   <link rel="stylesheet" href="styles/site.css">
   <link rel="stylesheet" href="styles/bot.css">
 
@@ -43,7 +42,7 @@
   <section id="menu">
     <div class="container">
       <h2 class="section-title">Speisekarte</h2>
-      <p class="section-sub" id="menu-hint">Preise & Auswahl können variieren.</p>
+      <p class="section-sub" id="menu-hint">Preise &amp; Auswahl können variieren.</p>
       <div id="menu-auto"></div>
     </div>
   </section>
@@ -67,15 +66,9 @@
     <div class="container frame">
       <h2 class="section-title">Reservierung & Kontakt</h2>
       <div class="section-sub">Wir freuen uns auf euch.</div>
-      <p class="center" id="contact-block">
-        <!-- wird automatisch befüllt -->
-      </p>
-      <ul class="hours" id="hours-list">
-        <!-- wird automatisch befüllt -->
-      </ul>
-      <p class="center" style="margin-top:18px">
-        <a class="cta" href="#top">Nach oben</a>
-      </p>
+      <p class="center" id="contact-block"><!-- auto --></p>
+      <ul class="hours" id="hours-list"><!-- auto --></ul>
+      <p class="center" style="margin-top:18px"><a class="cta" href="#top">Nach oben</a></p>
     </div>
   </section>
 
@@ -149,7 +142,7 @@
     <div class="ppx-brandbar">Powered by <strong>AI Elements</strong> ✨</div>
   </div>
 
-  <!-- Scripts: EmailJS zuerst, dann Loader -->
+  <!-- Scripts: EmailJS zuerst, dann Bot-Loader -->
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script defer src="bot/loader.js"
           data-ppx-loader
@@ -157,83 +150,84 @@
           data-widget="bot/index.js?v=7.9.4"
           data-nocache></script>
 
-  <!-- Automatisierung: Öffnungszeiten, Kontakt & Speisekarte -->
+  <!-- Automatisierung: Öffnungszeiten, Kontakt & Speisekarte (lädt direkt bot.json) -->
   <script>
   (function () {
-    const onReady = (fn) => document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn);
-    const waitData = (cb, tries=60) => {
-      if (window.PPX_DATA) return cb(window.PPX_DATA);
-      if (!tries) return;
-      setTimeout(() => waitData(cb, tries-1), 250);
-    };
-    const el = (sel) => document.querySelector(sel);
+    const on = (fn) => document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn);
+    const $ = (s) => document.querySelector(s);
 
-    onReady(() => {
+    on(() => {
       // CTA öffnet Bot
-      const cta = el('#cta-open-bot');
+      const cta = $('#cta-open-bot');
       if (cta) cta.addEventListener('click', (e) => {
         e.preventDefault();
-        const launch = el('#ppx-launch');
+        const launch = $('#ppx-launch');
         if (launch) launch.click();
       });
 
-      waitData((PPX_DATA) => {
-        // Kontaktblock
-        const c = PPX_DATA.cfg || {};
-        const contact = el('#contact-block');
-        if (contact) {
-          const tel = (c.phone||'').replace(/\s+/g,'');
-          const mail = c.email||'';
-          const addr = c.address||'';
-          const telHref = 'tel:' + (tel || '');
-          const mailHref = 'mailto:' + mail;
-          const mapsHref = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
-          contact.innerHTML =
-            'Telefon: <strong><a href="'+telHref+'">'+(c.phone||'')+'</a></strong><br>' +
-            'WhatsApp: <strong><a href="'+telHref+'">'+(c.phone||'')+'</a></strong><br>' +
-            'Adresse: <strong><a href="'+mapsHref+'" target="_blank" rel="noopener">'+addr+'</a></strong>';
-        }
+      // JSON laden (unabhängig vom Bot)
+      fetch('bot-data/bot.json?v=7', {cache:'no-store'})
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then((PPX) => {
+          // Kontakt
+          const c = (PPX && PPX.cfg) || {};
+          const contact = $('#contact-block');
+          if (contact) {
+            const telText = c.phone || '';
+            const telHref = 'tel:' + (telText || '').replace(/\s+/g,'');
+            const mail = c.email || '';
+            const addr = c.address || '';
+            const maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
+            contact.innerHTML =
+              'Telefon: <strong><a href="'+telHref+'">'+telText+'</a></strong><br>' +
+              'WhatsApp: <strong><a href="'+telHref+'">'+telText+'</a></strong><br>' +
+              'Adresse: <strong><a href="'+maps+'" target="_blank" rel="noopener">'+addr+'</a></strong>';
+          }
 
-        // Öffnungszeiten
-        const hours = el('#hours-list');
-        if (hours && Array.isArray(c.hoursLines)) {
-          hours.innerHTML = c.hoursLines.map(([d,t]) =>
-            '<li><span class="day">'+d+'</span><span class="fill"></span><span class="time">'+t+' Uhr</span></li>'
-          ).join('');
-        }
+          // Öffnungszeiten
+          const hours = $('#hours-list');
+          if (hours && Array.isArray(c.hoursLines)) {
+            hours.innerHTML = c.hoursLines.map(([d,t]) =>
+              '<li><span class="day">'+d+'</span><span class="fill"></span><span class="time">'+t+' Uhr</span></li>'
+            ).join('');
+          }
 
-        // Menü automatisch
-        const menuWrap = el('#menu-auto');
-        const fmtItem = (dish) => (
-          '<li><span class="name">'+dish.name+'</span><span class="dots"></span><span class="price">'+dish.price+'</span>' +
-          (dish.info?'<div class="info small">'+dish.info+'</div>':'') + '</li>'
-        );
-        const renderCat = (key, title) => {
-          const list = (PPX_DATA.dishes && PPX_DATA.dishes[key]) || [];
-          if (!list.length) return '';
-          return '<div class="menu-section frame">' +
-                 '<h3 class="menu-title">'+title+'</h3>' +
-                 '<ul class="menu-list">'+ list.map(fmtItem).join('') + '</ul>' +
-                 '</div>';
-        };
-        if (menuWrap) {
-          const order = (PPX_DATA.cfg && PPX_DATA.cfg.menuOrder) || [];
-          const titles = {
-            meze: 'Meze – Vorspeisen', pide: 'Pide', kebap: 'Kebap vom Grill',
-            guevec: 'Güveç & Ofengerichte', vegetarisch: 'Vegetarisch',
-            beilagen: 'Beilagen', getraenke: 'Getränke', desserts: 'Desserts'
-          };
-          menuWrap.innerHTML = order.map(k => renderCat(k, titles[k]||k)).join('');
-        }
-      });
+          // Speisekarte
+          const menuWrap = $('#menu-auto');
+          if (menuWrap && PPX.dishes) {
+            const order = (c.menuOrder) || [];
+            const titles = {
+              meze: 'Meze – Vorspeisen', pide: 'Pide', kebap: 'Kebap vom Grill',
+              guevec: 'Güveç & Ofengerichte', vegetarisch: 'Vegetarisch',
+              beilagen: 'Beilagen', getraenke: 'Getränke', desserts: 'Desserts'
+            };
+            const fmtItem = (d) =>
+              '<li><span class="name">'+d.name+'</span><span class="dots"></span><span class="price">'+d.price+'</span>' +
+              (d.info ? '<div class="info small">'+d.info+'</div>' : '') + '</li>';
+            const renderCat = (key) => {
+              const list = PPX.dishes[key] || [];
+              if (!list.length) return '';
+              return '<div class="menu-section frame">' +
+                     '<h3 class="menu-title">'+(titles[key]||key)+'</h3>' +
+                     '<ul class="menu-list">'+ list.map(fmtItem).join('') + '</ul>' +
+                     '</div>';
+            };
+            menuWrap.innerHTML = order.map(renderCat).join('');
+          }
+        })
+        .catch(() => {
+          // Fallback: Hinweis, falls bot.json nicht geladen werden konnte
+          const menuWrap = $('#menu-auto');
+          if (menuWrap) menuWrap.innerHTML = '<p class="center small">Speisekarte derzeit nicht verfügbar.</p>';
+        });
+
+      // Cookie Consent (unverändert)
+      const KEY='pp-consent', banner=document.getElementById('cookieBanner');
+      try{ if(!localStorage.getItem(KEY)){ banner.style.display='flex'; } }catch(e){ banner.style.display='flex'; }
+      window.acceptCookies=function(){ try{ localStorage.setItem(KEY,'accepted'); }catch(e){} banner.remove(); };
+      window.declineCookies=function(){ try{ localStorage.setItem(KEY,'declined'); }catch(e){} banner.remove(); };
+      window.resetConsent=function(){ try{ localStorage.removeItem(KEY); }catch(e){} location.hash='#datenschutz'; location.reload(); };
     });
-
-    // Cookie Consent helpers (unverändert)
-    const KEY='pp-consent', banner=document.getElementById('cookieBanner');
-    try{ if(!localStorage.getItem(KEY)){ banner.style.display='flex'; } }catch(e){ banner.style.display='flex'; }
-    window.acceptCookies=function(){ try{ localStorage.setItem(KEY,'accepted'); }catch(e){} banner.remove(); };
-    window.declineCookies=function(){ try{ localStorage.setItem(KEY,'declined'); }catch(e){} banner.remove(); };
-    window.resetConsent=function(){ try{ localStorage.removeItem(KEY); }catch(e){} location.hash='#datenschutz'; location.reload(); };
   })();
   </script>
 </body>
