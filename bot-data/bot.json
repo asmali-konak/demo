@@ -39,60 +39,58 @@
     "faqPdf": "./pdf/pizza_papa_faq.pdf",
     "orderUrl": ""
   },
-
   "dishes": {
     "meze": [
-      { "id": "hummus",      "name": "Hummus",                 "price": "6,90 €",  "info": "Kichererbsen, Tahin, Zitrone, Olivenöl. Mit Brot." },
-      { "id": "cacik",       "name": "Cacık",                  "price": "5,90 €",  "info": "Joghurt, Gurke, Knoblauch, Dill." },
-      { "id": "ezme",        "name": "Acılı Ezme (pikant)",    "price": "6,50 €",  "info": "Fein gehacktes Tomaten-Paprika-Relish." },
-      { "id": "sigaraboerek","name": "Sigara Böreği",          "price": "7,90 €",  "info": "Filo-Röllchen, Hirtenkäse, Petersilie (5 Stk.)." },
-      { "id": "mixe",        "name": "Meze Mix",               "price": "12,90 €", "info": "Auswahl aus 3 Meze nach Wahl." }
+      { "id": "hummus", "name": "Hummus", "price": "6,90 €", "info": "Kichererbsen, Tahin, Zitrone, Olivenöl. Mit Brot." },
+      { "id": "cacik", "name": "Cacık", "price": "5,90 €", "info": "Joghurt, Gurke, Knoblauch, Dill." },
+      { "id": "ezme", "name": "Acılı Ezme (pikant)", "price": "6,50 €", "info": "Fein gehacktes Tomaten-Paprika-Relish." },
+      { "id": "sigaraboerek", "name": "Sigara Böreği", "price": "7,90 €", "info": "Filo-Röllchen, Hirtenkäse, Petersilie (5 Stk.)." },
+      { "id": "mixe", "name": "Meze Mix", "price": "12,90 €", "info": "Auswahl aus 3 Meze nach Wahl." }
     ],
     "pide": [
-      { "id": "pide_kas",    "name": "Pide Kaşarlı",           "price": "10,90 €", "info": "Mit Käse, Sesamrand." },
-      { "id": "pide_kıym",   "name": "Pide Kıymalı",           "price": "12,90 €", "info": "Mit Rinderhack, Tomate, Paprika." },
-      { "id": "pide_sucuk",  "name": "Pide Sucuklu",           "price": "12,90 €", "info": "Mit türkischer Knoblauchwurst, Käse." },
-      { "id": "pide_spin",   "name": "Pide Ispanaklı",         "price": "11,90 €", "info": "Spinat, Käse, Zwiebel." },
-      { "id": "pide_mix",    "name": "Pide Mix (geteilt)",     "price": "13,90 €", "info": "Zwei Hälften, frei kombinierbar." }
+      { "id": "pide_kas", "name": "Pide Kaşarlı", "price": "10,90 €", "info": "Mit Käse, Sesamrand." },
+      { "id": "pide_kıym", "name": "Pide Kıymalı", "price": "12,90 €", "info": "Mit Rinderhack, Tomate, Paprika." },
+      { "id": "pide_sucuk", "name": "Pide Sucuklu", "price": "12,90 €", "info": "Mit türkischer Knoblauchwurst, Käse." },
+      { "id": "pide_spin", "name": "Pide Ispanaklı", "price": "11,90 €", "info": "Spinat, Käse, Zwiebel." },
+      { "id": "pide_mix", "name": "Pide Mix (geteilt)", "price": "13,90 €", "info": "Zwei Hälften, frei kombinierbar." }
     ],
     "kebap": [
-      { "id": "adana",       "name": "Adana Kebap (pikant)",   "price": "15,90 €", "info": "Gegrilltes Lamm-Rinderhack, Bulgur, Salat, Cacık." },
-      { "id": "urfa",        "name": "Urfa Kebap (mild)",      "price": "15,90 €", "info": "Mild gewürzt, Bulgur, Grillgemüse." },
-      { "id": "sis_tavuk",   "name": "Tavuk Şiş",              "price": "14,90 €", "info": "Hähnchenspieß, Reis, Salat." },
-      { "id": "sis_kuzu",    "name": "Kuzu Şiş",               "price": "18,90 €", "info": "Lammspieß, Bulgur, gegrillte Tomate." },
-      { "id": "iskender",    "name": "İskender",               "price": "16,90 €", "info": "Döner auf Brot, Tomatensauce, Joghurt, Butter." }
+      { "id": "adana", "name": "Adana Kebap (pikant)", "price": "15,90 €", "info": "Gegrilltes Lamm-Rinderhack, Bulgur, Salat, Cacık." },
+      { "id": "urfa", "name": "Urfa Kebap (mild)", "price": "15,90 €", "info": "Mild gewürzt, Bulgur, Grillgemüse." },
+      { "id": "sis_tavuk", "name": "Tavuk Şiş", "price": "14,90 €", "info": "Hähnchenspieß, Reis, Salat." },
+      { "id": "sis_kuzu", "name": "Kuzu Şiş", "price": "18,90 €", "info": "Lammspieß, Bulgur, gegrillte Tomate." },
+      { "id": "iskender", "name": "İskender", "price": "16,90 €", "info": "Döner auf Brot, Tomatensauce, Joghurt, Butter." }
     ],
     "guevec": [
-      { "id": "guvec_tavuk", "name": "Güveç Tavuk",            "price": "14,50 €", "info": "Eintopf im Tontopf, Hähnchen, Gemüse, Tomatensauce." },
-      { "id": "guvec_kuzu",  "name": "Güveç Kuzu",             "price": "17,90 €", "info": "Zartes Lamm, Aubergine, Paprika, Kräuter." },
-      { "id": "karniyarik",  "name": "Karnıyarık",             "price": "13,90 €", "info": "Gefüllte Aubergine mit Hack, Tomate, Petersilie." }
+      { "id": "guvec_tavuk", "name": "Güveç Tavuk", "price": "14,50 €", "info": "Eintopf im Tontopf, Hähnchen, Gemüse, Tomatensauce." },
+      { "id": "guvec_kuzu", "name": "Güveç Kuzu", "price": "17,90 €", "info": "Zartes Lamm, Aubergine, Paprika, Kräuter." },
+      { "id": "karniyarik", "name": "Karnıyarık", "price": "13,90 €", "info": "Gefüllte Aubergine mit Hack, Tomate, Petersilie." }
     ],
     "vegetarisch": [
-      { "id": "falafel",     "name": "Falafel-Teller",         "price": "12,50 €", "info": "Kichererbsenbällchen, Hummus, Salat, Brot." },
-      { "id": "manti_veg",   "name": "Manti Veggie",           "price": "13,90 €", "info": "Türkische Teigtaschen, Joghurt-Knoblauchsauce, Butter-Paprikaöl." },
-      { "id": "imam",        "name": "İmam Bayıldı",           "price": "12,90 €", "info": "Geschmorte Aubergine, Zwiebel, Tomate – kalt." }
+      { "id": "falafel", "name": "Falafel-Teller", "price": "12,50 €", "info": "Kichererbsenbällchen, Hummus, Salat, Brot." },
+      { "id": "manti_veg", "name": "Manti Veggie", "price": "13,90 €", "info": "Teigtaschen, Joghurt-Knoblauchsauce, Butter-Paprikaöl." },
+      { "id": "imam", "name": "İmam Bayıldı", "price": "12,90 €", "info": "Geschmorte Aubergine, Zwiebel, Tomate – kalt." }
     ],
     "beilagen": [
-      { "id": "bulgur",      "name": "Bulgur Pilavı",          "price": "3,90 €",  "info": "Hausgemacht." },
-      { "id": "reis",        "name": "Reis",                   "price": "3,90 €",  "info": "Butterreis." },
-      { "id": "salat",       "name": "Beilagensalat",          "price": "4,50 €",  "info": "Joghurt- oder Zitronendressing." },
-      { "id": "brot",        "name": "Ofenbrot",               "price": "2,50 €",  "info": "Frisch gebacken." }
+      { "id": "bulgur", "name": "Bulgur Pilavı", "price": "3,90 €", "info": "Hausgemacht." },
+      { "id": "reis", "name": "Reis", "price": "3,90 €", "info": "Butterreis." },
+      { "id": "salat", "name": "Beilagensalat", "price": "4,50 €", "info": "Joghurt- oder Zitronendressing." },
+      { "id": "brot", "name": "Ofenbrot", "price": "2,50 €", "info": "Frisch gebacken." }
     ],
     "getraenke": [
-      { "id": "ayran",       "name": "Ayran",                  "price": "2,50 €",  "info": "Joghurtgetränk, 0,25 l." },
-      { "id": "salgam",      "name": "Şalgam",                 "price": "3,20 €",  "info": "Fermentiertes Rübchengetränk, 0,33 l." },
-      { "id": "cay",         "name": "Çay (türk. Tee)",        "price": "1,90 €",  "info": "Im ince belli Glas." },
-      { "id": "raki",        "name": "Rakı (2 cl)",            "price": "4,90 €",  "info": "Anisschnaps." },
-      { "id": "soft",        "name": "Softdrinks",             "price": "3,20 €",  "info": "Cola, Fanta, Sprite – 0,33 l." },
-      { "id": "wasser",      "name": "Mineralwasser",          "price": "2,90 € / 5,50 €", "info": "0,25 / 0,75 l." }
+      { "id": "ayran", "name": "Ayran", "price": "2,50 €", "info": "Joghurtgetränk, 0,25 l." },
+      { "id": "salgam", "name": "Şalgam", "price": "3,20 €", "info": "Fermentiertes Rübchengetränk, 0,33 l." },
+      { "id": "cay", "name": "Çay (türk. Tee)", "price": "1,90 €", "info": "Im ince belli Glas." },
+      { "id": "raki", "name": "Rakı (2 cl)", "price": "4,90 €", "info": "Anisschnaps." },
+      { "id": "soft", "name": "Softdrinks", "price": "3,20 €", "info": "Cola, Fanta, Sprite – 0,33 l." },
+      { "id": "wasser", "name": "Mineralwasser", "price": "2,90 € / 5,50 €", "info": "0,25 / 0,75 l." }
     ],
     "desserts": [
-      { "id": "baklava",     "name": "Baklava (3 Stk.)",       "price": "5,90 €",  "info": "Mit Pistazie, Sirup." },
-      { "id": "sutlac",      "name": "Sütlaç",                 "price": "5,50 €",  "info": "Milchreis aus dem Ofen." },
-      { "id": "kunefe",      "name": "Künefe",                 "price": "7,90 €",  "info": "Fadenteig, Käse, warm, Sirup." }
+      { "id": "baklava", "name": "Baklava (3 Stk.)", "price": "5,90 €", "info": "Mit Pistazie, Sirup." },
+      { "id": "sutlac", "name": "Sütlaç", "price": "5,50 €", "info": "Milchreis aus dem Ofen." },
+      { "id": "kunefe", "name": "Künefe", "price": "7,90 €", "info": "Fadenteig, Käse, warm, Sirup." }
     ]
   },
-
   "faqs": {
     "title": "Asmali Konak – FAQ",
     "pdfUrl": "./pdf/pizza_papa_faq.pdf",
