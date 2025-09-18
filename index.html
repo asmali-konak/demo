@@ -3,20 +3,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Pizza Papa Hamburg – Italienische Speisen & Pizza</title>
-  <meta name="description" content="Pizza Papa Hamburg: Italienische Klassiker, hausgemachter Teig, frische Saucen und schnelle Küche mit Herz.">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
-
-  <!-- Externe Styles statt Inline-<style> -->
+  <title>Asmali Konak</title>
+  <meta name="description" content="Asmali Konak in Köln-Kalk: Meze, Pide & Kebap aus dem Steinofen. Reservieren per Bot oder Telefon. Täglich ab 12 Uhr, Samstag bis 01 Uhr.">
+  <!-- Self-Hosting Fonts empfohlen: in styles/site.css per @font-face einbinden -->
   <link rel="stylesheet" href="styles/site.css">
   <link rel="stylesheet" href="styles/bot.css">
+
+  <!-- Icons -->
+  <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
+  <link rel="icon" href="images/favicon-32.jpg" sizes="32x32" type="image/jpeg">
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.jpg" sizes="180x180">
+
+  <!-- Open Graph / Twitter -->
+  <meta property="og:title" content="Asmali Konak">
+  <meta property="og:description" content="Pide & Kebap">
+  <meta property="og:image" content="images/paper.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="images/paper.jpg">
 </head>
 <body>
   <header class="hero" id="top">
     <div class="hero-inner">
-      <h1 class="brand">Pizza Papa Hamburg</h1>
-      <p class="tagline">Italienische Klassiker – schnell, herzlich, mit Charakter.</p>
-      <a class="cta" href="#kontakt">Jetzt anrufen / reservieren</a>
+      <h1 class="brand">Asmali Konak</h1>
+      <p class="tagline">Türkische Küche mit Herz.</p>
+      <a class="cta" href="#kontakt" id="cta-open-bot">Reservieren/Kontaktformular</a>
     </div>
   </header>
 
@@ -24,75 +34,17 @@
   <section id="about">
     <div class="container frame">
       <h2 class="section-title">Unsere Philosophie</h2>
-      <p class="section-sub">Traditionelle Rezepte, ehrliche Zutaten, freundschaftliche Atmosphäre.</p>
-      <p class="center">Echte italienische Pizza – hausgemachter Teig, frische Saucen, schnelle Zubereitung im Steinofen.</p>
+      <p class="section-sub">Echt, herzlich, aus dem Ofen.</p>
+      <p class="center">Bei Asmali Konak verbinden wir traditionelle Rezepte mit frischen Zutaten: Meze zum Teilen, Pide aus dem Steinofen und Kebap vom Grill – einfach guter Geschmack ohne Schnickschnack.</p>
     </div>
   </section>
 
-  <!-- MENU -->
+  <!-- MENU (automatisch aus bot.json) -->
   <section id="menu">
     <div class="container">
       <h2 class="section-title">Speisekarte</h2>
-      <p class="section-sub">Alle Preise sind Platzhalter (XX/YY/ZZ).</p>
-
-      <div class="menu-section frame">
-        <h3 class="menu-title">Antipasti – Vorspeisen</h3>
-        <ul class="menu-list">
-          <li><span class="name">Bruschetta Classica</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Caprese</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Arancini</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Antipasto Misto</span><span class="dots"></span><span class="price">YY €</span></li>
-          <li><span class="name">Knoblauchbrot</span><span class="dots"></span><span class="price">XX €</span></li>
-        </ul>
-      </div>
-
-      <div class="menu-section frame">
-        <h3 class="menu-title">Pizza</h3>
-        <ul class="menu-list">
-          <li><span class="name">Margherita</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Prosciutto e Funghi</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Diavola (pikant)</span><span class="dots"></span><span class="price">YY €</span></li>
-          <li><span class="name">Quattro Formaggi</span><span class="dots"></span><span class="price">YY €</span></li>
-          <li><span class="name">Verdure (Gemüse)</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Tonno e Cipolla</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Parma (Rucola &amp; Grana)</span><span class="dots"></span><span class="price">ZZ €</span></li>
-          <li><span class="name">Calzone (gefüllt)</span><span class="dots"></span><span class="price">ZZ €</span></li>
-        </ul>
-      </div>
-
-      <div class="menu-section frame">
-        <h3 class="menu-title">Pasta</h3>
-        <p class="center small"><em>Nudelsorten:</em> Spaghetti, Tortellini, Linguine, Fusilli, Penne, Rigatoni, Tagliatelle, Gnocchi, Farfalle, Bucatini</p>
-        <ul class="menu-list">
-          <li><span class="name">Pomodoro</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Arrabbiata</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Carbonara</span><span class="dots"></span><span class="price">YY €</span></li>
-          <li><span class="name">Bolognese</span><span class="dots"></span><span class="price">YY €</span></li>
-          <li><span class="name">Pesto Genovese</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Funghi (Pilze)</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Gamberi (Garnelen)</span><span class="dots"></span><span class="price">ZZ €</span></li>
-          <li><span class="name">Frutti di Mare</span><span class="dots"></span><span class="price">ZZ €</span></li>
-          <li><span class="name">Alfredo</span><span class="dots"></span><span class="price">YY €</span></li>
-          <li><span class="name">Puttanesca</span><span class="dots"></span><span class="price">YY €</span></li>
-        </ul>
-      </div>
-
-      <div class="menu-section frame">
-        <h3 class="menu-title">Getränke</h3>
-        <ul class="menu-list">
-          <li><span class="name">Mineralwasser (still/prickelnd)</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Limonata / Aranciata</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Cola / Zero</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Espresso</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Cappuccino</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Hauswein Weiß (Glas/Fl.)</span><span class="dots"></span><span class="price">XX / YY €</span></li>
-          <li><span class="name">Hauswein Rot (Glas/Fl.)</span><span class="dots"></span><span class="price">XX / YY €</span></li>
-          <li><span class="name">Prosecco (Glas)</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Pils (0,3 / 0,5)</span><span class="dots"></span><span class="price">XX / YY €</span></li>
-          <li><span class="name">Helles / Lager (Fl.)</span><span class="dots"></span><span class="price">XX €</span></li>
-          <li><span class="name">Alkoholfreies Bier</span><span class="dots"></span><span class="price">XX €</span></li>
-        </ul>
-      </div>
+      <p class="section-sub" id="menu-hint">Preise & Auswahl können variieren.</p>
+      <div id="menu-auto"></div>
     </div>
   </section>
 
@@ -100,53 +52,46 @@
   <section id="galerie">
     <div class="container frame">
       <h2 class="section-title">Galerie</h2>
-      <div class="section-sub">Bilder können später jederzeit ersetzt werden.</div>
+      <div class="section-sub">Einblicke in unsere Küche.</div>
       <div class="gallery">
-        <img src="images/gallery1.jpg" alt="Pizza">
-        <img src="images/gallery2.jpg" alt="Pasta">
-        <img src="images/gallery3.jpg" alt="Calzone">
-        <img src="images/gallery4.jpg" alt="Dessert">
+        <img src="images/gallery1.jpg" alt="Sarma – gefüllte Weinblätter">
+        <img src="images/gallery2.jpg" alt="Baklava – süß, mit Pistazie">
+        <img src="images/gallery3.jpg" alt="Pide – frisch aus dem Steinofen">
+        <img src="images/gallery4.jpg" alt="Adana Kebap – vom Grill">
       </div>
     </div>
   </section>
 
-  <!-- KONTAKT -->
+  <!-- KONTAKT (aus bot.json) -->
   <section id="kontakt">
     <div class="container frame">
       <h2 class="section-title">Reservierung & Kontakt</h2>
-      <div class="section-sub">Beispieldaten – später ersetzen.</div>
-      <p class="center">
-        Telefon: <strong>+49 40 1234567</strong><br>
-        WhatsApp: <strong>+49 40 1234567</strong><br>
-        Adresse: <strong>Muster Str. XX, YYYYY Musterstadt</strong>
+      <div class="section-sub">Wir freuen uns auf euch.</div>
+      <p class="center" id="contact-block">
+        <!-- wird automatisch befüllt -->
       </p>
-      <ul class="hours">
-        <li><span class="day">Montag</span><span class="fill"></span><span class="time">11:00 – 22:00 Uhr</span></li>
-        <li><span class="day">Dienstag</span><span class="fill"></span><span class="time">11:00 – 22:00 Uhr</span></li>
-        <li><span class="day">Mittwoch</span><span class="fill"></span><span class="time">11:00 – 22:00 Uhr</span></li>
-        <li><span class="day">Donnerstag</span><span class="fill"></span><span class="time">11:00 – 22:00 Uhr</span></li>
-        <li><span class="day">Freitag</span><span class="fill"></span><span class="time">11:00 – 22:00 Uhr</span></li>
-        <li><span class="day">Samstag</span><span class="fill"></span><span class="time">13:00 – 24:00 Uhr</span></li>
-        <li><span class="day">Sonntag</span><span class="fill"></span><span class="time">15:00 – 21:00 Uhr</span></li>
+      <ul class="hours" id="hours-list">
+        <!-- wird automatisch befüllt -->
       </ul>
       <p class="center" style="margin-top:18px">
         <a class="cta" href="#top">Nach oben</a>
       </p>
     </div>
   </section>
+
   <!-- IMPRESSUM -->
   <section id="impressum">
     <div class="container frame">
       <h2 class="section-title">Impressum</h2>
       <p class="center small">
-        <strong>Pizza Papa Hamburg</strong><br>
-        Muster Str. XX, YYYYY Musterstadt<br>
-        Telefon: +49 123 456789 · E-Mail: info@pizzapapa.de<br>
-        Vertreten durch: Max Mustermann<br>
-        USt-IdNr.: DE123456789 · Aufsichtsbehörde: Musterbehörde
+        <strong>Asmali Konak</strong><br>
+        Ostheimer Str. 20, 51103 Köln<br>
+        Telefon: XXXX / XXXXXXXX · E-Mail: muciyil@gmail.com<br>
+        Vertreten durch: —<br>
+        USt-IdNr.: — · Aufsichtsbehörde: —
       </p>
-      <p class="center small">Inhaltlich Verantwortlicher gem. § 18 Abs. 2 MStV: Max Mustermann (Anschrift wie oben)</p>
-      <p class="center small">Haftung für Inhalte/Links: Trotz sorgfältiger inhaltlicher Kontrolle übernehmen wir keine Haftung für externe Links. Für den Inhalt verlinkter Seiten sind ausschließlich deren Betreiber verantwortlich.</p>
+      <p class="center small">Inhaltlich Verantwortliche*r gem. § 18 Abs. 2 MStV: —</p>
+      <p class="center small">Haftung für Inhalte/Links: Trotz sorgfältiger Prüfung übernehmen wir keine Haftung für externe Links. Für deren Inhalte sind die jeweiligen Betreiber verantwortlich.</p>
     </div>
   </section>
 
@@ -155,26 +100,23 @@
     <div class="container frame">
       <h2 class="section-title">Datenschutzerklärung</h2>
       <p class="small">
-        Diese Website verarbeitet personenbezogene Daten nur, soweit dies zur Bereitstellung der Website erforderlich ist (Art. 6 Abs. 1 lit. f DSGVO). Beim Aufruf werden serverseitig technisch notwendige Daten (z.&nbsp;B. IP-Adresse, Zeitpunkt, angeforderte Ressource) in Logfiles verarbeitet und nach kurzer Zeit gelöscht.
+        Diese Website verarbeitet personenbezogene Daten nur, soweit dies zur Bereitstellung der Website erforderlich ist (Art. 6 Abs. 1 lit. f DSGVO). Beim Aufruf werden serverseitig technisch notwendige Daten (z. B. IP-Adresse, Zeitpunkt, angeforderte Ressource) in Logfiles verarbeitet und zeitnah gelöscht.
       </p>
-      <p class="small"><strong>Cookies/Tracking:</strong> Es werden keine Tracking-Cookies gesetzt. Es wird lediglich Ihre Auswahl zur Cookie-Einwilligung lokal auf Ihrem Gerät gespeichert (technisch notwendig, keine Übermittlung an Dritte).</p>
-      <p class="small"><strong>Schriften/Fonts:</strong> Zurzeit werden Google Fonts extern geladen. Dadurch kann Ihre IP-Adresse an Google übertragen werden. Für eine vollständig datenschutzfreundliche Lösung empfehlen wir die lokale Einbindung (Self-Hosting) der Schriftarten.</p>
-      <p class="small"><strong>Kontaktaufnahme:</strong> Wenn Sie uns kontaktieren, verarbeiten wir die angegebenen Daten zur Bearbeitung der Anfrage. Die Daten werden nicht ohne Ihre Einwilligung weitergegeben.</p>
-      <p class="small"><strong>Ihre Rechte:</strong> Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit sowie Beschwerderecht bei einer Aufsichtsbehörde. Kontakt: <em>privacy@pizzapapa.de</em>.</p>
+      <p class="small"><strong>Cookies/Storage:</strong> Es werden keine Tracking-Cookies gesetzt. Es wird lediglich Ihre Auswahl zur Cookie-Einwilligung lokal auf Ihrem Gerät gespeichert (technisch notwendig, keine Übermittlung an Dritte).</p>
+      <p class="small"><strong>Schriften/Fonts:</strong> Die Schriften werden selbst gehostet (Self-Hosting). Es erfolgt kein Abruf von Drittservern.</p>
+      <p class="small"><strong>Kontaktaufnahme:</strong> Bei Kontakt verarbeiten wir die angegebenen Daten zur Bearbeitung der Anfrage. Die Daten werden ohne Ihre Einwilligung nicht weitergegeben.</p>
+      <p class="small"><strong>Ihre Rechte:</strong> Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit sowie Beschwerderecht bei einer Aufsichtsbehörde. Kontakt: <em>muciyil@gmail.com</em>.</p>
     </div>
   </section>
 
   <footer>
-    <p>&copy; 2025 Pizza Papa Hamburg</p>
+    <p>© 2025 Asmali Konak</p>
     <div class="social" aria-label="Social Media">
       <a href="#" aria-label="Instagram" title="Instagram">
         <svg viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm5 3.5A5.5 5.5 0 1 1 6.5 13 5.5 5.5 0 0 1 12 7.5zm0 2A3.5 3.5 0 1 0 15.5 13 3.5 3.5 0 0 0 12 9.5zm6.25-3a1.25 1.25 0 1 1-1.25 1.25A1.25 1.25 0 0 1 18.25 6.5z"/></svg>
       </a>
       <a href="#" aria-label="Facebook" title="Facebook">
         <svg viewBox="0 0 24 24"><path d="M13.5 22v-8h2.7l.4-3h-3.1V8.3c0-.9.3-1.5 1.7-1.5H17V4.1c-.3 0-1.3-.1-2.5-.1-2.4 0-4 1.4-4 4v2.9H8v3h2.5v8h3z"/></svg>
-      </a>
-      <a href="#" aria-label="LinkedIn" title="LinkedIn">
-        <svg viewBox="0 0 24 24"><path d="M4.98 3.5C4.98 4.88 3.86 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1s2.48 1.12 2.48 2.5zM0 8h5v13H0zM8 8h4.8v1.8h.1c.7-1.2 2.3-2.5 4.8-2.5 5.1 0 6 3.3 6 7.6V21H19v-5.8c0-1.4 0-3.3-2-3.3s-2.3 1.6-2.3 3.2V21H8V8z"/></svg>
       </a>
     </div>
     <div class="legal-links">
@@ -186,7 +128,7 @@
 
   <!-- Cookie Banner -->
   <div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-label="Cookie-Hinweis">
-    <p><strong>Cookie-Hinweis:</strong> Wir verwenden keine Tracking-Cookies. Wir speichern nur Ihre Auswahl lokal auf Ihrem Gerät, damit dieser Hinweis verschwindet.</p>
+    <p><strong>Cookie-Hinweis:</strong> Wir speichern nur Ihre Auswahl lokal (kein Tracking).</p>
     <div class="cookie-actions">
       <button class="btn primary" onclick="acceptCookies()">Einverstanden</button>
       <button class="btn" onclick="declineCookies()">Ablehnen</button>
@@ -194,28 +136,13 @@
     </div>
   </div>
 
-  <script>
-    /* Cookie Consent */
-    (function(){
-      const KEY='pp-consent';
-      const banner=document.getElementById('cookieBanner');
-      try{ if(!localStorage.getItem(KEY)){ banner.style.display='flex'; } }catch(e){ banner.style.display='flex'; }
-      window.acceptCookies=function(){ try{ localStorage.setItem(KEY,'accepted'); }catch(e){} banner.remove(); };
-      window.declineCookies=function(){ try{ localStorage.setItem(KEY,'declined'); }catch(e){} banner.remove(); };
-      window.resetConsent=function(){ try{ localStorage.removeItem(KEY); }catch(e){} location.hash='#datenschutz'; location.reload(); };
-    })();
-  </script>
-
-  <!-- Pizza Papa Lux Bot START -->
-  <!-- Launcher -->
+  <!-- Bot Launcher & Panel -->
   <div class="ppx-launch" id="ppx-launch" role="button" aria-label="Schnellzugriff öffnen">
     <div>Reservieren &amp; mehr ✨</div><div class="ppx-dot">💬</div>
   </div>
-
-  <!-- Panel -->
   <div class="ppx-panel" id="ppx-panel" aria-live="polite">
     <div class="ppx-h">
-      <div class="ppx-title">Pizza Papa Hamburg</div>
+      <div class="ppx-title">Asmali Konak</div>
       <button class="ppx-x" id="ppx-close" aria-label="Chat schließen">×</button>
     </div>
     <div class="ppx-v" id="ppx-v"></div>
@@ -226,9 +153,88 @@
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script defer src="bot/loader.js"
           data-ppx-loader
-          data-config="bot-data/bot.json?v=6"
+          data-config="bot-data/bot.json?v=7"
           data-widget="bot/index.js?v=7.9.4"
           data-nocache></script>
-  <!-- Pizza Papa Lux Bot END -->
+
+  <!-- Automatisierung: Öffnungszeiten, Kontakt & Speisekarte -->
+  <script>
+  (function () {
+    const onReady = (fn) => document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn);
+    const waitData = (cb, tries=60) => {
+      if (window.PPX_DATA) return cb(window.PPX_DATA);
+      if (!tries) return;
+      setTimeout(() => waitData(cb, tries-1), 250);
+    };
+    const el = (sel) => document.querySelector(sel);
+
+    onReady(() => {
+      // CTA öffnet Bot
+      const cta = el('#cta-open-bot');
+      if (cta) cta.addEventListener('click', (e) => {
+        e.preventDefault();
+        const launch = el('#ppx-launch');
+        if (launch) launch.click();
+      });
+
+      waitData((PPX_DATA) => {
+        // Kontaktblock
+        const c = PPX_DATA.cfg || {};
+        const contact = el('#contact-block');
+        if (contact) {
+          const tel = (c.phone||'').replace(/\s+/g,'');
+          const mail = c.email||'';
+          const addr = c.address||'';
+          const telHref = 'tel:' + (tel || '');
+          const mailHref = 'mailto:' + mail;
+          const mapsHref = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
+          contact.innerHTML =
+            'Telefon: <strong><a href="'+telHref+'">'+(c.phone||'')+'</a></strong><br>' +
+            'WhatsApp: <strong><a href="'+telHref+'">'+(c.phone||'')+'</a></strong><br>' +
+            'Adresse: <strong><a href="'+mapsHref+'" target="_blank" rel="noopener">'+addr+'</a></strong>';
+        }
+
+        // Öffnungszeiten
+        const hours = el('#hours-list');
+        if (hours && Array.isArray(c.hoursLines)) {
+          hours.innerHTML = c.hoursLines.map(([d,t]) =>
+            '<li><span class="day">'+d+'</span><span class="fill"></span><span class="time">'+t+' Uhr</span></li>'
+          ).join('');
+        }
+
+        // Menü automatisch
+        const menuWrap = el('#menu-auto');
+        const fmtItem = (dish) => (
+          '<li><span class="name">'+dish.name+'</span><span class="dots"></span><span class="price">'+dish.price+'</span>' +
+          (dish.info?'<div class="info small">'+dish.info+'</div>':'') + '</li>'
+        );
+        const renderCat = (key, title) => {
+          const list = (PPX_DATA.dishes && PPX_DATA.dishes[key]) || [];
+          if (!list.length) return '';
+          return '<div class="menu-section frame">' +
+                 '<h3 class="menu-title">'+title+'</h3>' +
+                 '<ul class="menu-list">'+ list.map(fmtItem).join('') + '</ul>' +
+                 '</div>';
+        };
+        if (menuWrap) {
+          const order = (PPX_DATA.cfg && PPX_DATA.cfg.menuOrder) || [];
+          const titles = {
+            meze: 'Meze – Vorspeisen', pide: 'Pide', kebap: 'Kebap vom Grill',
+            guevec: 'Güveç & Ofengerichte', vegetarisch: 'Vegetarisch',
+            beilagen: 'Beilagen', getraenke: 'Getränke', desserts: 'Desserts'
+          };
+          menuWrap.innerHTML = order.map(k => renderCat(k, titles[k]||k)).join('');
+        }
+      });
+    });
+
+    // Cookie Consent helpers (unverändert)
+    const KEY='pp-consent', banner=document.getElementById('cookieBanner');
+    try{ if(!localStorage.getItem(KEY)){ banner.style.display='flex'; } }catch(e){ banner.style.display='flex'; }
+    window.acceptCookies=function(){ try{ localStorage.setItem(KEY,'accepted'); }catch(e){} banner.remove(); };
+    window.declineCookies=function(){ try{ localStorage.setItem(KEY,'declined'); }catch(e){} banner.remove(); };
+    window.resetConsent=function(){ try{ localStorage.removeItem(KEY); }catch(e){} location.hash='#datenschutz'; location.reload(); };
+  })();
+  </script>
 </body>
 </html>
