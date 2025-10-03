@@ -65,7 +65,7 @@
   <section id="kontakt">
     <div class="container frame">
       <h2 class="section-title">Reservierung & Kontakt</h2>
-    <div class="section-sub">Wir freuen uns auf euch.</div>
+      <div class="section-sub">Wir freuen uns auf euch.</div>
       <p class="center" id="contact-block"><!-- auto --></p>
       <ul class="hours" id="hours-list"><!-- auto --></ul>
       <p class="center" style="margin-top:18px"><a class="cta" href="#top">Nach oben</a></p>
@@ -142,12 +142,13 @@
     <div class="ppx-brandbar">Powered by <strong>AI Elements</strong> ✨</div>
   </div>
 
-  <!-- Scripts -->
+  <!-- Scripts: EmailJS zuerst, dann PPX Loader (HIER ist die Loader-Stelle) -->
   <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
   <script defer src="bot/loader.js"
           data-ppx-loader
-          data-config="bot-data/bot.json?v=7"
-          data-widget="bot/index.js?v=7.9.4"
+          data-config="bot-data/bot.json?v=8.1.1"
+          data-widget="bot/index.js?v=8.1.1"
+          data-emailjs="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
           data-nocache></script>
 
   <!-- Automatisierung: Öffnungszeiten, Kontakt & Speisekarte (lädt direkt bot.json) -->
@@ -165,7 +166,7 @@
       });
 
       // JSON laden (unabhängig vom Bot)
-      fetch('bot-data/bot.json?v=7', {cache:'no-store'})
+      fetch('bot-data/bot.json?v=8.1.1', {cache:'no-store'})
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
         .then((PPX) => {
           const c = (PPX && PPX.cfg) || {};
@@ -192,7 +193,7 @@
             ).join('');
           }
 
-          // Speisekarte: Name (bold) + Info (normal) inline, Preis rechts
+          // Speisekarte
           const wrap = $('#menu-auto');
           if (wrap && PPX.dishes) {
             const order  = c.menuOrder || [];
