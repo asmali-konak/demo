@@ -1,83 +1,72 @@
 /* ============================================================================
-   PPX Service: Email – Robust v8.1
-   - Single Source: window.PPX_DATA.cfg.EMAIL (Alias __PPX_DATA__)
-   - init() versucht beide Formen (string / { publicKey })
-   - Klare Fehlermeldungen, nie "undefined"
-   - Template-Resolver: semantische Keys → echte Template-IDs
-   - Config-Validator + Self-Test
-   ============================================================================ */
+   PPX Email Service – minimal & robust (EmailJS v3)
+   Liest NUR aus window.PPX_DATA.EMAIL. Keine Globals außer window.PPX.
+   API:
+     PPX.services.email.validateEmailConfig() -> {ok:boolean, reason?}
+     PPX.services.email.ensureEmailJSReady()  -> Promise<{ok:boolean, reason?}>
+     PPX.services.email.template(key)         -> Template-ID (string|undefined)
+     PPX.services.email.send(tpl, params)     -> Promise<EmailJSResponse>
+============================================================================ */
 (function () {
-  'use strict';
-  var W = window;
-  var PPX = W.PPX = W.PPX || {};
-  PPX.services = PPX.services || {};
+  var w = window;
+  w.PPX = w.PPX || {};
+  var S = w.PPX.services = w.PPX.services || {};
 
-  function raw() { return (W.PPX_DATA || W.__PPX_DATA__ || {}); }
-  function cfg() { return (raw().cfg || {}); }
-  function emailCfg() { return (cfg().EMAIL || {}); }
+  function getCfg() { return (w.PPX_DATA && w.PPX_DATA.EMAIL) || {}; }
+  function has(v) { return typeof v === 'string' && v.trim().length > 0; }
 
-  function getPublicKey() { return (emailCfg().publicKey || '').toString().trim(); }
-  function getServiceId() { return (emailCfg().service || '').toString().trim(); }
-
-  // --- Template-Resolver ----------------------------------------------------
-  var TEMPLATE_ALIASES = {
-    reservationOwner: ['reservTemplate', 'toTemplate', 'reservationTemplate', 'template_reserv', 'template_reserv_brand'],
-    contactOwner:     ['contactTemplate', 'template_contact', 'template_kontakt_brand'],
-    autoReplyUser:    ['autoReplyTemplate', 'template_kunde', 'template_autoreply', 'template_kunde_brand']
-  };
-  function resolveTemplate(alias) {
-    var e = emailCfg();
-    var list = TEMPLATE_ALIASES[alias] || [];
-    for (var i = 0; i < list.length; i++) {
-      var key = list[i];
-      if (e[key]) return ('' + e[key]).trim();
-    }
-    return '';
-  }
-
-  // --- Validator & Self-Test -----------------------------------------------
   function validateEmailConfig() {
-    var miss = [];
-    if (!getPublicKey()) miss.push('EMAIL.publicKey');
-    if (!getServiceId()) miss.push('EMAIL.service');
-    var anyTpl = resolveTemplate('reservationOwner') || resolveTemplate('contactOwner') || resolveTemplate('autoReplyUser');
-    if (!anyTpl) miss.push('mind. 1 Template (reservationOwner/contactOwner/autoReplyUser)');
-    return { ok: miss.length === 0, missing: miss };
+    var C = getCfg();
+    if (!has(C.publicKey))  return { ok:false, reason:'Config: EMAIL.publicKey fehlt/leer' };
+    if (!has(C.service))    return { ok:false, reason:'Config: EMAIL.service fehlt/leer' };
+    if (!has(C.reservTemplate) && !has(C.contactTemplate) && !has(C.autoReplyTemplate))
+      return { ok:false, reason:'Config: Mind. eine Template-ID in EMAIL.*Template fehlt' };
+    return { ok:true };
   }
 
   function ensureEmailJSReady() {
-    var reasons = [];
-    if (!W.emailjs || typeof W.emailjs.send !== 'function') reasons.push('emailjs SDK fehlt');
-    var v = validateEmailConfig();
-    if (!v.ok) reasons.push('Config: ' + v.missing.join(', '));
-    if (reasons.length) return { ok: false, reason: reasons.join(' | ') };
-
-    try { try { W.emailjs.init(getPublicKey()); } catch (e1) { W.emailjs.init({ publicKey: getPublicKey() }); } }
-    catch (e) { return { ok: false, reason: 'init failed: ' + (e && e.message ? e.message : String(e)) }; }
-    return { ok: true };
+    return new Promise(function (resolve) {
+      var C = getCfg();
+      if (!w.emailjs) { resolve({ ok:false, reason:'emailjs SDK fehlt' }); return; }
+      try {
+        // v3 akzeptiert init('public_…') oder init({publicKey:'…'})
+        if (!w.__PPX_EMAILJS_INIT__) {
+          w.emailjs.init(C.publicKey);
+          w.__PPX_EMAILJS_INIT__ = true;
+        }
+        resolve({ ok:true });
+      } catch (e) {
+        resolve({ ok:false, reason:'init failed: '+ (e && e.message || e) });
+      }
+    });
   }
 
-  // --- Senden ---------------------------------------------------------------
-  function sendEmailJS(serviceId, templateId, params) {
-    var ready = ensureEmailJSReady();
-    if (!ready.ok) return Promise.reject(new Error(ready.reason));
-
-    var s = (serviceId || getServiceId()).trim();
-    var t = (templateId || '').trim();
-    var p = params || {};
-    if (!s) return Promise.reject(new Error('serviceId missing'));
-    if (!t) return Promise.reject(new Error('templateId missing'));
-
-    return W.emailjs.send(s, t, p, getPublicKey());
+  function template(alias) {
+    var C = getCfg();
+    var map = {
+      reservationOwner: C.reservTemplate,
+      contactOwner:     C.contactTemplate,
+      autoReply:        C.autoReplyTemplate
+    };
+    return map[alias] || C[alias];
   }
 
-  // Exporte
-  PPX.services.email = {
-    getPublicKey: getPublicKey,
-    getServiceId: getServiceId,
-    resolveTemplate: resolveTemplate,
+  function send(tpl, params) {
+    var C = getCfg();
+    if (!has(tpl)) return Promise.reject(new Error('templateId missing'));
+    if (!w.emailjs) return Promise.reject(new Error('emailjs SDK fehlt'));
+    try {
+      return w.emailjs.send(C.service, tpl, params || {});
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  // Public API
+  S.email = {
     validateEmailConfig: validateEmailConfig,
-    ensureEmailJSReady: ensureEmailJSReady,
-    sendEmailJS: sendEmailJS
+    ensureEmailJSReady:  ensureEmailJSReady,
+    template:            template,
+    send:                send
   };
 })();
