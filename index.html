@@ -142,90 +142,54 @@
     <div class="ppx-brandbar">Powered by <strong>AI Elements</strong> ✨</div>
   </div>
 
-  <!-- Scripts: EmailJS zuerst, dann PPX Loader (HIER ist die Loader-Stelle) -->
-  <script defer src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-  <script defer src="bot/loader.js"
+  <!-- PPX Loader – EINZIGE EmailJS-Einbindung über data-emailjs -->
+  <script id="ppx-bot-loader"
+          src="bot/loader.js"
           data-ppx-loader
           data-config="bot-data/bot.json?v=8.1.1"
           data-widget="bot/index.js?v=8.1.1"
           data-emailjs="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
-          data-nocache></script>
+          data-nocache="true"></script>
 
   <!-- Automatisierung: Öffnungszeiten, Kontakt & Speisekarte (lädt direkt bot.json) -->
   <script>
   (function () {
-    const on = (fn) => document.readyState !== 'loading' ? fn() : document.addEventListener('DOMContentLoaded', fn);
-    const $  = (s) => document.querySelector(s);
-
+    const on=(fn)=>document.readyState!=='loading'?fn():document.addEventListener('DOMContentLoaded',fn);
+    const $=(s)=>document.querySelector(s);
     on(() => {
       // CTA öffnet Bot
-      const cta = $('#cta-open-bot');
-      if (cta) cta.addEventListener('click', (e) => {
-        e.preventDefault();
-        const launch = $('#ppx-launch'); if (launch) launch.click();
-      });
+      const cta=$('#cta-open-bot'); if(cta) cta.addEventListener('click',(e)=>{ e.preventDefault(); const launch=$('#ppx-launch'); if(launch) launch.click(); });
 
       // JSON laden (unabhängig vom Bot)
-      fetch('bot-data/bot.json?v=8.1.1', {cache:'no-store'})
-        .then(r => r.ok ? r.json() : Promise.reject(r.status))
-        .then((PPX) => {
-          const c = (PPX && PPX.cfg) || {};
-
+      fetch('bot-data/bot.json?v=8.1.1',{cache:'no-store'})
+        .then(r=>r.ok?r.json():Promise.reject(r.status))
+        .then((PPX)=>{
+          const c=(PPX&&PPX.cfg)||{};
           // Kontakt
-          const contact = $('#contact-block');
-          if (contact) {
-            const telText = c.phone || '';
-            const telHref = 'tel:' + (telText || '').replace(/\s+/g,'');
-            const mail    = c.email || '';
-            const addr    = c.address || '';
-            const maps    = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr);
-            contact.innerHTML =
-              'Telefon: <strong><a href="'+telHref+'">'+telText+'</a></strong><br>' +
-              'WhatsApp: <strong><a href="'+telHref+'">'+telText+'</a></strong><br>' +
-              'Adresse: <strong><a href="'+maps+'" target="_blank" rel="noopener">'+addr+'</a></strong>';
+          const contact=$('#contact-block');
+          if(contact){
+            const telText=c.phone||''; const telHref='tel:'+(telText||'').replace(/\s+/g,'');
+            const mail=c.email||''; const addr=c.address||'';
+            const maps='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(addr);
+            contact.innerHTML='Telefon: <strong><a href="'+telHref+'">'+telText+'</a></strong><br>'+
+                              'WhatsApp: <strong><a href="'+telHref+'">'+telText+'</a></strong><br>'+
+                              'Adresse: <strong><a href="'+maps+'" target="_blank" rel="noopener">'+addr+'</a></strong>';
           }
-
           // Öffnungszeiten
-          const hours = $('#hours-list');
-          if (hours && Array.isArray(c.hoursLines)) {
-            hours.innerHTML = c.hoursLines.map(([d,t]) =>
-              '<li><span class="day">'+d+'</span><span class="fill"></span><span class="time">'+t+' Uhr</span></li>'
-            ).join('');
-          }
-
+          const hours=$('#hours-list');
+          if(hours&&Array.isArray(c.hoursLines)){ hours.innerHTML=c.hoursLines.map(([d,t])=>'<li><span class="day">'+d+'</span><span class="fill"></span><span class="time">'+t+' Uhr</span></li>').join(''); }
           // Speisekarte
-          const wrap = $('#menu-auto');
-          if (wrap && PPX.dishes) {
-            const order  = c.menuOrder || [];
-            const titles = {
-              meze: 'Meze – Vorspeisen', pide: 'Pide', kebap: 'Kebap vom Grill',
-              guevec: 'Güveç & Ofengerichte', vegetarisch: 'Vegetarisch',
-              beilagen: 'Beilagen', getraenke: 'Getränke', desserts: 'Desserts'
-            };
-            const fmtItem = (d) =>
-              '<li class="dish">'+
-                '<span class="name">'+d.name+'</span>'+
-                (d.info ? '<span class="info"> '+d.info+'</span>' : '')+
-                '<span class="dots" aria-hidden="true"></span>'+
-                '<span class="price">'+d.price+'</span>'+
-              '</li>';
-            const renderCat = (key) => {
-              const list = PPX.dishes[key] || [];
-              if (!list.length) return '';
-              return '<div class="menu-section frame">' +
-                     '<h3 class="menu-title">'+(titles[key]||key)+'</h3>' +
-                     '<ul class="menu-list">'+ list.map(fmtItem).join('') + '</ul>' +
-                     '</div>';
-            };
-            wrap.innerHTML = order.map(renderCat).join('');
+          const wrap=$('#menu-auto');
+          if(wrap&&PPX.dishes){
+            const order=c.menuOrder||[]; const titles={meze:'Meze – Vorspeisen',pide:'Pide',kebap:'Kebap vom Grill',guevec:'Güveç & Ofengerichte',vegetarisch:'Vegetarisch',beilagen:'Beilagen',getraenke:'Getränke',desserts:'Desserts'};
+            const fmtItem=(d)=>'<li class="dish"><span class="name">'+d.name+'</span>'+(d.info?'<span class="info"> '+d.info+'</span>':'')+'<span class="dots" aria-hidden="true"></span><span class="price">'+d.price+'</span></li>';
+            const renderCat=(key)=>{ const list=PPX.dishes[key]||[]; if(!list.length) return ''; return '<div class="menu-section frame"><h3 class="menu-title">'+(titles[key]||key)+'</h3><ul class="menu-list">'+list.map(fmtItem).join('')+'</ul></div>'; };
+            wrap.innerHTML=order.map(renderCat).join('');
           }
         })
-        .catch(() => {
-          const wrap = document.querySelector('#menu-auto');
-          if (wrap) wrap.innerHTML = '<p class="center small">Speisekarte derzeit nicht verfügbar.</p>';
-        });
+        .catch(()=>{ const wrap=document.querySelector('#menu-auto'); if(wrap) wrap.innerHTML='<p class="center small">Speisekarte derzeit nicht verfügbar.</p>'; });
 
-      // Cookie Consent (unverändert)
+      // Cookie Consent
       const KEY='pp-consent', banner=document.getElementById('cookieBanner');
       try{ if(!localStorage.getItem(KEY)){ banner.style.display='flex'; } }catch(e){ banner.style.display='flex'; }
       window.acceptCookies=function(){ try{ localStorage.setItem(KEY,'accepted'); }catch(e){} banner.remove(); };
