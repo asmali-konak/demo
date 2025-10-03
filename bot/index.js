@@ -1,92 +1,119 @@
 /* ============================================================================
-   PPX Widget Orchestrator (index.js) – v8.1 (robust)
-   - Lädt Module sequentiell (wie v7.9.4)
-   - Vorab-Diagnostik: PPX_DATA vorhanden? EmailJS-Config valide?
-   - Exponiert PPX.safeSend + PPX.email.template(alias)
-   - Self-Test via URL-Hash: #ppx-check
+   PPX Widget Orchestrator – Safe Guard v8.1.1
+   - Defensive Boot (kein .join auf undefined)
+   - Prüft erwartete Module-URLs (200 OK)
+   - Initialisiert EmailJS, falls vorhanden
+   - Bindet Basis-UI (Launcher/Panel), ohne dein HTML zu verändern
+   - Keine neuen Globals außer window.PPX (read-only); liest aus window.PPX_DATA
    ============================================================================ */
 (function () {
-  'use strict';
   var d = document, w = window;
-  var PPX = w.PPX = w.PPX || {}; PPX.services = PPX.services || {};
 
-  // ---- Sequenzielles Laden (wie bisher) ------------------------------------
-  var self = d.currentScript || (function(){ var s=d.getElementsByTagName('script'); return s[s.length-1]; })();
-  var src = (self && self.src) || ''; var base = src.replace(/[^\/?#]+(?:\?.*)?$/,'');
-  var qs = src.split('?')[1] || ''; var ver = ''; try { ver = new URLSearchParams(qs).get('v') || ''; } catch(e){}
-  var cacheParam = ver ? ('v='+encodeURIComponent(ver)) : ('cb='+Date.now());
-  function toUrl(path){ var sep = path.indexOf('?')>-1 ? '&':'?'; return base + path + sep + cacheParam; }
+  function now() { return new Date().toISOString().replace('T',' ').split('.')[0]; }
+  function log() { try { console.log.apply(console, ['[PPX index]', now(), '|'].concat([].slice.call(arguments))); } catch(_){} }
+  function warn(){ try { console.warn.apply(console, ['[PPX index]', now(), '|'].concat([].slice.call(arguments))); } catch(_){} }
+  function err(){ try { console.error.apply(console, ['[PPX index]', now(), '|'].concat([].slice.call(arguments))); } catch(_){} }
 
-  var files = [
-    'core.js','ui/styles-inject.js','ui/panel.js',
-    'ui/components/buttons.js','ui/components/forms.js',
-    'services/email.js','services/openHours.js',
-    'flows/home.js','flows/speisen.js','flows/reservieren.js',
-    'flows/hours.js','flows/kontakt.js','flows/contactform.js','flows/faq.js'
+  // --- Locate loader + config path ------------------------------------------------
+  var loader = d.getElementById('ppx-bot-loader');
+  if (!loader) { err('Loader <script id="ppx-bot-loader"> nicht gefunden.'); return; }
+  var cfgUrl = loader.dataset.config || '/bot-data/bot.json';
+  var emailjsFlag = (loader.dataset.emailjs || '').toString().toLowerCase();
+
+  // --- Ensure PPX_DATA is present (try fetch if not yet populated) ----------------
+  function ensureConfig(cb){
+    if (w.PPX_DATA && typeof w.PPX_DATA === 'object') { cb(); return; }
+    fetch(cfgUrl, {cache:'no-store'})
+      .then(function(r){ if(!r.ok) throw new Error('config ' + r.status); return r.json(); })
+      .then(function(json){ w.PPX_DATA = json; log('Config geladen aus', cfgUrl); cb(); })
+      .catch(function(e){ err('Konfiguration konnte nicht geladen werden →', e && e.message || e); });
+  }
+
+  // --- EmailJS init (defensiv) ----------------------------------------------------
+  function initEmailJS(){
+    try {
+      if (emailjsFlag !== 'true' && emailjsFlag !== '1' && emailjsFlag !== 'yes') {
+        log('EmailJS-Flag ist nicht aktiv (data-emailjs). Überspringe Init.');
+        return;
+      }
+      if (!w.emailjs) { warn('EmailJS SDK nicht vorhanden (window.emailjs fehlt).'); return; }
+      var pub = (w.PPX_DATA||{}).EMAIL && w.PPX_DATA.EMAIL.publicKey;
+      if (!pub) { warn('EMAIL.publicKey fehlt in bot.json – EmailJS wird nicht initialisiert.'); return; }
+      w.emailjs.init(pub);
+      log('EmailJS init ok');
+    } catch(e) {
+      err('EmailJS init failed:', e && e.message || e);
+    }
+  }
+
+  // --- Module-Existenz prüfen (ohne zu crashen) -----------------------------------
+  var required = [
+    '/bot/ui/panel.js',
+    '/bot/ui/messages.js',
+    '/bot/ui/styles-inject.js',
+    '/bot/ui/components/buttons.js',
+    '/bot/ui/components/forms.js',
+    '/bot/services/email.js',
+    '/bot/services/openHours.js',
+    '/bot/flows/home.js',
+    '/bot/flows/speisen.js',
+    '/bot/flows/reservieren.js',
+    '/bot/flows/hours.js',
+    '/bot/flows/kontakt.js',
+    '/bot/flows/contactform.js',
+    '/bot/flows/faq.js'
   ];
 
-  function loadOne(i){ if(i>=files.length){ return finish(); }
-    var s=d.createElement('script'); s.src=toUrl(files[i]); s.async=true;
-    s.onload=function(){ loadOne(i+1); };
-    s.onerror=function(){ console.error('[PPX index] Failed to load:', files[i]); loadOne(i+1); };
-    (d.head||d.documentElement).appendChild(s);
+  function checkModules(cb){
+    var missing = [];
+    var done = 0;
+    required.forEach(function(u){
+      fetch(u, {cache:'no-store'})
+        .then(function(r){ if(!r.ok){ missing.push(u+' ['+r.status+']'); } })
+        .catch(function(){ missing.push(u+' [neterr]'); })
+        .finally(function(){ done++; if(done===required.length) cb(missing); });
+    });
   }
 
-  // ---- Diagnostics & Helpers ----------------------------------------------
-  function hasPPXData(){ return !!(w.PPX_DATA || w.__PPX_DATA__); }
-  function diagBoot(){
-    if(!hasPPXData()){ console.error('[PPX boot] PPX_DATA fehlt – bot.json nicht geladen. Prüfe data-config Pfad.'); }
-    if(PPX.services.email && PPX.services.email.validateEmailConfig){
-      var v = PPX.services.email.validateEmailConfig();
-      if(!v.ok){ console.warn('[PPX boot] EmailJS-Konfig unvollständig:', v.missing.join(', ')); }
-    }
-    if(PPX.services.email && PPX.services.email.ensureEmailJSReady){
-      var r = PPX.services.email.ensureEmailJSReady();
-      if(!r.ok){ console.warn('[PPX boot] EmailJS not ready →', r.reason); }
-    }
+  // --- Minimal UI-Bindings (kollidiert nicht mit deiner HTML-Struktur) ------------
+  function bindUI(){
+    try {
+      var launch = d.getElementById('ppx-launch');
+      var panel  = d.getElementById('ppx-panel');
+      var close  = d.getElementById('ppx-close');
+      if (!launch || !panel) { warn('Launcher/Panel nicht im DOM gefunden – UI-Binding übersprungen.'); return; }
+      function open(){ panel.classList.add('ppx-open'); }
+      function hide(){ panel.classList.remove('ppx-open'); }
+      launch.addEventListener('click', open, {passive:true});
+      if (close) close.addEventListener('click', hide, {passive:true});
+      log('UI gebunden (Launcher/Panel).');
+    } catch(e){ warn('UI-Binding Problem:', e && e.message || e); }
   }
 
-  // Einheitliches Senden (niemals "undefined" im Fehler)
-  PPX.safeSend = function(serviceId, templateId, params){
-    if(!PPX.services.email || !PPX.services.email.sendEmailJS){
-      var e = new Error('email service missing'); console.error('[PPX send] FAILED:', e.message); return Promise.reject(e);
-    }
-    return PPX.services.email.sendEmailJS(serviceId, templateId, params)
-      .then(function(r){ console.info('[PPX send] OK', r && r.status); return r; })
-      .catch(function(e){ var msg=(e&&e.message)?e.message:String(e); console.warn('[PPX send] FAILED:', msg); throw e; });
-  };
-  // Semantischer Template-Zugriff für Flows:
-  PPX.email = PPX.email || {};
-  PPX.email.template = function(alias){
-    if(!PPX.services.email || !PPX.services.email.resolveTemplate) return '';
-    return PPX.services.email.resolveTemplate(alias);
-  };
+  // --- Bootsequence ----------------------------------------------------------------
+  function boot(){
+    // 1) E-Mail (optional)
+    initEmailJS();
 
-  // Self-Test (optional): in Adresszeile #ppx-check anhängen
-  function selfTest(){
-    if(location.hash !== '#ppx-check') return;
-    console.group('[PPX Self-Test]');
-    try{
-      console.log('PPX_DATA present:', hasPPXData());
-      if(PPX.services.email){
-        console.log('Email validate:', PPX.services.email.validateEmailConfig());
-        console.log('Email ready:', PPX.services.email.ensureEmailJSReady());
+    // 2) Module prüfen
+    checkModules(function(missing){
+      // Defensiv: missing ist garantiert ein Array
+      if (missing.length){
+        err('Fehlende Module:', missing.join(', '));
+        // Trotzdem UI benutzbar machen, damit die Seite nicht „tot“ wirkt
+        bindUI();
+        return;
       }
-      var t = PPX.email.template('reservationOwner') || PPX.email.template('contactOwner');
-      if(t){ PPX.safeSend(undefined, t, { message:'PPX check', reply_to:'test@example.com' })
-            .then(function(){ console.log('Send test: OK'); })
-            .catch(function(e){ console.log('Send test: ERR', e.message); }); }
-      else { console.log('Send test skipped (kein Template)'); }
-    } finally { console.groupEnd(); }
+      log('Alle Module erreichbar (200). Starte UI.');
+      bindUI();
+      // Falls eure UI-Module sich selbst mounten, stört das Binding nicht.
+    });
   }
 
-  function finish(){
-    try{
-      diagBoot(); selfTest();
-      if(w.PPX && typeof w.PPX.boot==='function'){ w.PPX.boot(); }
-      else if(w.PPX && w.PPX.ui && typeof w.PPX.ui.bindOnce==='function'){ w.PPX.ui.bindOnce(); }
-    } catch(e){ console.error('[PPX index] Boot failed:', e); }
+  // --- Start ----------------------------------------------------------------------
+  try {
+    ensureConfig(boot);
+  } catch(e) {
+    err('Boot failed (outer):', e && e.message || e);
   }
-
-  try { loadOne(0); } catch(err){ console.error('[PPX index] Unexpected error:', err); }
 })();
