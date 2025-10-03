@@ -30,7 +30,7 @@
     "EMAIL": {
       "publicKey": "J1KTj7-7VJBsV-LHc",
       "service": "service_asmali_konak",
-      "toTemplate": "template_reserv_asmali",
+      "reservTemplate": "template_reserv_asmali",
       "autoReplyTemplate": "template_kunde_asmali",
       "contactTemplate": "template_kontakt_asmali"
     },
