@@ -29,10 +29,10 @@
     },
     "EMAIL": {
       "publicKey": "J1KTj7-7VJBsV-LHc",
-      "service": "service_asmali",
-      "toTemplate": "template_asmali_reserv",
-      "autoReplyTemplate": "template_asmali_kunde",
-      "contactTemplate": "template_asmali_kontakt"
+      "service": "service_asmali_konak",
+      "toTemplate": "template_reserv_asmali",
+      "autoReplyTemplate": "template_kunde_asmali",
+      "contactTemplate": "template_kontakt_asmali"
     },
     "menuOrder": ["meze", "pide", "kebap", "guevec", "vegetarisch", "beilagen", "getraenke", "desserts"],
     "menuPdf": "./pdf/speisekarte_test.pdf",
