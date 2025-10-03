@@ -100,7 +100,7 @@
   PPX.boot = boot;
 
   // Vorbereiten von Teil-Namespaces, die andere Dateien befüllen
-  PPX.ui = PPX.ui || {};          // panel, components, helpers
+  PPX.ui = PPX.ui || {};            // panel, components, helpers
   PPX.services = PPX.services || {}; // email, openHours
-  PPX.flows = PPX.flows || {};    // home, speisen, reservieren, hours, kontakt, contactform, faq
+  PPX.flows = PPX.flows || {};      // home, speisen, reservieren, hours, kontakt, contactform, faq
 })();
