@@ -157,28 +157,21 @@
     const on=(fn)=>document.readyState!=='loading'?fn():document.addEventListener('DOMContentLoaded',fn);
     const $=(s)=>document.querySelector(s);
     on(() => {
-      // CTA öffnet Bot
       const cta=$('#cta-open-bot'); if(cta) cta.addEventListener('click',(e)=>{ e.preventDefault(); const launch=$('#ppx-launch'); if(launch) launch.click(); });
-
-      // JSON laden (unabhängig vom Bot)
       fetch('bot-data/bot.json?v=8.1.1',{cache:'no-store'})
         .then(r=>r.ok?r.json():Promise.reject(r.status))
         .then((PPX)=>{
           const c=(PPX&&PPX.cfg)||{};
-          // Kontakt
           const contact=$('#contact-block');
           if(contact){
             const telText=c.phone||''; const telHref='tel:'+(telText||'').replace(/\s+/g,'');
-            const mail=c.email||''; const addr=c.address||'';
-            const maps='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(addr);
+            const addr=c.address||''; const maps='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(addr);
             contact.innerHTML='Telefon: <strong><a href="'+telHref+'">'+telText+'</a></strong><br>'+
                               'WhatsApp: <strong><a href="'+telHref+'">'+telText+'</a></strong><br>'+
                               'Adresse: <strong><a href="'+maps+'" target="_blank" rel="noopener">'+addr+'</a></strong>';
           }
-          // Öffnungszeiten
           const hours=$('#hours-list');
           if(hours&&Array.isArray(c.hoursLines)){ hours.innerHTML=c.hoursLines.map(([d,t])=>'<li><span class="day">'+d+'</span><span class="fill"></span><span class="time">'+t+' Uhr</span></li>').join(''); }
-          // Speisekarte
           const wrap=$('#menu-auto');
           if(wrap&&PPX.dishes){
             const order=c.menuOrder||[]; const titles={meze:'Meze – Vorspeisen',pide:'Pide',kebap:'Kebap vom Grill',guevec:'Güveç & Ofengerichte',vegetarisch:'Vegetarisch',beilagen:'Beilagen',getraenke:'Getränke',desserts:'Desserts'};
@@ -189,7 +182,6 @@
         })
         .catch(()=>{ const wrap=document.querySelector('#menu-auto'); if(wrap) wrap.innerHTML='<p class="center small">Speisekarte derzeit nicht verfügbar.</p>'; });
 
-      // Cookie Consent
       const KEY='pp-consent', banner=document.getElementById('cookieBanner');
       try{ if(!localStorage.getItem(KEY)){ banner.style.display='flex'; } }catch(e){ banner.style.display='flex'; }
       window.acceptCookies=function(){ try{ localStorage.setItem(KEY,'accepted'); }catch(e){} banner.remove(); };
