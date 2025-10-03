@@ -1,72 +1,145 @@
 /* ============================================================================
-   PPX Email Service – minimal & robust (EmailJS v3)
-   Liest NUR aus window.PPX_DATA.EMAIL. Keine Globals außer window.PPX.
-   API:
-     PPX.services.email.validateEmailConfig() -> {ok:boolean, reason?}
-     PPX.services.email.ensureEmailJSReady()  -> Promise<{ok:boolean, reason?}>
-     PPX.services.email.template(key)         -> Template-ID (string|undefined)
-     PPX.services.email.send(tpl, params)     -> Promise<EmailJSResponse>
-============================================================================ */
+   /bot/services/email.js  –  v7.9.4 Shim-kompatibel
+   Stellt alte API `EM.sendEmailJS(...)` bereit und moderne Wrapper.
+   Single Source of Truth: window.PPX_DATA.EMAIL
+   Keine neuen Globals außer window.PPX.
+   ============================================================================ */
 (function () {
-  var w = window;
-  w.PPX = w.PPX || {};
-  var S = w.PPX.services = w.PPX.services || {};
+  'use strict';
+  var W = window, D = document;
+  var PPX = W.PPX = W.PPX || {};
+  PPX.services = PPX.services || {};
+  var NS = PPX.services.email = PPX.services.email || {};
 
-  function getCfg() { return (w.PPX_DATA && w.PPX_DATA.EMAIL) || {}; }
-  function has(v) { return typeof v === 'string' && v.trim().length > 0; }
+  // ---------- Utils -----------------------------------------------------------
+  function log(){ try{ console.log.apply(console, ['[PPX email]'].concat([].slice.call(arguments))); }catch(e){} }
+  function warn(){ try{ console.warn.apply(console, ['[PPX email]'].concat([].slice.call(arguments))); }catch(e){} }
+  function err(){ try{ console.error.apply(console, ['[PPX email]'].concat([].slice.call(arguments))); }catch(e){} }
 
-  function validateEmailConfig() {
-    var C = getCfg();
-    if (!has(C.publicKey))  return { ok:false, reason:'Config: EMAIL.publicKey fehlt/leer' };
-    if (!has(C.service))    return { ok:false, reason:'Config: EMAIL.service fehlt/leer' };
-    if (!has(C.reservTemplate) && !has(C.contactTemplate) && !has(C.autoReplyTemplate))
-      return { ok:false, reason:'Config: Mind. eine Template-ID in EMAIL.*Template fehlt' };
-    return { ok:true };
+  function EMAIL(){ return (W.PPX_DATA && W.PPX_DATA.EMAIL) || {}; }
+  function cfg(){ return (W.PPX_DATA && W.PPX_DATA.cfg) || {}; }
+  function safeStr(v){ return (v==null)?'':String(v); }
+
+  // Map „Kinds“ → Templateschlüssel in PPX_DATA.EMAIL
+  var KIND_MAP = {
+    contact: 'contactTemplate',
+    reserv:  'reservTemplate',
+    reserve: 'reservTemplate',
+    booking: 'reservTemplate',
+    autoreply: 'autoReplyTemplate'
+  };
+
+  // ---------- Guards ----------------------------------------------------------
+  function ensureSdk(){
+    if (!W.emailjs) { warn('EmailJS SDK fehlt (window.emailjs).'); return false; }
+    return true;
   }
 
-  function ensureEmailJSReady() {
-    return new Promise(function (resolve) {
-      var C = getCfg();
-      if (!w.emailjs) { resolve({ ok:false, reason:'emailjs SDK fehlt' }); return; }
-      try {
-        // v3 akzeptiert init('public_…') oder init({publicKey:'…'})
-        if (!w.__PPX_EMAILJS_INIT__) {
-          w.emailjs.init(C.publicKey);
-          w.__PPX_EMAILJS_INIT__ = true;
-        }
-        resolve({ ok:true });
-      } catch (e) {
-        resolve({ ok:false, reason:'init failed: '+ (e && e.message || e) });
+  function ensureKeys(){
+    var E = EMAIL();
+    var ok = !!(E.publicKey && E.service);
+    if (!ok){
+      warn('EMAIL.publicKey oder EMAIL.service fehlt in bot.json.');
+    }
+    return ok;
+  }
+
+  // ---------- Core Sender -----------------------------------------------------
+  /**
+   * Low-level Send (ruft emailjs.send).
+   * @param {string} templateId - exakte Template-ID (z. B. 'template_abcd123').
+   * @param {object} params - Template-Parameter (name, message, reply_to, etc.).
+   * @returns {Promise<{status:number,text:string}>}
+   */
+  function sendTemplate(templateId, params){
+    return new Promise(function(resolve, reject){
+      try{
+        if (!ensureSdk() || !ensureKeys()) return reject(new Error('EmailJS not ready'));
+        var E = EMAIL();
+        // emailjs.init nur aufrufen, wenn möglich/sinnvoll (idempotent ok)
+        try{ W.emailjs.init(E.publicKey); }catch(e){ /* already inited or sdk variant */ }
+        // Defaults aus cfg
+        var defaults = {
+          site_name: cfg().siteTitle || cfg().brand || 'Website',
+          timestamp: new Date().toISOString()
+        };
+        var data = Object.assign({}, defaults, params || {});
+
+        W.emailjs.send(E.service, templateId, data)
+          .then(function(r){ log('send ok', templateId, r && r.text || r); resolve(r); })
+          .catch(function(e){ err('send fail', templateId, e && e.text || e); reject(e); });
+      }catch(e){
+        reject(e);
       }
     });
   }
 
-  function template(alias) {
-    var C = getCfg();
-    var map = {
-      reservationOwner: C.reservTemplate,
-      contactOwner:     C.contactTemplate,
-      autoReply:        C.autoReplyTemplate
-    };
-    return map[alias] || C[alias];
-  }
-
-  function send(tpl, params) {
-    var C = getCfg();
-    if (!has(tpl)) return Promise.reject(new Error('templateId missing'));
-    if (!w.emailjs) return Promise.reject(new Error('emailjs SDK fehlt'));
-    try {
-      return w.emailjs.send(C.service, tpl, params || {});
-    } catch (e) {
-      return Promise.reject(e);
+  /**
+   * Kompatible Shim-API:
+   * EM.sendEmailJS(kindOrTemplate, params)
+   *
+   * - Wenn `kindOrTemplate` einem bekannten „Kind“ entspricht (contact/reserv/…),
+   *   wird die Template-ID aus PPX_DATA.EMAIL genommen.
+   * - Sonst behandeln wir `kindOrTemplate` als direkte Template-ID.
+   */
+  function sendEmailJS(kindOrTemplate, params){
+    var kind = safeStr(kindOrTemplate).toLowerCase().trim();
+    var E = EMAIL();
+    var key = KIND_MAP[kind]; // z.B. 'contactTemplate'
+    var tpl = key ? E[key] : kindOrTemplate; // direkte ID, wenn kein Kind
+    if (!tpl){
+      return Promise.reject(new Error('Template-ID fehlt (kind="'+kind+'")'));
     }
+    return sendTemplate(tpl, params);
   }
 
-  // Public API
-  S.email = {
-    validateEmailConfig: validateEmailConfig,
-    ensureEmailJSReady:  ensureEmailJSReady,
-    template:            template,
-    send:                send
-  };
+  // ---------- Convenience Wrapper --------------------------------------------
+  /**
+   * Modernere Kurzform: send(kindOrTemplate, params)
+   */
+  function send(kindOrTemplate, params){
+    return sendEmailJS(kindOrTemplate, params);
+  }
+
+  /**
+   * Spezialisierte Helfer, falls in Flows verwendet:
+   */
+  function sendContact(formData){
+    // Erwartete Felder: name, email, phone, message, subject
+    var p = Object.assign({
+      subject: 'Kontaktanfrage',
+      reply_to: safeStr(formData && formData.email)
+    }, formData||{});
+    return sendEmailJS('contact', p);
+  }
+
+  function sendReservation(formData){
+    // Erwartete Felder: name, email, phone, date, time, persons, note
+    var p = Object.assign({
+      subject: 'Reservierungsanfrage',
+      reply_to: safeStr(formData && formData.email)
+    }, formData||{});
+    return sendEmailJS('reserv', p);
+  }
+
+  function autoReply(toEmail, params){
+    var p = Object.assign({
+      to_email: safeStr(toEmail),
+      subject: 'Danke für Ihre Nachricht',
+      reply_to: safeStr(toEmail)
+    }, params||{});
+    return sendEmailJS('autoreply', p);
+  }
+
+  // ---------- Public API (Pizza-Papa-kompatibel) ------------------------------
+  // Alter Alias „EM“ wurde im Flow oft so verwendet:
+  // const EM = PPX.services.email; EM.sendEmailJS(...)
+  NS.sendEmailJS = sendEmailJS;
+  NS.send        = send;
+  NS.sendContact = sendContact;
+  NS.sendReservation = sendReservation;
+  NS.autoReply   = autoReply;
+
+  // Optional: kleine Diagnose für Entwickler
+  log('Service geladen. SDK:', !!W.emailjs, 'Keys:', ensureKeys());
 })();
