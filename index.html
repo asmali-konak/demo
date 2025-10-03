@@ -147,7 +147,7 @@
           src="bot/loader.js"
           data-ppx-loader
           data-config="/bot-data/bot.json?v=8.1.1"
-          data-widget="bot/index.js?v=8.1.1"
+          data-widget="/bot/index.js?v=8.1.1"
           data-emailjs="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
           data-nocache="true"></script>
 
@@ -158,7 +158,7 @@
     const $=(s)=>document.querySelector(s);
     on(() => {
       const cta=$('#cta-open-bot'); if(cta) cta.addEventListener('click',(e)=>{ e.preventDefault(); const launch=$('#ppx-launch'); if(launch) launch.click(); });
-      fetch('bot-data/bot.json?v=8.1.1',{cache:'no-store'})
+      fetch('/bot-data/bot.json?v=8.1.1',{cache:'no-store'})
         .then(r=>r.ok?r.json():Promise.reject(r.status))
         .then((PPX)=>{
           const c=(PPX&&PPX.cfg)||{};
