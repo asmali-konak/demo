@@ -1,9 +1,5 @@
 /* ============================================================================
    /bot/services/email.js – Auto-Discovery + SDK-Load + Init
-   - Findet EMAIL-Config (Top-Level oder unter cfg.*)
-   - Lädt EmailJS-SDK selbst (aus data-emailjs des Loaders, sonst CDN)
-   - Init mit Public Key; send nutzt service + template (oder Aliase)
-   - API: PPX.services.email.{sendEmailJS, send, sendContact, sendReservation, autoReply}
    ============================================================================ */
 (function () {
   'use strict';
@@ -11,7 +7,6 @@
   PPX.services = PPX.services || {};
   var SVC = PPX.services.email = {};
 
-  // ---- Utils ----------------------------------------------------------------
   function log(){ try{ console.log.apply(console, ['[PPX email]'].concat([].slice.call(arguments))); }catch(e){} }
   function warn(){ try{ console.warn.apply(console, ['[PPX email]'].concat([].slice.call(arguments))); }catch(e){} }
   function err(){ try{ console.error.apply(console, ['[PPX email]'].concat([].slice.call(arguments))); }catch(e){} }
@@ -19,7 +14,6 @@
   function DATA(){ return (W.PPX_DATA||{}); }
   function CFG(){ return (DATA().cfg||{}); }
 
-  // ---- Config: Auto-Discovery & Normalisierung ------------------------------
   function findEmailBlock() {
     var D = DATA(), C = CFG(), cand = [];
     if (D.EMAIL)   cand.push({p:'EMAIL',   o:D.EMAIL});
@@ -52,7 +46,6 @@
   }
   function keysOk(N){ return !!(N.service && N.publicKey); }
 
-  // ---- SDK laden & init -----------------------------------------------------
   function sdkUrl() {
     var tag = document.getElementById('ppx-bot-loader');
     return (tag && tag.getAttribute('data-emailjs')) ||
@@ -70,7 +63,6 @@
   }
   function init(publicKey){ try{ W.emailjs && W.emailjs.init && W.emailjs.init(publicKey); }catch(e){} }
 
-  // ---- Core Sender ----------------------------------------------------------
   function sendTemplate(tplId, params){
     var N = norm();
     if (!keysOk(N)) {
@@ -90,17 +82,18 @@
       .catch(function(e){ err('send FAIL', e && (e.text||e.message)||e); throw e; });
   }
 
-  // ---- API ------------------------------------------------------------------
   var KIND = { contact:'contact', reserv:'reserv', reserve:'reserv', booking:'reserv', autoreply:'autoreply' };
   function tplFor(kindOrId){
     var k = S(kindOrId).toLowerCase().trim(), N = norm(), m = KIND[k];
     return m ? N.templates[m] : kindOrId;
   }
+
   function sendEmailJS(kindOrTemplate, params){
     var tpl = tplFor(kindOrTemplate);
     if (!tpl) return Promise.reject(new Error('Template-ID unbekannt/leer für "'+kindOrTemplate+'"'));
     return sendTemplate(tpl, params);
   }
+
   function send(kindOrTemplate, params){ return sendEmailJS(kindOrTemplate, params); }
   function sendContact(form){ 
     form = form || {};
@@ -108,20 +101,27 @@
       subject:'Kontaktanfrage',
       from_email: String(form.email||''),
       reply_to:   String(form.email||''),
-      from_name:  String((form.name||'') || (form.email||'').split('@')[0] || 'Gast')
+      from_name:  String((form.name||'') || (form.email||'').split('@')[0] || 'Gast'),
+      email:      String(form.email||'')         // <- für Templates mit {{email}}
     }, form));
   }
   function sendReservation(form){
     form = form || {};
     return sendEmailJS('reserv', Object.assign({
       subject:'Reservierungsanfrage',
-      from_email: String(form.email||''),
-      reply_to:   String(form.email||''),
-      from_name:  String(form.name || (form.email||'').split('@')[0] || 'Gast')
+      from_email: String(form.email||form.from_email||''),
+      reply_to:   String(form.email||form.from_email||''),
+      from_name:  String(form.name || (form.email||'').split('@')[0] || 'Gast'),
+      email:      String(form.email||form.from_email||'') // <- für Templates mit {{email}}
     }, form));
   }
   function autoReply(toEmail, params){ 
-    return sendEmailJS('autoreply', Object.assign({ to_email:String(toEmail||''), reply_to:String(toEmail||'') }, params||{})); 
+    var e = String(toEmail||'');
+    return sendEmailJS('autoreply', Object.assign({
+      to_email: e,   // viele Templates nutzen das
+      email:   e,    // dein Template nutzt {{email}} in "To Email"
+      reply_to:e
+    }, params||{})); 
   }
 
   SVC.sendEmailJS = sendEmailJS;
@@ -130,7 +130,6 @@
   SVC.sendReservation = sendReservation;
   SVC.autoReply = autoReply;
 
-  // Diagnose
   (function(){
     var N = norm();
     log('Service geladen. SDK:', !!W.emailjs, 'Keys OK:', keysOk(N), 'Quelle:', N.sourcePath, 'Templates:', N.templates);
