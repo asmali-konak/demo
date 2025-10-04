@@ -1,4 +1,56 @@
 {
+  "THEME": {
+    "root": {
+      "fontBody": "'Cormorant Garamond', Georgia, serif",
+      "fontHeading": "Cinzel, serif",
+      "fontMono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
+
+      "text": "#2b2a29",
+      "textMuted": "#6b5f57",
+      "bg": "#e7dbc0",
+      "surface": "#faf6eb",
+
+      "primary": "#173b2d",
+      "primaryContrast": "#ffffff",
+      "accent": "#c9a667",
+      "link": "#5b2734",
+
+      "border": "#d6c9b3",
+      "radiusSm": "8px",
+      "radiusMd": "12px",
+      "radiusLg": "18px",
+      "radiusFull": "999px",
+
+      "spaceXS": "4px",
+      "spaceS": "8px",
+      "spaceM": "12px",
+      "spaceL": "16px",
+      "spaceXL": "24px",
+
+      "shadowSm": "0 4px 12px rgba(0,0,0,.12)",
+      "shadowMd": "0 6px 20px rgba(0,0,0,.10)",
+      "shadowLg": "0 28px 80px rgba(0,0,0,.35)",
+
+      "focusOutline": "2px dashed #c9a667",
+      "transitionFast": "120ms",
+      "transition": "200ms",
+      "transitionSlow": "320ms",
+
+      "zChat": "100000"
+    },
+    "bot": {
+      "bg": "#0a2a21",
+      "surface": "rgba(255,255,255,.06)",
+      "header": "#0f3a2f",
+      "text": "#f7faf8",
+      "chip": "rgba(255,255,255,.06)",
+      "chipBorder": "rgba(255,255,255,.18)",
+      "brandDot": "#0f3a2f",
+      "brandbarBg": "rgba(255,255,255,.92)",
+      "brandbarText": "#11231c"
+    }
+  },
+
   "cfg": {
     "brand": "Asmali Konak",
     "phone": "XXXX / XXXXXXXX",
