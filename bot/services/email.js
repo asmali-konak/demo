@@ -1,5 +1,5 @@
 /* ============================================================================
-   /bot/services/email.js – Auto-Discovery + SDK-Load + Init (kompakt)
+   /bot/services/email.js – Auto-Discovery + SDK-Load + Init
    - Findet EMAIL-Config (Top-Level oder unter cfg.*)
    - Lädt EmailJS-SDK selbst (aus data-emailjs des Loaders, sonst CDN)
    - Init mit Public Key; send nutzt service + template (oder Aliase)
@@ -90,23 +90,39 @@
       .catch(function(e){ err('send FAIL', e && (e.text||e.message)||e); throw e; });
   }
 
-  // ---- API (Pizza-Papa kompatibel) ------------------------------------------
+  // ---- API ------------------------------------------------------------------
   var KIND = { contact:'contact', reserv:'reserv', reserve:'reserv', booking:'reserv', autoreply:'autoreply' };
   function tplFor(kindOrId){
     var k = S(kindOrId).toLowerCase().trim(), N = norm(), m = KIND[k];
-    return m ? N.templates[m] : kindOrId; // „contact“ → ID; sonst direkte ID
+    return m ? N.templates[m] : kindOrId;
   }
-
   function sendEmailJS(kindOrTemplate, params){
     var tpl = tplFor(kindOrTemplate);
     if (!tpl) return Promise.reject(new Error('Template-ID unbekannt/leer für "'+kindOrTemplate+'"'));
     return sendTemplate(tpl, params);
   }
-
   function send(kindOrTemplate, params){ return sendEmailJS(kindOrTemplate, params); }
-  function sendContact(form){ return sendEmailJS('contact', Object.assign({ subject:'Kontaktanfrage', reply_to:S(form&&form.email) }, form||{})); }
-  function sendReservation(form){ return sendEmailJS('reserv', Object.assign({ subject:'Reservierungsanfrage', reply_to:S(form&&form.email) }, form||{})); }
-  function autoReply(toEmail, params){ return sendEmailJS('autoreply', Object.assign({ to_email:S(toEmail), subject:'Danke für Ihre Nachricht', reply_to:S(toEmail) }, params||{})); }
+  function sendContact(form){ 
+    form = form || {};
+    return sendEmailJS('contact', Object.assign({
+      subject:'Kontaktanfrage',
+      from_email: String(form.email||''),
+      reply_to:   String(form.email||''),
+      from_name:  String((form.name||'') || (form.email||'').split('@')[0] || 'Gast')
+    }, form));
+  }
+  function sendReservation(form){
+    form = form || {};
+    return sendEmailJS('reserv', Object.assign({
+      subject:'Reservierungsanfrage',
+      from_email: String(form.email||''),
+      reply_to:   String(form.email||''),
+      from_name:  String(form.name || (form.email||'').split('@')[0] || 'Gast')
+    }, form));
+  }
+  function autoReply(toEmail, params){ 
+    return sendEmailJS('autoreply', Object.assign({ to_email:String(toEmail||''), reply_to:String(toEmail||'') }, params||{})); 
+  }
 
   SVC.sendEmailJS = sendEmailJS;
   SVC.send = send;
