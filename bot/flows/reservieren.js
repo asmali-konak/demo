@@ -1,23 +1,26 @@
 /* ============================================================================
-   PPX Flow: Reservieren (reservieren.js) – v7.9.4
+   PPX Flow: Reservieren – nutzt PPX.services.email.sendReservation(...)
+   - Kein Service-/Template-Piping im Flow (macht der Email-Service)
+   - Sendet auf "reserv" (oder direkte reservTemplate-ID, via Service)
+   - Optional: to_email Fallback aus cfg.email / EMAIL.to
+   - Optional: Auto-Reply an Gast, wenn Template vorhanden
    ============================================================================ */
 (function () {
   'use strict';
 
   var W = window, D = document;
   var PPX = W.PPX = W.PPX || {};
-
-  var UI = PPX.ui || {};
-  var U  = PPX.util || {};
-  var DLY = PPX.D || {};
+  var UI = PPX.ui || {}, U = PPX.util || {}, DLY = PPX.D || {};
   var OH = (PPX.services && PPX.services.openHours) || {};
-  var EM = (PPX.services && PPX.services.email) || {};
   var Forms = (UI && UI.forms) || {};
+
+  // Live-Lookup: immer frisch holen (falls Services später laden)
+  function EM(){ return (W.PPX && W.PPX.services && W.PPX.services.email) || null; }
+  function CFG(){ try { return (PPX.data && PPX.data.cfg && PPX.data.cfg()) || {}; } catch(e){ return {}; } }
 
   var RESV = null;
 
-  // --- helpers ---------------------------------------------------------------
-  function cfg(){ try { return (PPX.data && PPX.data.cfg && PPX.data.cfg()) || {}; } catch(e){ return {}; } }
+  // ---- helpers --------------------------------------------------------------
   function todayISO(){
     var d = new Date();
     var m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
@@ -35,8 +38,12 @@
     var dd = String(d.getDate()).padStart(2,'0'), mm = String(d.getMonth()+1).padStart(2,'0');
     return wd+', '+dd+'.'+mm+'.';
   }
+  function toEmailFallback(){
+    var c = CFG();
+    return c.email || (c.EMAIL && (c.EMAIL.to || c.EMAIL.toEmail)) || '';
+  }
 
-  // --- flow: start -----------------------------------------------------------
+  // ---- flow: start ----------------------------------------------------------
   function stepReservieren(){
     RESV = { name:'', dateISO:'', dateReadable:'', time:'', persons:'', phone:'', email:'' };
 
@@ -44,8 +51,6 @@
     B.setAttribute('data-block','resv-name');
 
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    var backScopeIdx = (UI.getScopeIndex ? UI.getScopeIndex() : 1) - 1;
-
     C.appendChild(UI.note('Du möchtest gerne reservieren?'));
     try { UI.keepBottom(); } catch(e){}
 
@@ -62,19 +67,16 @@
         U.delay(renderResvDate, DLY.step || 450);
       }, 'ppx-cta', '➡️'));
       C.appendChild(r);
-
-      B.appendChild(UI.navBottom ? UI.navBottom(backScopeIdx) : D.createTextNode(''));
       try { UI.keepBottom(); } catch(e){}
-    }, DLY.long || 1000);
+    }, DLY.long || 900);
   }
 
-  // --- date ------------------------------------------------------------------
+  // ---- date -----------------------------------------------------------------
   function renderResvDate(){
     var B = UI.block(null, { maxWidth:'100%' });
     B.setAttribute('data-block','resv-date');
 
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-
     C.appendChild(UI.note('Perfekt, '+RESV.name+'! :)'));
     try { UI.keepBottom(); } catch(e){}
 
@@ -90,22 +92,19 @@
         if (!d){ alert('Bitte wähle ein Datum.'); Forms.focus(rIn.input); return; }
         RESV.dateISO = d.toISOString().slice(0,10);
         RESV.dateReadable = fmtDateReadable(d);
-        U.delay(function(){ renderResvTime(d, (UI.getScopeIndex?UI.getScopeIndex():1)-1); }, DLY.step || 450);
+        U.delay(function(){ renderResvTime(d); }, DLY.step || 450);
       }, 'ppx-cta', '🗓️'));
       C.appendChild(r);
-
-      B.appendChild(UI.navBottom ? UI.navBottom((UI.getScopeIndex?UI.getScopeIndex():1)-1) : D.createTextNode(''));
       try { UI.keepBottom(); } catch(e){}
-    }, DLY.long || 1000);
+    }, DLY.long || 900);
   }
 
-  // --- time ------------------------------------------------------------------
-  function renderResvTime(dateObj, backScopeIdx){
+  // ---- time -----------------------------------------------------------------
+  function renderResvTime(dateObj){
     var B = UI.block(null, { maxWidth:'100%' });
     B.setAttribute('data-block','resv-time');
 
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    B.appendChild(UI.navBottom ? UI.navBottom(backScopeIdx) : D.createTextNode(''));
     C.appendChild(UI.note('Um welche Uhrzeit möchtest du reservieren?'));
     try { UI.keepBottom(); } catch(e){}
 
@@ -129,7 +128,7 @@
         });
         C.appendChild(G);
         try { UI.keepBottom(); } catch(e){}
-      }, DLY.sub || 550);
+      }, DLY.sub || 500);
       return;
     }
 
@@ -149,22 +148,21 @@
           });
           slotWrap.appendChild(G);
           try { UI.keepBottom(); } catch(e){}
-        }, DLY.tap || 260);
+        }, DLY.tap || 240);
       }, 'ppx-group'));
       C.appendChild(r);
       try { UI.keepBottom(); } catch(e){}
     });
 
-    U.delay(function(){ C.appendChild(slotWrap); try { UI.keepBottom(); } catch(e){} }, DLY.sub || 550);
+    U.delay(function(){ C.appendChild(slotWrap); try { UI.keepBottom(); } catch(e){} }, DLY.sub || 500);
   }
 
-  // --- persons ---------------------------------------------------------------
+  // ---- persons --------------------------------------------------------------
   function renderResvPersons(){
     var B = UI.block(null, { maxWidth:'100%' });
     B.setAttribute('data-block','resv-persons');
 
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-
     C.appendChild(UI.note('Super, '+RESV.name+'!'));
     try { UI.keepBottom(); } catch(e){}
 
@@ -178,23 +176,19 @@
         var val = Number(Forms.val(rIn.input) || 0);
         if (!val || val < 1){ alert('Bitte gib eine gültige Anzahl ein.'); Forms.focus(rIn.input); return; }
         RESV.persons = String(val);
-        U.delay(function(){ renderResvPhone((UI.getScopeIndex?UI.getScopeIndex():1)-1); }, DLY.step || 450);
+        U.delay(renderResvPhone, DLY.step || 450);
       }, 'ppx-cta', '➡️'));
       C.appendChild(r);
-
-      B.appendChild(UI.navBottom ? UI.navBottom((UI.getScopeIndex?UI.getScopeIndex():1)-1) : D.createTextNode(''));
       try { UI.keepBottom(); } catch(e){}
-    }, DLY.long || 1000);
+    }, DLY.long || 900);
   }
 
-  // --- phone (optional) ------------------------------------------------------
-  function renderResvPhone(backScopeIdx){
+  // ---- phone (optional) -----------------------------------------------------
+  function renderResvPhone(){
     var B = UI.block(null, { maxWidth:'100%' });
     B.setAttribute('data-block','resv-phone');
 
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    B.appendChild(UI.navBottom ? UI.navBottom(backScopeIdx) : D.createTextNode(''));
-
     C.appendChild(UI.note('Magst du mir deine Nummer dalassen? (optional)'));
     var rIn = Forms.inputRow({ type:'tel', placeholder:'+49 …' });
     C.appendChild(rIn.row);
@@ -212,13 +206,12 @@
     try { UI.keepBottom(); } catch(e){}
   }
 
-  // --- email (required) ------------------------------------------------------
+  // ---- email (required) -----------------------------------------------------
   function renderResvEmail(){
     var B = UI.block(null, { maxWidth:'100%' });
     B.setAttribute('data-block','resv-email');
 
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-
     C.appendChild(UI.note('Und deine E-Mail für die Bestätigung?'));
     try { UI.keepBottom(); } catch(e){}
 
@@ -234,49 +227,60 @@
           alert('Bitte gib eine gültige E-Mail-Adresse ein.'); Forms.focus(rIn.input); return;
         }
         RESV.email = v;
-        U.delay(submitReservation, DLY.tap || 260);
+        U.delay(submitReservation, DLY.tap || 240);
       }, 'ppx-cta', '✉️'));
       C.appendChild(r);
-
-      B.appendChild(UI.navBottom ? UI.navBottom((UI.getScopeIndex?UI.getScopeIndex():1)-1) : D.createTextNode(''));
       try { UI.keepBottom(); } catch(e){}
-    }, DLY.long || 1000);
+    }, DLY.long || 900);
   }
 
-  // --- submit ---------------------------------------------------------------
+  // ---- submit ---------------------------------------------------------------
   function submitReservation(){
-    var Cfg = cfg();
-    var brand = (Cfg.brand || 'Restaurant');
+    var cfg = CFG(), brand = (cfg.brand || 'Restaurant');
     var payload = {
-      brand: brand,
-      name: RESV.name,
-      date: RESV.dateReadable,
-      time: RESV.time,
-      persons: RESV.persons,
-      phone: RESV.phone || '',
-      email: RESV.email,
-      message: ''
+      brand:      brand,
+      name:       RESV.name,
+      date:       RESV.dateReadable,
+      date_iso:   RESV.dateISO,
+      time:       RESV.time,
+      persons:    RESV.persons,
+      phone:      RESV.phone || '',
+      from_email: RESV.email,       // typische EmailJS-Keys
+      reply_to:   RESV.email,
+      from_name:  RESV.name || (RESV.email||'').split('@')[0] || 'Gast',
+      message:    ''
     };
-    var svcId   = Cfg.EMAIL && (Cfg.EMAIL.service || Cfg.EMAIL.serviceId);
-    var tplTo   = Cfg.EMAIL && (Cfg.EMAIL.toTemplate || Cfg.EMAIL.templateId);
-    var tplAuto = Cfg.EMAIL && Cfg.EMAIL.autoReplyTemplate;
+    // Falls Template to_email erwartet, bestücken:
+    var toFallback = toEmailFallback();
+    if (toFallback) payload.to_email = toFallback;
 
+    var svc = EM();
     var B = UI.block('SENDE ANFRAGE …', { maxWidth:'100%' });
     B.setAttribute('data-block','resv-sending');
 
-    if (svcId && tplTo && EM.ensureEmailJSReady && EM.ensureEmailJSReady()){
-      EM.sendEmailJS(svcId, tplTo, payload).then(function(){
-        if (tplAuto){ return EM.sendEmailJS(svcId, tplAuto, payload).catch(function(e){ console.warn('[PPX] auto-reply failed:', e && e.message); }); }
-      }).then(function(){ showReservationSuccess('emailjs'); })
-        .catch(function(err){ console.warn('[PPX] reservation send failed:', err && err.message); showReservationError(err && err.message, payload); });
+    if (svc && svc.sendReservation){
+      svc.sendReservation(payload)
+        .then(function(){
+          // Optional: Auto-Reply an den Gast, wenn Template vorhanden
+          try {
+            var N = (svc && svc.sendEmailJS) ? true : false; // Service geladen
+            var hasAuto = (W.PPX_DATA && ((W.PPX_DATA.EMAIL && W.PPX_DATA.EMAIL.autoReplyTemplate) || (W.PPX_DATA.cfg && W.PPX_DATA.cfg.EMAIL && W.PPX_DATA.cfg.EMAIL.autoReplyTemplate)));
+            if (N && hasAuto && svc.autoReply){ return svc.autoReply(RESV.email, { subject:'Wir haben deine Reservierungsanfrage erhalten', name:RESV.name }); }
+          } catch(e){}
+        })
+        .then(function(){ showReservationSuccess(); })
+        .catch(function(e){
+          console.warn('[PPX] reservation send failed:', e && (e.text||e.message)||e);
+          showReservationError(e && (e.text||e.message)||'Unbekannter Fehler', payload);
+        });
       return;
     }
-    showReservationError('EmailJS nicht verfügbar', payload);
+    showReservationError('Email-Service nicht geladen', payload);
   }
 
   function mailtoHrefReservation(p){
-    var Cfg = cfg();
-    var addr = Cfg.email || (Cfg.EMAIL && (Cfg.EMAIL.to || Cfg.EMAIL.toEmail)) || 'info@example.com';
+    var c = CFG();
+    var addr = c.email || (c.EMAIL && (c.EMAIL.to || c.EMAIL.toEmail)) || 'info@example.com';
     var bodyLines = [
       'Reservierungsanfrage',
       'Name: '+p.name,
@@ -284,23 +288,19 @@
       'Uhrzeit: '+p.time,
       'Personen: '+p.persons,
       'Telefon: '+(p.phone||'-'),
-      'E-Mail: '+p.email,
+      'E-Mail: '+(p.from_email||p.email||'-'),
       '— gesendet via Bot'
     ];
-    var body = encodeURIComponent(bodyLines.join('\n'));
-    return 'mailto:'+addr+'?subject='+encodeURIComponent('Reservierung')+'&body='+body;
+    return 'mailto:'+addr+'?subject='+encodeURIComponent('Reservierung')+'&body='+encodeURIComponent(bodyLines.join('\n'));
   }
 
-  function showReservationSuccess(kind){
+  function showReservationSuccess(){
     var B = UI.block('RESERVIERUNG', { maxWidth:'100%' });
     B.setAttribute('data-block','reservieren-success');
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-
-    C.appendChild(UI.line('Danke für deine Anfrage! Schau doch mal in deinem E-Mail-Postfach vorbei! ;)'));
-    C.appendChild(UI.line('Möchtest du noch etwas anderes wissen?'));
+    C.appendChild(UI.line('Danke für deine Anfrage! Schau bitte in dein E-Mail-Postfach – wir melden uns kurz zurück.'));
     var r = UI.row();
-    r.appendChild(UI.btn('Ja, zeig mir die Q&As', function(){ try { U.delay(PPX.flows.stepQAs, DLY.step || 450); } catch(e){} }, 'ppx-cta', '❓'));
-    r.appendChild(UI.btn('Nein, zurück ins Hauptmenü', function(){ try { UI.goHome(); } catch(e){} }, 'ppx-secondary', '🏠'));
+    r.appendChild(UI.btn('Zurück ins Hauptmenü', function(){ try { UI.goHome(); } catch(e){} }, 'ppx-secondary', '🏠'));
     C.appendChild(r);
     try { UI.keepBottom(); } catch(e){}
   }
@@ -309,11 +309,10 @@
     var B = UI.block('SENDEN FEHLGESCHLAGEN', { maxWidth:'100%' });
     B.setAttribute('data-block','resv-error');
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-
     C.appendChild(UI.line('Uff, das hat gerade nicht geklappt. Grund (technisch): '+(msg||'unbekannt')));
     C.appendChild(UI.line('Du kannst es nochmal versuchen oder deine E-Mail-App manuell öffnen.'));
     var r = UI.row();
-    r.appendChild(UI.btn('Nochmal senden', function(){ try { U.delay(submitReservation, DLY.tap || 260); } catch(e){} }, 'ppx-cta', '⤴️'));
+    r.appendChild(UI.btn('Nochmal senden', function(){ try { U.delay(submitReservation, DLY.tap || 240); } catch(e){} }, 'ppx-cta', '⤴️'));
     r.appendChild(UI.btn('E-Mail manuell öffnen', function(){ try { window.location.href = mailtoHrefReservation(payload); } catch(e){} }, 'ppx-secondary', '✉️'));
     r.appendChild(UI.homeBtn ? UI.homeBtn() : UI.btn('Zurück ins Hauptmenü', function(){ try { UI.goHome(); } catch(e){} }, 'ppx-secondary', '🏠'));
     C.appendChild(r);
