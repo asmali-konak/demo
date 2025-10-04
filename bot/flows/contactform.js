@@ -1,13 +1,12 @@
 /* ============================================================================
    PPX Flow: Kontaktformular – nutzt PPX.services.email.sendEmailJS('contact', …)
-   (Keine Service-ID im Aufruf – das übernimmt der Email-Service.)
    ============================================================================ */
 (function () {
   'use strict';
   var W = window, D = document;
   var PPX = W.PPX = W.PPX || {};
   var UI = PPX.ui || {}, U = PPX.util || {}, DLY = PPX.D || {};
-  var EM = (PPX.services && PPX.services.email) || {};
+  function EM(){ return (W.PPX && W.PPX.services && W.PPX.services.email) || null; } // <- live lookup
   var Forms = (UI && UI.forms) || {};
   var CF = null;
 
@@ -54,13 +53,23 @@
   }
 
   function submitContactForm(){
+    var SVC = EM();
     var B = UI.block('SENDE NACHRICHT …', { maxWidth:'100%' }); B.setAttribute('data-block','cf-sending');
-    var payload = { subject:'Kontaktanfrage', email: CF.email, from_email: CF.email, message: CF.message };
-    // Wichtig: KEINE Service-ID hier! Der Email-Service kennt service & publicKey aus bot.json
-    if (EM && EM.sendEmailJS){
-      EM.sendEmailJS('contact', payload)
+    var payload = {
+      subject:    'Kontaktanfrage',
+      email:      CF.email,           // für eigene Logs
+      from_email: CF.email,           // typische EmailJS-Keys
+      reply_to:   CF.email,
+      from_name:  (CF.email||'').split('@')[0] || 'Gast',
+      message:    CF.message
+    };
+    if (SVC && SVC.sendEmailJS){
+      SVC.sendEmailJS('contact', payload)
         .then(function(){ showContactSuccess(); })
-        .catch(function(e){ console.warn('[PPX] cf send failed:', e && (e.text||e.message)||e); showContactError(e && (e.text||e.message)||'Unbekannter Fehler', payload); });
+        .catch(function(e){ 
+          console.warn('[PPX] cf send failed:', e && (e.text||e.message)||e); 
+          showContactError(e && (e.text||e.message)||'Unbekannter Fehler', payload); 
+        });
       return;
     }
     showContactError('Email-Service nicht geladen', payload);
