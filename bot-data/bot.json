@@ -27,18 +27,20 @@
       "frueh": ["17:30", "20:30"],
       "spaet": ["20:30", "23:59"]
     },
-    "EMAIL": {
-      "publicKey": "J1KTj7-7VJBsV-LHc",
-      "service": "service_asmali_konak",
-      "reservTemplate": "template_reserv_asmali",
-      "autoReplyTemplate": "template_kunde_asmali",
-      "contactTemplate": "template_kontakt_asmali"
-    },
     "menuOrder": ["meze", "pide", "kebap", "guevec", "vegetarisch", "beilagen", "getraenke", "desserts"],
     "menuPdf": "./pdf/speisekarte_test.pdf",
     "faqPdf": "./pdf/pizza_papa_faq.pdf",
     "orderUrl": ""
   },
+
+  "EMAIL": {
+    "publicKey": "J1KTj7-7VJBsV-LHc",
+    "service": "service_asmali_konak",
+    "reservTemplate": "template_reserv_asmali",
+    "autoReplyTemplate": "template_kunde_asmali",
+    "contactTemplate": "template_kontakt_asmali"
+  },
+
   "dishes": {
     "meze": [
       { "id": "hummus", "name": "Hummus", "price": "6,90 €", "info": "Kichererbsen, Tahin, Zitrone, Olivenöl. Mit Brot." },
@@ -91,6 +93,7 @@
       { "id": "kunefe", "name": "Künefe", "price": "7,90 €", "info": "Fadenteig, Käse, warm, Sirup." }
     ]
   },
+
   "faqs": {
     "title": "Asmali Konak – FAQ",
     "pdfUrl": "./pdf/pizza_papa_faq.pdf",
