@@ -1,27 +1,26 @@
 /* ============================================================================
-   PPX Bot Loader – "Never-Undefined" v8.1
+   PPX Bot Loader – "Never-Undefined" v8.2
    - Lädt bot.json sicher
    - Setzt IMMER window.PPX_DATA (+ Alias __PPX_DATA__)
+   - Übernimmt EMAIL / EMAILJS und spiegelt EMAIL -> cfg.EMAIL (falls nicht da)
    - Stellt minimales PPX.data-API bereit
    - Optional: EmailJS laden (per data-emailjs)
    - Lädt danach bot/index.js
-   Daten-Attribute am <script>:
-     data-ppx-loader
+   Daten-Attribute am <script id="ppx-bot-loader">:
      data-config="bot-data/bot.json"
-     data-widget="bot/index.js?v=7.9.4"
-     data-nocache
+     data-widget="bot/index.js?v=9.1.0"
      (optional) data-emailjs="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
+     (optional) data-nocache
    ============================================================================ */
 (function () {
   'use strict';
   var W = window, D = document;
 
   function pickScript() {
-    return D.currentScript ||
-      D.querySelector('script[data-ppx-loader]') ||
-      D.getElementById('ppx-bot-loader');
+    return D.currentScript || D.getElementById('ppx-bot-loader') || D.querySelector('script[data-ppx-loader]');
   }
   function withBust(url, nocache) {
+    if (!url) return url;
     if (!nocache) return url;
     var sep = url.indexOf('?') > -1 ? '&' : '?';
     return url + sep + 'cb=' + Date.now();
@@ -32,11 +31,20 @@
   }
   function setPPX_DATA(obj) {
     var current = W.PPX_DATA || W.__PPX_DATA__ || {};
+    var src = obj || {};
     var safe = {
-      cfg:    (obj && (obj.cfg || obj.config)) || current.cfg || {},
-      dishes: (obj && (obj.dishes || obj.menu)) || current.dishes || {},
-      faqs:   (obj && (obj.faqs || obj.faq)) || current.faqs || []
+      cfg:    (src.cfg || src.config || current.cfg || {}),
+      dishes: (src.dishes || src.menu || current.dishes || {}),
+      faqs:   (src.faqs || src.faq || current.faqs || []),
+      // <-- FIX: EMAIL-Blöcke übernehmen
+      EMAIL:  (src.EMAIL || src.email || src.EMAILJS || current.EMAIL || current.email || null),
+      EMAILJS:(src.EMAILJS || null)
     };
+    // Bridge: EMAIL auch unter cfg.EMAIL verfügbar machen (ohne zu überschreiben)
+    if (safe.EMAIL && (!safe.cfg || !safe.cfg.EMAIL)) {
+      safe.cfg = safe.cfg || {};
+      safe.cfg.EMAIL = safe.EMAIL;
+    }
     W.PPX_DATA = safe;
     W.__PPX_DATA__ = W.PPX_DATA; // Alias für Altcode
   }
@@ -50,12 +58,13 @@
     // Debug:
     W.PPX_DEBUG = function () {
       var x = PPX.data.raw();
-      console.info('[PPX DEBUG] cfg.EMAIL =', x.cfg && x.cfg.EMAIL ? x.cfg.EMAIL : null);
+      console.info('[PPX DEBUG] EMAIL at top =', !!x.EMAIL, 'cfg.EMAIL =', !!(x.cfg && x.cfg.EMAIL));
       return x;
     };
   }
   function loadScript(src, nocache) {
     return new Promise(function (resolve, reject) {
+      if (!src) return resolve();
       var s = D.createElement('script');
       s.src = withBust(src, nocache);
       s.async = true;
@@ -80,7 +89,11 @@
             console.warn('[PPX Loader] Config nicht geladen, nutze leere Defaults.', err);
             setPPX_DATA({});
           })
-          .then(ensurePPXNamespace);
+          .then(ensurePPXNamespace)
+          .then(function(){
+            var x = (W.PPX_DATA || {});
+            console.info('[PPX Loader] PPX_DATA ready – EMAIL:', !!x.EMAIL, 'cfg.EMAIL:', !!(x.cfg && x.cfg.EMAIL));
+          });
       })
       .then(function () {
         if (EMAILJS_URL && !W.emailjs) {
