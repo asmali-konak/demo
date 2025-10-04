@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="styles/bot.css">
 
   <!-- Icons -->
-  <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
+  <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48" type="image/x-icon">
   <link rel="icon" href="images/favicon-32.jpg" sizes="32x32" type="image/jpeg">
   <link rel="apple-touch-icon" href="images/apple-touch-icon.jpg" sizes="180x180">
 
@@ -129,7 +129,7 @@
     </div>
   </div>
 
-  <!-- Bot Launcher & Panel (wie vorher belassen) -->
+  <!-- Bot Launcher & Panel -->
   <div class="ppx-launch" id="ppx-launch" role="button" aria-label="Schnellzugriff öffnen">
     <div>Reservieren &amp; mehr ✨</div><div class="ppx-dot">💬</div>
   </div>
@@ -142,12 +142,12 @@
     <div class="ppx-brandbar">Powered by <strong>AI Elements</strong> ✨</div>
   </div>
 
-  <!-- PPX Loader – Pizza-Papa-Verhalten v7.9.4 mit EmailJS-URL -->
+  <!-- PPX Loader – relativ (keine führenden Slashes) -->
   <script
     id="ppx-bot-loader"
-    src="/bot/loader.js?v=7.9.4"
-    data-config="/bot-data/bot.json?v=7.9.4"
-    data-widget="/bot/index.js?v=7.9.4"
+    src="bot/loader.js?v=7.9.4"
+    data-config="bot-data/bot.json?v=7.9.4"
+    data-widget="bot/index.js?v=7.9.4"
     data-emailjs="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
     defer
   ></script>
@@ -159,7 +159,7 @@
     const $=(s)=>document.querySelector(s);
     on(() => {
       const cta=$('#cta-open-bot'); if(cta) cta.addEventListener('click',(e)=>{ e.preventDefault(); const launch=$('#ppx-launch'); if(launch) launch.click(); });
-      fetch('/bot-data/bot.json?v=8.1.1',{cache:'no-store'})
+      fetch('bot-data/bot.json?v=8.1.1',{cache:'no-store'})
         .then(r=>r.ok?r.json():Promise.reject(r.status))
         .then((PPX)=>{
           const c=(PPX&&PPX.cfg)||{};
