@@ -58,7 +58,7 @@
 
     function finish() {
       try {
-        if (w.PPX && typeof w.PX !== 'undefined' && w.PPX.boot && typeof w.PPX.boot === 'function') {
+        if (w.PPX && typeof w.PPX !== 'undefined' && w.PPX.boot && typeof w.PPX.boot === 'function') {
           w.PPX.boot();
         } else if (w.PPX && w.PPX.ui && typeof w.PPX.ui.bindOnce === 'function') {
           // Fallback – sollte selten gebraucht werden
