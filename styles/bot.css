@@ -2,36 +2,61 @@
    Bot UI Shell (styles/bot.css) – Launcher, Panel & Basislayout
    ============================================================================ */
 
-:root{--green:#0f3a2f;--green2:#0a2a21;--gold:#c9a667}
+/* Fallbacks (werden über styles-inject.js überschrieben) */
+:root{
+  --ppx-bot-bg:#0a2a21; --ppx-bot-header:#0f3a2f; --ppx-bot-text:#f7faf8;
+  --ppx-bot-chip:rgba(255,255,255,.06); --ppx-bot-chip-border:rgba(255,255,255,.18);
+  --ppx-bot-dot:#0f3a2f; --ppx-bot-brandbar-bg:rgba(255,255,255,.92); --ppx-bot-brandbar-text:#11231c;
+  --ppx-shadow-lg:0 28px 80px rgba(0,0,0,.35); --ppx-shadow-md:0 6px 20px rgba(0,0,0,.10);
+  --ppx-font-heading:Cinzel,serif; --ppx-font-body:"Cormorant Garamond",Georgia,serif;
+  --ppx-primary:#173b2d; --ppx-primary-contrast:#ffffff;
+}
 
-.ppx-launch{position:fixed;right:22px;bottom:22px;z-index:99999;display:flex;align-items:center;gap:10px;background:#fff;color:#0e1b16;border-radius:999px;padding:10px 14px;border:1px solid #e7ebee;box-shadow:0 14px 36px rgba(0,0,0,.18);cursor:pointer;user-select:none}
-.ppx-dot{width:38px;height:38px;border-radius:50%;background:var(--green);display:grid;place-items:center;color:#fff;font-size:18px}
+.ppx-launch{
+  position:fixed;right:22px;bottom:22px;z-index:var(--ppx-z-chat,100000);
+  display:flex;align-items:center;gap:10px;background:#fff;color:#0e1b16;border-radius:999px;
+  padding:10px 14px;border:1px solid #e7ebee;box-shadow:0 14px 36px rgba(0,0,0,.18);cursor:pointer;user-select:none
+}
+.ppx-dot{width:38px;height:38px;border-radius:50%;background:var(--ppx-bot-dot);display:grid;place-items:center;color:#fff;font-size:18px}
 
-.ppx-panel{position:fixed;right:22px;bottom:86px;width:480px;max-width:calc(100vw - 44px);display:none;z-index:100000;border-radius:18px;overflow:hidden;border:1px solid rgba(0,0,0,.08);box-shadow:0 28px 80px rgba(0,0,0,.35);background:var(--green2);flex-direction:column;max-height:78vh}
+.ppx-panel{
+  position:fixed;right:22px;bottom:86px;width:480px;max-width:calc(100vw - 44px);display:none;z-index:calc(var(--ppx-z-chat,100000) + 1);
+  border-radius:18px;overflow:hidden;border:1px solid rgba(0,0,0,.08);box-shadow:var(--ppx-shadow-lg);background:var(--ppx-bot-bg);
+  flex-direction:column;max-height:78vh
+}
 .ppx-open{display:flex}
 
-.ppx-h{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--green);color:#fff;border-bottom:1px solid rgba(0,0,0,.25)}
-.ppx-title{font-family:"Cinzel",serif;font-weight:700;letter-spacing:.3px}
-.ppx-x{border:none;background:transparent;font-size:22px;color:#fff;cursor:pointer;opacity:.9}
+.ppx-h{
+  display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--ppx-bot-header);color:var(--ppx-bot-text);
+  border-bottom:1px solid rgba(0,0,0,.25)
+}
+.ppx-title{font-family:var(--ppx-font-heading);font-weight:700;letter-spacing:.3px}
+.ppx-x{border:none;background:transparent;font-size:22px;color:var(--ppx-bot-text);cursor:pointer;opacity:.9}
 .ppx-x:hover{opacity:1}
 
-.ppx-v{padding:14px;flex:1;overflow:auto;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)), var(--green2);color:#f7faf8;display:flex;flex-direction:column;gap:12px;min-height:520px}
+.ppx-v{
+  padding:14px;flex:1;overflow:auto;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)), var(--ppx-bot-bg);
+  color:var(--ppx-bot-text);display:flex;flex-direction:column;gap:12px;min-height:520px
+}
 
 .ppx-m{line-height:1.35;white-space:pre-wrap}
 .ppx-link{color:#f3e9c9;text-decoration:underline}
-.ppx-bot{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);padding:12px;border-radius:12px}
+.ppx-bot{background:var(--ppx-bot-chip);border:1px solid var(--ppx-bot-chip-border);padding:12px;border-radius:12px}
 
 .ppx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:2px}
-.ppx-opt{display:flex;align-items:center;gap:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);border-radius:14px;padding:12px;cursor:pointer;transition:transform .15s ease, box-shadow .15s ease}
+.ppx-opt{
+  display:flex;align-items:center;gap:10px;border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);border-radius:14px;padding:12px;
+  cursor:pointer;transition:transform var(--ppx-t,200ms) ease, box-shadow var(--ppx-t,200ms) ease
+}
 .ppx-opt:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.18)}
-.ppx-ico{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;background:linear-gradient(135deg,var(--gold),#ead09b);color:#0c1f18;font-weight:700;font-size:14px}
+.ppx-ico{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;background:linear-gradient(135deg,var(--ppx-accent),#ead09b);color:#0c1f18;font-weight:700;font-size:14px}
 
-.ppx-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);cursor:pointer;user-select:none}
+.ppx-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);cursor:pointer;user-select:none}
 .ppx-pill:hover{transform:translateY(-1px)}
 
-.ppx-card{border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);border-radius:14px;padding:12px}
+.ppx-card{border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);border-radius:14px;padding:12px}
 .ppx-card.compact{padding:8px 10px}
-.ppx-heading{font-family:"Cinzel",serif;margin:0 0 6px;color:#efe6d6}
+.ppx-heading{font-family:var(--ppx-font-heading);margin:0 0 6px;color:#efe6d6}
 .ppx-heading.compact{font-size:17px;margin:0}
 .ppx-price.compact{font-size:16px;font-weight:700;white-space:nowrap}
 .ppx-headrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
@@ -42,11 +67,11 @@
 .ppx-note{margin-top:8px;font-weight:600}
 
 .ppx-iconrow{display:flex;gap:8px;margin-top:6px}
-.ppx-iconbtn{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.06);font-size:12px;font-weight:700;letter-spacing:.2px}
+.ppx-iconbtn{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.3);background:var(--ppx-bot-chip);font-size:12px;font-weight:700;letter-spacing:.2px}
 
-.ppx-brandbar{padding:8px 12px;background:rgba(255,255,255,.92);color:#11231c;border-top:1px solid rgba(0,0,0,.08);font-size:12px;text-align:center}
+.ppx-brandbar{padding:8px 12px;background:var(--ppx-bot-brandbar-bg);color:var(--ppx-bot-brandbar-text);border-top:1px solid rgba(0,0,0,.08);font-size:12px;text-align:center}
 
-.ppx-appear{animation:ppxFade .25s ease both}
+.ppx-appear{animation:ppxFade var(--ppx-t-fast,120ms) ease both}
 @keyframes ppxFade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 
 @media (max-width:640px){
@@ -60,7 +85,7 @@
 .ppx-input textarea{min-height:72px;resize:vertical}
 
 .ppx-minirow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-.ppx-mini{padding:8px 12px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);border-radius:999px;cursor:pointer;user-select:none}
+.ppx-mini{padding:8px 12px;border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);border-radius:999px;cursor:pointer;user-select:none}
 
 /* >>> Home-Optionen mittig (nur Startansicht, keine Kategorien) <<< */
 #ppx-v > .ppx-appear > .ppx-opt{justify-content:center}
