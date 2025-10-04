@@ -142,17 +142,16 @@
     <div class="ppx-brandbar">Powered by <strong>AI Elements</strong> ✨</div>
   </div>
 
-  <!-- PPX Loader – relativ + synchroner Cache-Buster -->
+  <!-- PPX Loader – synchroner Cache-Buster (einheitlich) -->
   <script
     id="ppx-bot-loader"
-    src="bot/loader.js?v=7.9.4"
-    data-config="bot-data/bot.json?v=9.0.2"
-    data-widget="bot/index.js?v=7.9.4"
+    src="bot/loader.js?v=9.1.0"
+    data-config="bot-data/bot.json?v=9.1.0"
+    data-widget="bot/index.js?v=9.1.0"
     data-emailjs="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
-    defer
   ></script>
 
-  <!-- Automatisierung: Öffnungszeiten, Kontakt & Speisekarte (lädt direkt bot.json) -->
+  <!-- Automatisierung: Öffnungszeiten, Kontakt & Speisekarte (liest bot.json) -->
   <script>
   (function () {
     const on=(fn)=>document.readyState!=='loading'?fn():document.addEventListener('DOMContentLoaded',fn);
@@ -161,7 +160,7 @@
       const cta=$('#cta-open-bot'); if(cta) cta.addEventListener('click',(e)=>{ e.preventDefault(); const launch=$('#ppx-launch'); if(launch) launch.click(); });
 
       // Cache-Buster identisch zum Loader
-      fetch('bot-data/bot.json?v=9.0.2',{cache:'no-store'})
+      fetch('bot-data/bot.json?v=9.1.0',{cache:'no-store'})
         .then(r=>r.ok?r.json():Promise.reject(r.status))
         .then((PPX)=>{
           const c=(PPX&&PPX.cfg)||{};
