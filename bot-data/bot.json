@@ -88,7 +88,8 @@
     "autoReplyTemplate": "template_kunde_asmali",
     "contactTemplate": "template_kontakt_asmali"
   },
-,  "dishes": {
+
+  "dishes": {
     "meze": [
       { "id": "hummus", "name": "Hummus", "price": "6,90 €", "info": "Kichererbsen, Tahin, Zitrone, Olivenöl. Mit Brot." },
       { "id": "cacik", "name": "Cacık", "price": "5,90 €", "info": "Joghurt, Gurke, Knoblauch, Dill." },
@@ -219,4 +220,3 @@
     ]
   }
 }
-
