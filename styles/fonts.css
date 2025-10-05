@@ -1,15 +1,25 @@
 /* ============================================================================
-   Self-Hosted Webfonts – WOFF2 (empfohlen)
-   Dateien liegen in /fonts/
-   Familiennamen (in THEME verwenden):
+   Self-Hosted Webfonts – WOFF2 (Asmali Konak)
+   Ordnerstruktur:
+     styles/
+       ├─ fonts.css  ← diese Datei
+       └─ fonts/
+           ├─ Cinzel-700.woff2
+           ├─ CormorantGaramond-400.woff2
+           └─ CormorantGaramond-600.woff2
+
+   Familiennamen (in THEME und CSS verwenden):
      Heading:  Cinzel
      Body:     "Cormorant Garamond"
+
+   Performance:
+     - font-display: swap (Text sofort sichtbar, dann schöner Font)
    ============================================================================ */
 
 /* HEADINGS – Cinzel 700 (Bold) */
 @font-face{
   font-family: "Cinzel";
-  src: url("../fonts/Cinzel-700.woff2") format("woff2");
+  src: url("./fonts/Cinzel-700.woff2") format("woff2");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -18,7 +28,7 @@
 /* BODY – Cormorant Garamond 400 (Regular) */
 @font-face{
   font-family: "Cormorant Garamond";
-  src: url("../fonts/CormorantGaramond-400.woff2") format("woff2");
+  src: url("./fonts/CormorantGaramond-400.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -27,8 +37,14 @@
 /* BODY – Cormorant Garamond 600 (SemiBold) */
 @font-face{
   font-family: "Cormorant Garamond";
-  src: url("../fonts/CormorantGaramond-600.woff2") format("woff2");
+  src: url("./fonts/CormorantGaramond-600.woff2") format("woff2");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
+
+/* Hinweis:
+   - Wenn ihr später Italic-Schnitte wollt, einfach passende .woff2-Datei
+     in styles/fonts/ legen und hier einen weiteren @font-face-Block ergänzen:
+       font-style: italic; font-weight: (z. B. 400);
+*/
