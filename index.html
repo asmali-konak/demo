@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Asmali Konak</title>
   <meta name="description" content="Asmali Konak in Köln-Kalk: Meze, Pide & Kebap aus dem Steinofen. Reservieren per Bot oder Telefon. Täglich ab 12 Uhr, Samstag bis 01 Uhr.">
+
+  <!-- Self-hosted Fonts -->
+  <link rel="preload" href="fonts/Cinzel-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/CormorantGaramond-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles/fonts.css">
+
+  <!-- Site Styles -->
   <link rel="stylesheet" href="styles/site.css">
   <link rel="stylesheet" href="styles/bot.css">
 
@@ -157,7 +164,8 @@
     const on=(fn)=>document.readyState!=='loading'?fn():document.addEventListener('DOMContentLoaded',fn);
     const $=(s)=>document.querySelector(s);
     on(() => {
-      const cta=$('#cta-open-bot'); if(cta) cta.addEventListener('click',(e)=>{ e.preventDefault(); const launch=$('#ppx-launch'); if(launch) launch.click(); });
+      const cta=$('#cta-open-bot');
+      if(cta) cta.addEventListener('click',(e)=>{ e.preventDefault(); const launch=$('#ppx-launch'); if(launch) launch.click(); });
 
       // Cache-Buster identisch zum Loader
       fetch('bot-data/bot.json?v=9.1.0',{cache:'no-store'})
@@ -184,6 +192,7 @@
         })
         .catch(()=>{ const wrap=document.querySelector('#menu-auto'); if(wrap) wrap.innerHTML='<p class="center small">Speisekarte derzeit nicht verfügbar.</p>'; });
 
+      // Cookie-Banner
       const KEY='pp-consent', banner=document.getElementById('cookieBanner');
       try{ if(!localStorage.getItem(KEY)){ banner.style.display='flex'; } }catch(e){ banner.style.display='flex'; }
       window.acceptCookies=function(){ try{ localStorage.setItem(KEY,'accepted'); }catch(e){} banner.remove(); };
