@@ -172,6 +172,15 @@
         .then(r=>r.ok?r.json():Promise.reject(r.status))
         .then((PPX)=>{
           const c=(PPX&&PPX.cfg)||{};
+          const theme=(PPX&&PPX.THEME)||{};
+          const root=(theme.root||{});
+          const typo=(theme.typography||{});
+          /* -> Single Source: setze Basisgröße & Font-Families aus bot.json */
+          const base = parseFloat(typo.baseSize);           // z. B. 17.5
+          if(!Number.isNaN(base)) document.documentElement.style.setProperty('--fs-base', base+'px');
+          if(root.fontBody)    document.documentElement.style.setProperty('--font-body', root.fontBody);
+          if(root.fontHeading) document.documentElement.style.setProperty('--font-heading', root.fontHeading);
+
           const contact=$('#contact-block');
           if(contact){
             const telText=c.phone||''; const telHref='tel:'+(telText||'').replace(/\s+/g,'');
