@@ -1,0 +1,49 @@
+/* ============================================================================
+   Self-Hosted Webfonts – Asmali Konak
+   - Leg die zugehörigen .woff2-Dateien in /fonts/
+   - Diese Datei wird in index.html eingebunden.
+   - THEME (bot.json) nutzt die Familiennamen:
+       Heading:  Cinzel
+       Body:     "Cormorant Garamond"
+   - Performance: font-display: swap (Text bleibt sofort sichtbar)
+   ============================================================================ */
+
+/* -------------------------
+   HEADINGS – Cinzel 700
+   ------------------------- */
+@font-face{
+  font-family: "Cinzel";
+  src:
+    url("../fonts/Cinzel-700.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* -------------------------
+   BODY – Cormorant Garamond 400
+   ------------------------- */
+@font-face{
+  font-family: "Cormorant Garamond";
+  src:
+    url("../fonts/CormorantGaramond-400.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* -------------------------
+   BODY – Cormorant Garamond 600 (SemiBold)
+   ------------------------- */
+@font-face{
+  font-family: "Cormorant Garamond";
+  src:
+    url("../fonts/CormorantGaramond-600.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Optional Quality-of-Life:
+   Falls ihr kursiv braucht, könnt ihr später separate @font-face-Blöcke
+   mit font-style: italic hinzufügen (z. B. 400 italic). */
