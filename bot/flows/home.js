@@ -29,9 +29,9 @@
     C.appendChild(UI.line('👋 WILLKOMMEN BEI ' + brand.toUpperCase() + '!'));
     C.appendChild(UI.line('Schön, dass du da bist. Wie können wir dir heute helfen?'));
 
-    // 1) Speisen
+    // 1) Speisen (kein ppx-cta mehr → neutraler Startzustand)
     var r1 = UI.row();
-    r1.appendChild(UI.btn('Speisen', function(){ try { PPX.flows.stepSpeisen(); } catch(e){} }, 'ppx-cta', '🍽️'));
+    r1.appendChild(UI.btn('Speisen', function(){ try { PPX.flows.stepSpeisen(); } catch(e){} }, '', '🍽️'));
     C.appendChild(r1);
 
     // 2) Reservieren
