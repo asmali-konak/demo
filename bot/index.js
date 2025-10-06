@@ -1,13 +1,27 @@
 /* ============================================================================
-   PPX Widget Orchestrator (index.js) – v7.9.4
+   PPX Widget Orchestrator (index.js) – v8.4.0
    Lädt die Modul-Dateien sequentiell und startet den Bot (1:1 Verhalten).
-   Keine neuen Globals außer window.PPX (durch die Module selbst).
+   Neu:
+   - Initialisiert window.PPX Namespace früh (ohne Globals außer window.PPX)
+   - Liest bevorzugte Sprache aus localStorage ("ppx.lang") → PPX.lang
+   - Setzt data-ppx-lang am <html> früh, damit Styles/Module es nutzen können
    ============================================================================ */
 (function () {
+  'use strict';
   try {
     var d = document, w = window;
 
-    // Basis-URL und Cache-Buster aus dem eigenen <script src=".../bot/index.js?v=...">
+    // --- Früh: Namespace + Sprache ------------------------------------------
+    var PPX = w.PPX = w.PPX || {};
+    // gewählte Sprache (persistiert in panel.js, aber hier früh verfügbar)
+    try {
+      PPX.lang = PPX.lang || localStorage.getItem('ppx.lang') || 'de';
+    } catch (e) {
+      PPX.lang = PPX.lang || 'de';
+    }
+    try { d.documentElement.setAttribute('data-ppx-lang', PPX.lang); } catch (e) {}
+
+    // --- Basis-URL und Cache-Buster aus dem eigenen <script src=".../bot/index.js?v=...">
     var self = d.currentScript || (function () {
       var s = d.getElementsByTagName('script');
       return s[s.length - 1];
@@ -23,7 +37,7 @@
       return base + path + sep + cacheParam;
     }
 
-    // Reihenfolge ist wichtig → exakt so laden
+    // --- Orchestrierte Lade-Reihenfolge (wichtig) ----------------------------
     var files = [
       'core.js',
       'ui/styles-inject.js',
@@ -39,9 +53,22 @@
       'flows/kontakt.js',
       'flows/contactform.js',
       'flows/faq.js'
-      // 'compat/compat_v794.js' // optional, aktuell weggelassen
+      // 'compat/compat_v794.js' // optional
     ];
 
+    // Kleines Ready-Queue-Utility, falls Module Hooks registrieren wollen
+    PPX._readyQ = PPX._readyQ || [];
+    PPX.onReady = function (fn) { if (typeof fn === 'function') PPX._readyQ.push(fn); };
+
+    function drainReadyQueue() {
+      var q = PPX._readyQ || [];
+      for (var i = 0; i < q.length; i++) {
+        try { q[i](); } catch (e) { /* noop */ }
+      }
+      PPX._readyQ = [];
+    }
+
+    // --- Loader --------------------------------------------------------------
     function loadOne(i) {
       if (i >= files.length) { return finish(); }
       var s = d.createElement('script');
@@ -50,7 +77,7 @@
       s.onload = function () { loadOne(i + 1); };
       s.onerror = function () {
         console.error('[PPX index] Failed to load:', files[i]);
-        // Wir machen weiter, um möglichst viel funktionsfähig zu halten
+        // Weiterladen, damit möglichst viel funktioniert
         loadOne(i + 1);
       };
       (d.head || d.documentElement).appendChild(s);
@@ -58,7 +85,8 @@
 
     function finish() {
       try {
-        if (w.PPX && typeof w.PPX !== 'undefined' && w.PPX.boot && typeof w.PPX.boot === 'function') {
+        // Falls core ein boot() bereitstellt → bevorzugt nutzen
+        if (w.PPX && typeof w.PPX.boot === 'function') {
           w.PPX.boot();
         } else if (w.PPX && w.PPX.ui && typeof w.PPX.ui.bindOnce === 'function') {
           // Fallback – sollte selten gebraucht werden
@@ -66,6 +94,9 @@
         }
       } catch (e) {
         console.error('[PPX index] Boot failed:', e);
+      } finally {
+        // Ready-Queue ausführen (z. B. Module, die erst nach Boot arbeiten sollen)
+        try { drainReadyQueue(); } catch (e) {}
       }
     }
 

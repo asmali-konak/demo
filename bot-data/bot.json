@@ -42,9 +42,7 @@
       "brandbarBg": "rgba(255,255,255,.92)",
       "brandbarText": "#11231c"
     },
-    "typography": {
-      "baseSize": 17.5
-    }
+    "typography": { "baseSize": 17.5 }
   },
 
   "cfg": {
@@ -78,7 +76,18 @@
     "menuOrder": ["meze", "pide", "kebap", "guevec", "vegetarisch", "beilagen", "getraenke", "desserts"],
     "menuPdf": "./pdf/speisekarte_test.pdf",
     "faqPdf": "./pdf/pizza_papa_faq.pdf",
-    "orderUrl": ""
+    "orderUrl": "",
+    "i18n": { "enabled": ["de","en"], "default": "de" },
+    "menuTitles": {
+      "meze":         { "de": "Meze", "en": "Meze (Starters)" },
+      "pide":         { "de": "Pide", "en": "Pide" },
+      "kebap":        { "de": "Kebap", "en": "Kebab" },
+      "guevec":       { "de": "Güveç & Ofengerichte", "en": "Stews & Casseroles" },
+      "vegetarisch":  { "de": "Vegetarisch", "en": "Vegetarian" },
+      "beilagen":     { "de": "Beilagen", "en": "Sides" },
+      "getraenke":    { "de": "Getränke", "en": "Drinks" },
+      "desserts":     { "de": "Desserts", "en": "Desserts" }
+    }
   },
 
   "EMAIL": {
@@ -91,130 +100,217 @@
 
   "dishes": {
     "meze": [
-      { "id": "hummus", "name": "Hummus", "price": "6,90 €", "info": "Kichererbsen, Tahin, Zitrone, Olivenöl. Mit Brot." },
-      { "id": "cacik", "name": "Cacık", "price": "5,90 €", "info": "Joghurt, Gurke, Knoblauch, Dill." },
-      { "id": "ezme", "name": "Acılı Ezme (pikant)", "price": "6,50 €", "info": "Fein gehacktes Tomaten-Paprika-Relish." },
-      { "id": "sigaraboerek", "name": "Sigara Böreği", "price": "7,90 €", "info": "Filo-Röllchen, Hirtenkäse, Petersilie (5 Stk.)." },
-      { "id": "mixe", "name": "Meze Mix", "price": "12,90 €", "info": "Auswahl aus 3 Meze nach Wahl." }
+      { "id": "hummus",       "name": "Hummus",                    "name_en": "Hummus",                     "price": "6,90 €", "info": "Kichererbsen, Tahin, Zitrone, Olivenöl. Mit Brot.",              "info_en": "Chickpeas, tahini, lemon, olive oil. With bread." },
+      { "id": "cacik",        "name": "Cacık",                     "name_en": "Cacık (yogurt dip)",         "price": "5,90 €", "info": "Joghurt, Gurke, Knoblauch, Dill.",                                 "info_en": "Yogurt, cucumber, garlic, dill." },
+      { "id": "ezme",         "name": "Acılı Ezme (pikant)",       "name_en": "Acılı Ezme (spicy relish)",  "price": "6,50 €", "info": "Fein gehacktes Tomaten-Paprika-Relish.",                           "info_en": "Finely chopped tomato–pepper relish." },
+      { "id": "sigaraboerek", "name": "Sigara Böreği",             "name_en": "Sigara Böreği (feta rolls)", "price": "7,90 €", "info": "Filo-Röllchen, Hirtenkäse, Petersilie (5 Stk.).",                   "info_en": "Filo rolls, feta, parsley (5 pcs)." },
+      { "id": "mixe",         "name": "Meze Mix",                  "name_en": "Meze Mix",                   "price": "12,90 €","info": "Auswahl aus 3 Meze nach Wahl.",                                      "info_en": "Selection of any 3 meze." }
     ],
     "pide": [
-      { "id": "pide_kas", "name": "Pide Kaşarlı", "price": "10,90 €", "info": "Mit Käse, Sesamrand." },
-      { "id": "pide_kıym", "name": "Pide Kıymalı", "price": "12,90 €", "info": "Mit Rinderhack, Tomate, Paprika." },
-      { "id": "pide_sucuk", "name": "Pide Sucuklu", "price": "12,90 €", "info": "Mit türkischer Knoblauchwurst, Käse." },
-      { "id": "pide_spin", "name": "Pide Ispanaklı", "price": "11,90 €", "info": "Spinat, Käse, Zwiebel." },
-      { "id": "pide_mix", "name": "Pide Mix (geteilt)", "price": "13,90 €", "info": "Zwei Hälften, frei kombinierbar." }
+      { "id": "pide_kas",  "name": "Pide Kaşarlı",  "name_en": "Pide with Cheese",            "price": "10,90 €", "info": "Mit Käse, Sesamrand.",                 "info_en": "With cheese, sesame crust." },
+      { "id": "pide_kıym", "name": "Pide Kıymalı",  "name_en": "Pide with Minced Beef",       "price": "12,90 €", "info": "Mit Rinderhack, Tomate, Paprika.",      "info_en": "Minced beef, tomato, pepper." },
+      { "id": "pide_sucuk","name": "Pide Sucuklu",  "name_en": "Pide with Sucuk",             "price": "12,90 €", "info": "Mit türkischer Knoblauchwurst, Käse.", "info_en": "Turkish garlic sausage (sucuk), cheese." },
+      { "id": "pide_spin", "name": "Pide Ispanaklı","name_en": "Pide with Spinach & Cheese",  "price": "11,90 €", "info": "Spinat, Käse, Zwiebel.",               "info_en": "Spinach, cheese, onion." },
+      { "id": "pide_mix",  "name": "Pide Mix (geteilt)", "name_en": "Pide Mix (half/half)",   "price": "13,90 €", "info": "Zwei Hälften, frei kombinierbar.",      "info_en": "Two halves, freely combinable." }
     ],
     "kebap": [
-      { "id": "adana", "name": "Adana Kebap (pikant)", "price": "15,90 €", "info": "Gegrilltes Lamm-Rinderhack, Bulgur, Salat, Cacık." },
-      { "id": "urfa", "name": "Urfa Kebap (mild)", "price": "15,90 €", "info": "Mild gewürzt, Bulgur, Grillgemüse." },
-      { "id": "sis_tavuk", "name": "Tavuk Şiş", "price": "14,90 €", "info": "Hähnchenspieß, Reis, Salat." },
-      { "id": "sis_kuzu", "name": "Kuzu Şiş", "price": "18,90 €", "info": "Lammspieß, Bulgur, gegrillte Tomate." },
-      { "id": "iskender", "name": "İskender", "price": "16,90 €", "info": "Döner auf Brot, Tomatensauce, Joghurt, Butter." }
+      { "id": "adana",     "name": "Adana Kebap (pikant)", "name_en": "Adana Kebab (spicy)", "price": "15,90 €", "info": "Gegrilltes Lamm-Rinderhack, Bulgur, Salat, Cacık.", "info_en": "Grilled lamb–beef mince, bulgur, salad, cacık." },
+      { "id": "urfa",      "name": "Urfa Kebap (mild)",    "name_en": "Urfa Kebab (mild)",   "price": "15,90 €", "info": "Mild gewürzt, Bulgur, Grillgemüse.",               "info_en": "Mild seasoning, bulgur, grilled vegetables." },
+      { "id": "sis_tavuk", "name": "Tavuk Şiş",            "name_en": "Chicken Şiş",         "price": "14,90 €", "info": "Hähnchenspieß, Reis, Salat.",                     "info_en": "Chicken skewer, rice, salad." },
+      { "id": "sis_kuzu",  "name": "Kuzu Şiş",             "name_en": "Lamb Şiş",            "price": "18,90 €", "info": "Lammspieß, Bulgur, gegrillte Tomate.",             "info_en": "Lamb skewer, bulgur, grilled tomato." },
+      { "id": "iskender",  "name": "İskender",             "name_en": "İskender",            "price": "16,90 €", "info": "Döner auf Brot, Tomatensauce, Joghurt, Butter.",   "info_en": "Doner on bread, tomato sauce, yogurt, butter." }
     ],
     "guevec": [
-      { "id": "guvec_tavuk", "name": "Güveç Tavuk", "price": "14,50 €", "info": "Eintopf im Tontopf, Hähnchen, Gemüse, Tomatensauce." },
-      { "id": "guvec_kuzu", "name": "Güveç Kuzu", "price": "17,90 €", "info": "Zartes Lamm, Aubergine, Paprika, Kräuter." },
-      { "id": "karniyarik", "name": "Karnıyarık", "price": "13,90 €", "info": "Gefüllte Aubergine mit Hack, Tomate, Petersilie." }
+      { "id": "guvec_tavuk", "name": "Güveç Tavuk", "name_en": "Chicken Güveç", "price": "14,50 €", "info": "Eintopf im Tontopf, Hähnchen, Gemüse, Tomatensauce.", "info_en": "Clay-pot stew, chicken, vegetables, tomato sauce." },
+      { "id": "guvec_kuzu",  "name": "Güveç Kuzu",  "name_en": "Lamb Güveç",    "price": "17,90 €", "info": "Zartes Lamm, Aubergine, Paprika, Kräuter.",           "info_en": "Tender lamb, eggplant, pepper, herbs." },
+      { "id": "karniyarik",  "name": "Karnıyarık",  "name_en": "Karnıyarık",    "price": "13,90 €", "info": "Gefüllte Aubergine mit Hack, Tomate, Petersilie.",    "info_en": "Stuffed eggplant with minced meat, tomato, parsley." }
     ],
     "vegetarisch": [
-      { "id": "falafel", "name": "Falafel-Teller", "price": "12,50 €", "info": "Kichererbsenbällchen, Hummus, Salat, Brot." },
-      { "id": "manti_veg", "name": "Manti Veggie", "price": "13,90 €", "info": "Teigtaschen, Joghurt-Knoblauchsauce, Butter-Paprikaöl." },
-      { "id": "imam", "name": "İmam Bayıldı", "price": "12,90 €", "info": "Geschmorte Aubergine, Zwiebel, Tomate – kalt." }
+      { "id": "falafel",   "name": "Falafel-Teller", "name_en": "Falafel Plate",  "price": "12,50 €", "info": "Kichererbsenbällchen, Hummus, Salat, Brot.",                    "info_en": "Chickpea falafel, hummus, salad, bread." },
+      { "id": "manti_veg", "name": "Manti Veggie",   "name_en": "Veggie Manti",   "price": "13,90 €", "info": "Teigtaschen, Joghurt-Knoblauchsauce, Butter-Paprikaöl.",         "info_en": "Dumplings, yogurt–garlic sauce, butter–paprika oil." },
+      { "id": "imam",      "name": "İmam Bayıldı",   "name_en": "İmam Bayıldı",   "price": "12,90 €", "info": "Geschmorte Aubergine, Zwiebel, Tomate – kalt.",                  "info_en": "Braised eggplant, onion, tomato – served cold." }
     ],
     "beilagen": [
-      { "id": "bulgur", "name": "Bulgur Pilavı", "price": "3,90 €", "info": "Hausgemacht." },
-      { "id": "reis", "name": "Reis", "price": "3,90 €", "info": "Butterreis." },
-      { "id": "salat", "name": "Beilagensalat", "price": "4,50 €", "info": "Joghurt- oder Zitronendressing." },
-      { "id": "brot", "name": "Ofenbrot", "price": "2,50 €", "info": "Frisch gebacken." }
+      { "id": "bulgur", "name": "Bulgur Pilavı", "name_en": "Bulgur Pilaf",       "price": "3,90 €", "info": "Hausgemacht.",                          "info_en": "Homemade." },
+      { "id": "reis",   "name": "Reis",          "name_en": "Rice",               "price": "3,90 €", "info": "Butterreis.",                           "info_en": "Butter rice." },
+      { "id": "salat",  "name": "Beilagensalat", "name_en": "Side Salad",         "price": "4,50 €", "info": "Joghurt- oder Zitronendressing.",       "info_en": "Yogurt or lemon dressing." },
+      { "id": "brot",   "name": "Ofenbrot",      "name_en": "Oven Bread",         "price": "2,50 €", "info": "Frisch gebacken.",                      "info_en": "Freshly baked." }
     ],
     "getraenke": [
-      { "id": "ayran", "name": "Ayran", "price": "2,50 €", "info": "Joghurtgetränk, 0,25 l." },
-      { "id": "salgam", "name": "Şalgam", "price": "3,20 €", "info": "Fermentiertes Rübchengetränk, 0,33 l." },
-      { "id": "cay", "name": "Çay (türk. Tee)", "price": "1,90 €", "info": "Im ince belli Glas." },
-      { "id": "raki", "name": "Rakı (2 cl)", "price": "4,90 €", "info": "Anisschnaps." },
-      { "id": "soft", "name": "Softdrinks", "price": "3,20 €", "info": "Cola, Fanta, Sprite – 0,33 l." },
-      { "id": "wasser", "name": "Mineralwasser", "price": "2,90 € / 5,50 €", "info": "0,25 / 0,75 l." }
+      { "id": "ayran",  "name": "Ayran",               "name_en": "Ayran",             "price": "2,50 €", "info": "Joghurtgetränk, 0,25 l.",               "info_en": "Yogurt drink, 0.25 l." },
+      { "id": "salgam", "name": "Şalgam",              "name_en": "Şalgam",            "price": "3,20 €", "info": "Fermentiertes Rübchengetränk, 0,33 l.", "info_en": "Fermented turnip beverage, 0.33 l." },
+      { "id": "cay",    "name": "Çay (türk. Tee)",     "name_en": "Çay (Turkish tea)", "price": "1,90 €", "info": "Im ince belli Glas.",                   "info_en": "Served in ince-belli glass." },
+      { "id": "raki",   "name": "Rakı (2 cl)",         "name_en": "Rakı (2 cl)",       "price": "4,90 €", "info": "Anisschnaps.",                          "info_en": "Anise spirit." },
+      { "id": "soft",   "name": "Softdrinks",          "name_en": "Soft Drinks",       "price": "3,20 €", "info": "Cola, Fanta, Sprite – 0,33 l.",         "info_en": "Cola, Fanta, Sprite – 0.33 l." },
+      { "id": "wasser", "name": "Mineralwasser",       "name_en": "Mineral Water",     "price": "2,90 € / 5,50 €", "info": "0,25 / 0,75 l.",              "info_en": "0.25 / 0.75 l." }
     ],
     "desserts": [
-      { "id": "baklava", "name": "Baklava (3 Stk.)", "price": "5,90 €", "info": "Mit Pistazie, Sirup." },
-      { "id": "sutlac", "name": "Sütlaç", "price": "5,50 €", "info": "Milchreis aus dem Ofen." },
-      { "id": "kunefe", "name": "Künefe", "price": "7,90 €", "info": "Fadenteig, Käse, warm, Sirup." }
+      { "id": "baklava", "name": "Baklava (3 Stk.)", "name_en": "Baklava (3 pcs)", "price": "5,90 €", "info": "Mit Pistazie, Sirup.",           "info_en": "With pistachio, syrup." },
+      { "id": "sutlac",  "name": "Sütlaç",            "name_en": "Sütlaç (rice pudding)", "price": "5,50 €", "info": "Milchreis aus dem Ofen.", "info_en": "Baked rice pudding." },
+      { "id": "kunefe",  "name": "Künefe",            "name_en": "Künefe",           "price": "7,90 €", "info": "Fadenteig, Käse, warm, Sirup.", "info_en": "Shredded pastry, cheese, warm, syrup." }
     ]
   },
-
   "faqs": {
     "title": "Asmali Konak – FAQ",
+    "title_en": "Asmali Konak – FAQ",
     "pdfUrl": "./pdf/pizza_papa_faq.pdf",
     "cats": [
       {
         "key": "reservierung",
         "title": "Reservierung",
+        "title_en": "Reservations",
         "icon": "📞",
         "items": [
-          { "q": "Wie reserviere ich am schnellsten?", "a": "Am einfachsten über den Bot (Reservieren) oder telefonisch. Für Gruppen ab 8 Personen bitten wir um kurze telefonische Bestätigung.", "special": "contactForm" },
-          { "q": "Bis wann kann ich kostenfrei stornieren?", "a": "Bis 2 Stunden vor Termin – danach bitte kurz durchrufen." }
+          {
+            "q": "Wie reserviere ich am schnellsten?",
+            "q_en": "What’s the fastest way to reserve?",
+            "a": "Am einfachsten über den Bot (Reservieren) oder telefonisch. Für Gruppen ab 8 Personen bitten wir um kurze telefonische Bestätigung.",
+            "a_en": "Easiest via the bot (Reserve) or by phone. For groups of 8+ please call briefly to confirm.",
+            "special": "contactForm"
+          },
+          {
+            "q": "Bis wann kann ich kostenfrei stornieren?",
+            "q_en": "Until when can I cancel free of charge?",
+            "a": "Bis 2 Stunden vor Termin – danach bitte kurz durchrufen.",
+            "a_en": "Up to 2 hours before your time slot — after that please give us a quick call."
+          }
         ]
       },
       {
         "key": "oeffnungszeiten",
         "title": "Öffnungszeiten",
+        "title_en": "Opening Hours",
         "icon": "⏰",
         "items": [
-          { "q": "Habt ihr heute geöffnet?", "a": "Die aktuellen Zeiten zeigt dir der Bot live an.", "special": "openHours" },
-          { "q": "Feiertage?", "a": "An Heiligabend geschlossen. Am 25. & 26.12. 20:00–23:59 geöffnet." }
+          {
+            "q": "Habt ihr heute geöffnet?",
+            "q_en": "Are you open today?",
+            "a": "Die aktuellen Zeiten zeigt dir der Bot live an.",
+            "a_en": "The bot shows today’s opening times live.",
+            "special": "openHours"
+          },
+          {
+            "q": "Feiertage?",
+            "q_en": "Public holidays?",
+            "a": "An Heiligabend geschlossen. Am 25. & 26.12. 20:00–23:59 geöffnet.",
+            "a_en": "Closed on Christmas Eve. Open on Dec 25 & 26 from 20:00–23:59."
+          }
         ]
       },
       {
         "key": "kueche",
         "title": "Küche & Allergene",
+        "title_en": "Kitchen & Allergens",
         "icon": "🫓",
         "items": [
-          { "q": "Gibt es vegetarische/vegane Optionen?", "a": "Ja – u. a. İmam Bayıldı, Falafel-Teller, Pide Ispanaklı; vegan auf Wunsch ohne Joghurt/Butter." },
-          { "q": "Glutenfrei möglich?", "a": "Wir arbeiten mit Brot/Teig – Spuren können nicht ausgeschlossen werden." }
+          {
+            "q": "Gibt es vegetarische/vegane Optionen?",
+            "q_en": "Do you offer vegetarian/vegan options?",
+            "a": "Ja – u. a. İmam Bayıldı, Falafel-Teller, Pide Ispanaklı; vegan auf Wunsch ohne Joghurt/Butter.",
+            "a_en": "Yes — e.g., İmam Bayıldı, Falafel Plate, Pide with spinach; vegan on request (no yogurt/butter)."
+          },
+          {
+            "q": "Glutenfrei möglich?",
+            "q_en": "Is gluten-free possible?",
+            "a": "Wir arbeiten mit Brot/Teig – Spuren können nicht ausgeschlossen werden.",
+            "a_en": "We work with bread/dough — traces of gluten cannot be excluded."
+          }
         ]
       },
       {
         "key": "abholung",
         "title": "Abholung & Lieferung",
+        "title_en": "Pickup & Delivery",
         "icon": "🚗",
         "items": [
-          { "q": "Bietet ihr Abholung an?", "a": "Ja, ab Bestellung i. d. R. 15–25 Min. Abholzeit." },
-          { "q": "Lieferung?", "a": "Aktuell keine eigene Lieferung. Bei Bedarf bitte anrufen – wir beraten gern." }
+          {
+            "q": "Bietet ihr Abholung an?",
+            "q_en": "Do you offer pickup?",
+            "a": "Ja, ab Bestellung i. d. R. 15–25 Min. Abholzeit.",
+            "a_en": "Yes, usually ready for pickup 15–25 minutes after ordering."
+          },
+          {
+            "q": "Lieferung?",
+            "q_en": "Delivery?",
+            "a": "Aktuell keine eigene Lieferung. Bei Bedarf bitte anrufen – wir beraten gern.",
+            "a_en": "No in-house delivery at the moment. Call us if needed — we’re happy to advise."
+          }
         ]
       },
       {
         "key": "bezahlung",
         "title": "Bezahlung",
+        "title_en": "Payment",
         "icon": "💳",
         "items": [
-          { "q": "Welche Zahlarten gibt es?", "a": "Bar, EC/Kreditkarte. Mobile Pay (Apple/Google) in Vorbereitung." },
-          { "q": "Gibt es Gruppen-/Firmenrechnung?", "a": "Ja, bitte beim Service Bescheid geben." }
+          {
+            "q": "Welche Zahlarten gibt es?",
+            "q_en": "Which payment methods do you accept?",
+            "a": "Bar, EC/Kreditkarte. Mobile Pay (Apple/Google) in Vorbereitung.",
+            "a_en": "Cash, debit/credit cards. Mobile Pay (Apple/Google) coming soon."
+          },
+          {
+            "q": "Gibt es Gruppen-/Firmenrechnung?",
+            "q_en": "Group/company invoices available?",
+            "a": "Ja, bitte beim Service Bescheid geben.",
+            "a_en": "Yes, please inform our staff."
+          }
         ]
       },
       {
         "key": "speisenkarte",
         "title": "Speisenkarte",
+        "title_en": "Menu",
         "icon": "📜",
         "items": [
-          { "q": "Wo finde ich eure Karte?", "a": "Im Bot unter „Speisen“ sowie als PDF verlinkt." },
-          { "q": "Kinderfreundliche Gerichte?", "a": "Ja – kleine Pide, Döner-Teller klein, Reis & Hähnchen." }
+          {
+            "q": "Wo finde ich eure Karte?",
+            "q_en": "Where can I find your menu?",
+            "a": "Im Bot unter „Speisen“ sowie als PDF verlinkt.",
+            "a_en": "In the bot under “Dishes” and also linked as PDF."
+          },
+          {
+            "q": "Kinderfreundliche Gerichte?",
+            "q_en": "Kid-friendly dishes?",
+            "a": "Ja – kleine Pide, Döner-Teller klein, Reis & Hähnchen.",
+            "a_en": "Yes — small pide, small döner plate, rice & chicken."
+          }
         ]
       },
       {
         "key": "kontakt",
         "title": "Kontakt",
+        "title_en": "Contact",
         "icon": "✉️",
         "items": [
-          { "q": "Wie kontaktiere ich euch?", "a": "Über das Kontaktformular oder telefonisch.", "special": "contactForm" },
-          { "q": "Adresse & Route?", "a": "Ostheimer Str. 20, 51103 Köln – Klick auf die Adresse öffnet Google Maps." }
+          {
+            "q": "Wie kontaktiere ich euch?",
+            "q_en": "How can I contact you?",
+            "a": "Über das Kontaktformular oder telefonisch.",
+            "a_en": "Via the contact form or by phone.",
+            "special": "contactForm"
+          },
+          {
+            "q": "Adresse & Route?",
+            "q_en": "Address & directions?",
+            "a": "Ostheimer Str. 20, 51103 Köln – Klick auf die Adresse öffnet Google Maps.",
+            "a_en": "Ostheimer Str. 20, 51103 Cologne — click the address to open Google Maps."
+          }
         ]
       },
       {
         "key": "bestellung",
         "title": "Schnellbestellung",
+        "title_en": "Quick Order",
         "icon": "⚡",
         "items": [
-          { "q": "Kann ich schnell vorbestellen?", "a": "Kurze Nachricht im Bot mit Uhrzeit & Personenanzahl – wir bestätigen umgehend.", "special": "orderQuick" }
+          {
+            "q": "Kann ich schnell vorbestellen?",
+            "q_en": "Can I place a quick pre-order?",
+            "a": "Kurze Nachricht im Bot mit Uhrzeit & Personenanzahl – wir bestätigen umgehend.",
+            "a_en": "Send a short message in the bot with time & party size — we’ll confirm promptly.",
+            "special": "orderQuick"
+          }
         ]
       }
     ]

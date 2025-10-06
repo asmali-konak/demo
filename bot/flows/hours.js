@@ -1,7 +1,7 @@
 /* ============================================================================
-   PPX Flow: Öffnungszeiten (hours.js) – v7.9.4
-   - stepHours(): zeigt Stundenliste zentriert
-   - askReserveAfterHours(): Follow-up CTA
+   PPX Flow: Öffnungszeiten (hours.js) – v8.4.0
+   - stepHours(): zeigt Stundenliste zentriert (I18N)
+   - askReserveAfterHours(): Follow-up CTA (I18N)
    ============================================================================ */
 (function () {
   'use strict';
@@ -13,13 +13,26 @@
   var U  = PPX.util || {};
   var DLY = PPX.D || {};
   var OH = (PPX.services && PPX.services.openHours) || {};
+  var I  = PPX.i18n || {};
 
   function cfg(){ try { return (PPX.data && PPX.data.cfg && PPX.data.cfg()) || {}; } catch(e){ return {}; } }
+  function L(){ try { return (I && I.nowLang && I.nowLang()) || PPX.lang || 'de'; } catch(e){ return 'de'; } }
+  function t(k, fb){ try { return (I && I.t) ? I.t(k, fb) : (fb||k); } catch(e){ return fb||k; } }
+
+  // I18N-Schlüssel registrieren
+  try { I.reg && I.reg({
+    'hours.title':     { de:'ÖFFNUNGSZEITEN', en:'OPENING HOURS' },
+    'hours.none':      { de:'Keine Zeiten hinterlegt.', en:'No hours configured.' },
+    'hours.ask':       { de:'Samstagabend ist meist voll – möchtest du dir jetzt schon einen Platz sichern?',
+                         en:'Saturday evenings are usually busy—want to secure a table now?' },
+    'hours.reserve':   { de:'Ja, bitte reservieren', en:'Yes, reserve a table' },
+    'hours.nohome':    { de:'Nein, zurück ins Hauptmenü', en:'No, back to main menu' }
+  }); } catch(e){}
 
   function stepHours(){
     var scopeIdx = UI.getScopeIndex ? UI.getScopeIndex() : 0;
 
-    var B = UI.block('ÖFFNUNGSZEITEN', { maxWidth:'100%', hCenter:true });
+    var B = UI.block(t('hours.title','ÖFFNUNGSZEITEN'), { maxWidth:'100%', hCenter:true });
     B.setAttribute('data-block','hours');
 
     var C = D.createElement('div'); C.className = 'ppx-body'; C.style.textAlign = 'center';
@@ -32,11 +45,11 @@
     try {
       var Cfg = cfg();
       lines = OH.normalizeHoursLines ? OH.normalizeHoursLines(Cfg.hoursLines) : [];
-      if (!lines.length && OH.hoursFromOpen) lines = OH.hoursFromOpen();
+      if (!lines.length && OH.hoursFromOpen) lines = OH.hoursFromOpen(L());
     } catch (e) { lines = []; }
 
     if (!Array.isArray(lines) || !lines.length) {
-      C.appendChild(UI.line('Keine Zeiten hinterlegt.'));
+      C.appendChild(UI.line(t('hours.none','Keine Zeiten hinterlegt.')));
     } else {
       lines.forEach(function (rowArr) {
         var txt = Array.isArray(rowArr) ? (rowArr[0] + ': ' + rowArr[1]) : String(rowArr);
@@ -51,10 +64,10 @@
   function askReserveAfterHours(scopeIdx){
     var Q = UI.block(null, { maxWidth:'100%' });
     Q.setAttribute('data-block','hours-ask');
-    Q.appendChild(UI.note('Samstagabend ist meist voll – möchtest du dir jetzt schon einen Platz sichern?'));
+    Q.appendChild(UI.note(t('hours.ask','Samstagabend ist meist voll – möchtest du dir jetzt schon einen Platz sichern?')));
     var r = UI.row(); r.style.justifyContent = 'flex-start';
-    r.appendChild(UI.btn('Ja, bitte reservieren', function(){ try { U.delay(PPX.flows.stepReservieren, DLY.step || 450); } catch(e){} }, 'ppx-cta', '🗓️'));
-    r.appendChild(UI.btn('Nein, zurück ins Hauptmenü', function(){ try { UI.goHome(); } catch(e){} }, 'ppx-secondary', '🏠'));
+    r.appendChild(UI.btn(t('hours.reserve','Ja, bitte reservieren'), function(){ try { U.delay(PPX.flows.stepReservieren, DLY.step || 450); } catch(e){} }, 'ppx-cta', '🗓️'));
+    r.appendChild(UI.btn(t('hours.nohome','Nein, zurück ins Hauptmenü'), function(){ try { UI.goHome(); } catch(e){} }, 'ppx-secondary', '🏠'));
     Q.appendChild(r);
     try { UI.keepBottom && UI.keepBottom(); } catch(e){}
   }
