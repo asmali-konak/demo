@@ -102,7 +102,7 @@
       <p class="small">
         Diese Website verarbeitet personenbezogene Daten nur, soweit dies zur Bereitstellung der Website erforderlich ist (Art. 6 Abs. 1 lit. f DSGVO). Beim Aufruf werden serverseitig technisch notwendige Daten (z. B. IP-Adresse, Zeitpunkt, angeforderte Ressource) in Logfiles verarbeitet und zeitnah gelöscht.
       </p>
-      <p class="small"><strong>Cookies/Storage:</strong> Es werden keine Tracking-Cookies gesetzt. Es wird lediglich Ihre Auswahl zur Cookie-Einwilligung lokal auf Ihrem Gerät gespeichert (technisch notwendig, keine Übermittlung an Dritte).</p>
+      <p class="small"><strong>Cookies/Storage:</strong> Es werden <em>keine</em> Tracking-Cookies gesetzt und es erfolgt <em>kein</em> Zugriff auf nicht notwendige Endgeräteinformationen. Es wird kein Local Storage für Komfortfunktionen genutzt.</p>
       <p class="small"><strong>Schriften/Fonts:</strong> Die Schriften werden selbst gehostet (Self-Hosting). Es erfolgt kein Abruf von Drittservern.</p>
       <p class="small"><strong>Kontaktaufnahme:</strong> Bei Kontakt verarbeiten wir die angegebenen Daten zur Bearbeitung der Anfrage. Die Daten werden ohne Ihre Einwilligung nicht weitergegeben.</p>
       <p class="small"><strong>Ihre Rechte:</strong> Auskunft, Berichtigung, Löschung, Einschränkung, Datenübertragbarkeit sowie Beschwerderecht bei einer Aufsichtsbehörde. Kontakt: <em>muciyil@gmail.com</em>.</p>
@@ -122,19 +122,8 @@
     <div class="legal-links">
       <a href="#impressum">Impressum</a>
       <a href="#datenschutz">Datenschutz</a>
-      <a href="#" onclick="resetConsent();return false;">Cookie-Einstellungen</a>
     </div>
   </footer>
-
-  <!-- Cookie Banner -->
-  <div class="cookie-banner" id="cookieBanner" role="dialog" aria-live="polite" aria-label="Cookie-Hinweis">
-    <p><strong>Cookie-Hinweis:</strong> Wir speichern nur Ihre Auswahl lokal (kein Tracking).</p>
-    <div class="cookie-actions">
-      <button class="btn primary" onclick="acceptCookies()">Einverstanden</button>
-      <button class="btn" onclick="declineCookies()">Ablehnen</button>
-      <a class="btn link" href="#datenschutz">Mehr erfahren</a>
-    </div>
-  </div>
 
   <!-- Bot Launcher & Panel -->
   <div class="ppx-launch" id="ppx-launch" role="button" aria-label="Schnellzugriff öffnen">
@@ -175,8 +164,7 @@
           const theme=(PPX&&PPX.THEME)||{};
           const root=(theme.root||{});
           const typo=(theme.typography||{});
-          /* -> Single Source: setze Basisgröße & Font-Families aus bot.json */
-          const base = parseFloat(typo.baseSize);           // z. B. 17.5
+          const base = parseFloat(typo.baseSize);
           if(!Number.isNaN(base)) document.documentElement.style.setProperty('--fs-base', base+'px');
           if(root.fontBody)    document.documentElement.style.setProperty('--font-body', root.fontBody);
           if(root.fontHeading) document.documentElement.style.setProperty('--font-heading', root.fontHeading);
@@ -200,13 +188,6 @@
           }
         })
         .catch(()=>{ const wrap=document.querySelector('#menu-auto'); if(wrap) wrap.innerHTML='<p class="center small">Speisekarte derzeit nicht verfügbar.</p>'; });
-
-      // Cookie-Banner
-      const KEY='pp-consent', banner=document.getElementById('cookieBanner');
-      try{ if(!localStorage.getItem(KEY)){ banner.style.display='flex'; } }catch(e){ banner.style.display='flex'; }
-      window.acceptCookies=function(){ try{ localStorage.setItem(KEY,'accepted'); }catch(e){} banner.remove(); };
-      window.declineCookies=function(){ try{ localStorage.setItem(KEY,'declined'); }catch(e){} banner.remove(); };
-      window.resetConsent=function(){ try{ localStorage.removeItem(KEY); }catch(e){} location.hash='#datenschutz'; location.reload(); };
     });
   })();
   </script>

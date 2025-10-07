@@ -148,14 +148,3 @@ footer{
   background:none;border:none;box-shadow:none;padding:0;display:block;position:static;left:auto;transform:none;text-align:center
 }
 #about .section-sub{color:#2b2a29;opacity:.95}
-
-/* --- Cookie Banner --------------------------------------------------------- */
-.cookie-banner{
-  position:fixed;z-index:9999;left:16px;right:16px;bottom:16px;display:none;align-items:flex-start;gap:14px;
-  padding:12px 14px;border:2px solid var(--gold);border-radius:12px;background:url('../images/paper.jpg') center/cover repeat;box-shadow:var(--shadow)
-}
-.cookie-banner p{margin:0;font-size:.9rem}
-.cookie-actions{display:flex;gap:10px;margin-left:auto;flex-wrap:wrap}
-.btn{cursor:pointer;border:2px solid var(--gold);padding:8px 12px;border-radius:999px;background:#fff}
-.btn.primary{background:var(--deep);color:#fff}
-.btn.link{background:transparent;text-decoration:underline}
