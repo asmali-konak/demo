@@ -1,10 +1,15 @@
 /* ============================================================================
-   PPX UI Panel (panel.js) – v7.9.4
+   PPX UI Panel (panel.js) – v8.4.0
    - DOM Query & Panel open/close
    - Scroll-Always (keepBottom)
    - UI-Basics: block(), line(), note(), row(), grid()
    - Scope-Stack: getScopeIndex(), popToScope()
    - Einmaliges Binden der Events (bindOnce)
+   - Neu: Sprach-Toggler (DE/EN) direkt neben dem Close-"X"
+     * Speichert Wahl in localStorage ("ppx.lang")
+     * Setzt PPX.lang und data-lang am #ppx-panel
+     * feuert CustomEvent "ppx:lang" auf window
+     * optionales Re-Render: leert View und ruft stepHome()
    ============================================================================ */
 (function () {
   'use strict';
@@ -14,9 +19,10 @@
   var U = PPX.util || {};
 
   // DOM refs
-  var $launch, $panel, $close, $view;
+  var $launch, $panel, $close, $view, $langBtn;
   var BOUND = false;
 
+  // --- DOM Query -------------------------------------------------------------
   function queryDom() {
     $launch = D.getElementById('ppx-launch');
     $panel  = D.getElementById('ppx-panel');
@@ -25,11 +31,110 @@
     return !!($launch && $panel && $close && $view);
   }
 
+  // --- Language handling -----------------------------------------------------
+  function getStoredLang() {
+    try { return localStorage.getItem('ppx.lang'); } catch(e) { return null; }
+  }
+  function storeLang(v) {
+    try { localStorage.setItem('ppx.lang', v); } catch(e) {}
+  }
+  function currentLang() {
+    return (PPX.lang || getStoredLang() || 'de');
+  }
+
+  function updateLangIndicator() {
+    if (!$langBtn) return;
+    var lang = currentLang();
+    $langBtn.setAttribute('aria-pressed', lang === 'en' ? 'true' : 'false');
+    $langBtn.textContent = (lang === 'en') ? 'EN' : 'DE';
+    $langBtn.title = (lang === 'en')
+      ? 'Switch to German'
+      : 'Auf Englisch umschalten';
+  }
+
+  function applyLangToDom(lang) {
+    if ($panel) { $panel.setAttribute('data-lang', lang); }
+    D.documentElement.setAttribute('data-ppx-lang', lang);
+  }
+
+  function setLang(lang, opts) {
+    opts = opts || {};
+    var prev = currentLang();
+    if (lang !== 'de' && lang !== 'en') lang = 'de';
+    PPX.lang = lang;
+    storeLang(lang);
+    applyLangToDom(lang);
+    updateLangIndicator();
+
+    // Custom event für alle Module/Flows
+    try {
+      var ev = new CustomEvent('ppx:lang', { detail: { lang: lang, prev: prev } });
+      W.dispatchEvent(ev);
+    } catch(e) {}
+
+    // Optional: sofort neu rendern (Home)
+    if (opts.rerender !== false) {
+      // View leeren und Home erneut starten
+      popToScope(0);
+      if (PPX.flows && typeof PPX.flows.stepHome === 'function') {
+        try { PPX.flows.stepHome(); } catch (e) {}
+      }
+    }
+  }
+
+  function buildLangToggle() {
+    if (!$close || !$panel) return;
+    if ($langBtn && $langBtn.parentNode) return; // bereits vorhanden
+
+    $langBtn = el('button', {
+      id: 'ppx-lang',
+      type: 'button',
+      'aria-label': 'Language',
+      'class': 'ppx-lang-btn',
+      style: {
+        display: 'inline-flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '12px',
+        lineHeight: '1',
+        minWidth: '34px',
+        height: '28px',
+        marginRight: '6px',
+        padding: '0 8px',
+        borderRadius: '14px',
+        border: '0',
+        cursor: 'pointer'
+      },
+      onclick: function () {
+        var lang = currentLang() === 'de' ? 'en' : 'de';
+        setLang(lang, { rerender: true });
+      }
+    });
+
+    // Direkt vor dem Close-X einfügen, damit "neben dem X"
+    try {
+      $close.parentNode.insertBefore($langBtn, $close);
+    } catch(e) {
+      // Fallback: ans Panel hängen
+      $panel.appendChild($langBtn);
+    }
+    // Initialen Zustand setzen
+    applyLangToDom(currentLang());
+    updateLangIndicator();
+  }
+
+  // --- Panel open/close ------------------------------------------------------
   function openPanel() {
     if (!queryDom()) return;
     $panel.classList.add('ppx-open', 'ppx-v5');
+
+    // Sprache sicherstellen (einmalig pro Öffnen)
+    buildLangToggle();
+
     if (!$panel.dataset.init) {
       $panel.dataset.init = '1';
+      // Initialsprache aus Persistenz laden
+      setLang(currentLang(), { rerender: false });
       if (PPX.flows && typeof PPX.flows.stepHome === 'function') {
         try { PPX.flows.stepHome(); } catch (e) { /* noop */ }
       }
@@ -133,9 +238,13 @@
       if (t) openPanel();
     });
 
+    // Sprach-Toggle schon beim Binden vorbereiten (falls Panel initial offen)
+    buildLangToggle();
+
     // Falls Panel bei Start schon offen ist
     if ($panel.classList.contains('ppx-open') && !$panel.dataset.init) {
       $panel.dataset.init = '1';
+      setLang(currentLang(), { rerender: false });
       if (PPX.flows && typeof PPX.flows.stepHome === 'function') {
         try { PPX.flows.stepHome(); } catch (e) {}
       }
@@ -146,6 +255,7 @@
   }
 
   // Exports
+  PPX.ui = PPX.ui || {};
   PPX.ui.block = block;
   PPX.ui.line = line;
   PPX.ui.note = note;
@@ -159,4 +269,8 @@
   PPX.ui.openPanel = openPanel;
   PPX.ui.closePanel = closePanel;
   PPX.ui.bindOnce = bindOnce;
+
+  // Zusätzlich exportieren: Sprachfunktionen für andere Module (optional)
+  PPX.ui.setLang = setLang;
+  PPX.ui.currentLang = currentLang;
 })();

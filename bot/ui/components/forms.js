@@ -1,8 +1,9 @@
 /* ============================================================================
-   PPX UI Forms (forms.js) – v7.9.4
+   PPX UI Forms (forms.js) – v8.4.0
    - Input-/Textarea-/Select-Row-Builder (mit .ppx-input Wrapper)
    - Helpers: val(el), focus(el)
    - Validation: isValidEmail()
+   - I18N: akzeptiert {de:'…', en:'…'} bei placeholder/option.label (außerhalb bot.json)
    ============================================================================ */
 (function () {
   'use strict';
@@ -11,12 +12,18 @@
   var PPX = W.PPX = W.PPX || {};
   PPX.ui = PPX.ui || {};
 
+  // I18N helpers (sanfte Fallbacks)
+  var I = PPX.i18n || {};
+  var pick = (I && I.pick) ? I.pick : function(v){ return (v && typeof v==='object') ? (v.de||v.en||'') : v; };
+
   // ---- small utils ----------------------------------------------------------
   function assignAttrs(node, attrs) {
     if (!attrs) return node;
     Object.keys(attrs).forEach(function (k) {
       var v = attrs[k];
       if (v == null) return;
+      // I18N: placeholder kann {de,en} sein
+      if (k === 'placeholder') v = pick(v);
       if (k === 'class' || k === 'className') node.setAttribute('class', v);
       else if (k === 'style' && typeof v === 'object') Object.assign(node.style, v);
       else if (k in node) { try { node[k] = v; } catch(e){ node.setAttribute(k, v); } }
@@ -37,6 +44,7 @@
     attrs = attrs || {};
     var wrap = makeWrap();
     var inp = D.createElement('input');
+    // I18N: placeholder unterstützen
     assignAttrs(inp, Object.assign({ type:'text' }, attrs));
     wrap.appendChild(inp);
     return { row: wrap, input: inp };
@@ -53,14 +61,19 @@
   }
 
   // selectRow(options, { value, ... })
-  // options: [{ value:'', label:'' }, ...]  or  ['A','B']
+  // options: [{ value:'', label:''|{de,en} }, ...]  or  ['A','B']
   function selectRow(options, attrs) {
     var wrap = makeWrap();
     var sel = D.createElement('select');
     (options || []).forEach(function (opt) {
       var o = D.createElement('option');
-      if (typeof opt === 'string') { o.value = opt; o.textContent = opt; }
-      else { o.value = String(opt.value != null ? opt.value : (opt.label || '')); o.textContent = String(opt.label != null ? opt.label : o.value); }
+      if (typeof opt === 'string') {
+        o.value = opt; o.textContent = opt;
+      } else {
+        var val = (opt.value != null ? String(opt.value) : String(opt.label || ''));
+        var lbl = (opt.label != null ? pick(opt.label) : val);
+        o.value = val; o.textContent = String(lbl);
+      }
       sel.appendChild(o);
     });
     assignAttrs(sel, attrs || {});

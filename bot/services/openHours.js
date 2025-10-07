@@ -1,7 +1,8 @@
 /* ============================================================================
-   PPX Service: Open Hours & Slots (openHours.js) – v7.9.4
-   - parseSpanToText(span)
-   - hoursFromOpen()
+   PPX Service: Open Hours & Slots (openHours.js) – v8.4.0
+   - I18N-aware: nutzt PPX.lang / PPX.i18n.nowLang()
+   - parseSpanToText(span[, lang])
+   - hoursFromOpen([lang])
    - normalizeHoursLines(v)
    - hmToMin(), minToHM()
    - buildSlotsForDate(dateObj)  // 30-min Slots, heute mit 4h Lead
@@ -17,8 +18,12 @@
   function cfg() {
     try { return (PPX.data && PPX.data.cfg && PPX.data.cfg()) || {}; } catch(e){ return {}; }
   }
+  function nowLang() {
+    try { return (PPX.i18n && PPX.i18n.nowLang && PPX.i18n.nowLang()) || PPX.lang || 'de'; }
+    catch(e){ return (PPX && PPX.lang) || 'de'; }
+  }
 
-  // ---- Helpers --------------------------------------------------------------
+  // ---- Helpers: HM <-> Min --------------------------------------------------
   function hmToMin(s){
     var a = String(s || '').trim().replace(/\s/g,'');
     var m = a.match(/^(\d{1,2}):(\d{2})$/);
@@ -33,6 +38,14 @@
     return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
   }
 
+  // ---- Day-Names per Sprache ------------------------------------------------
+  var DAYS_DE = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  var DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  function dayName(idx, lang){
+    var L = lang || nowLang();
+    return (L === 'en' ? DAYS_EN : DAYS_DE)[idx] || '';
+  }
+
   // span: ["11:00","22:00"] | {from/to|start/end} | "11:00 – 22:00"
   function parseSpan(span){
     var from, to;
@@ -45,17 +58,22 @@
     return { from: from || '', to: to || '' };
   }
 
-  function parseSpanToText(span){
+  function parseSpanToText(span, lang){
+    var L = lang || nowLang();
     var p = parseSpan(span);
-    if (!p.from || !p.to) return 'geschlossen';
-    return p.from + ' – ' + p.to + ' Uhr';
+    if (!p.from || !p.to) return (L === 'en') ? 'closed' : 'geschlossen';
+    // 24h-Format beibehalten (Template-weit konsistent)
+    return (L === 'en')
+      ? (p.from + ' – ' + p.to)
+      : (p.from + ' – ' + p.to + ' Uhr');
   }
 
-  function hoursFromOpen(){
-    var dnames = ['Sonntag','Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag'];
+  function hoursFromOpen(lang){
+    var L = lang || nowLang();
     var out = [], O = (cfg().OPEN || {});
-    for (var i=1;i<=6;i++){ out.push([dnames[i], parseSpanToText(O[String(i)])]); }
-    out.push([dnames[0], parseSpanToText(O['0'])]);
+    // Reihenfolge: Montag…Samstag, Sonntag (wie bisher)
+    for (var i=1;i<=6;i++){ out.push([dayName(i,L), parseSpanToText(O[String(i)], L)]); }
+    out.push([dayName(0,L), parseSpanToText(O['0'], L)]);
     return out;
   }
 
@@ -73,7 +91,9 @@
       return out;
     }
     if (v && typeof v === 'object'){
-      ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag'].forEach(function(d){
+      // Unterstützt DE & EN Keys
+      ['Montag','Dienstag','Mittwoch','Donnerstag','Freitag','Samstag','Sonntag',
+       'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].forEach(function(d){
         if (v[d]) out.push([d, String(v[d])]);
       });
     }

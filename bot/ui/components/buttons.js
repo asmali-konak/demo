@@ -1,8 +1,9 @@
 /* ============================================================================
-   PPX UI Buttons (buttons.js) – v7.9.4
+   PPX UI Buttons (buttons.js) – v8.4.0
    - btn(), chip() mit Icon-Support (data-ic)
    - Back/Home-Buttons + Nav-Leisten
    - goHome(): popToScope(0) + stepHome(force)
+   - I18N: nutzt PPX.i18n.t()/pick() für Labels (außerhalb bot.json)
    ============================================================================ */
 (function () {
   'use strict';
@@ -11,7 +12,20 @@
   var PPX = W.PPX = W.PPX || {};
   PPX.ui = PPX.ui || {};
 
-  // kleine lokale Helfer (identisch zur Logik in panel.js)
+  // I18N helpers (sanft fallbacken)
+  var I = PPX.i18n || {};
+  var t    = (I && I.t)    ? I.t    : function(k, fb){ return fb || k; };
+  var pick = (I && I.pick) ? I.pick : function(v){ return v; };
+
+  // Eigene UI-Texte zentral registrieren (DE/EN), außerhalb bot.json
+  try {
+    I.reg && I.reg({
+      'ui.back':          { de:'← Zurück',              en:'← Back' },
+      'ui.home':          { de:'Zurück ins Hauptmenü',  en:'Back to Main Menu' }
+    });
+  } catch(e){}
+
+  // kleine lokale Helfer (aligned mit panel.js)
   function isObj(v){ return v && typeof v === 'object' && !Array.isArray(v); }
   function el(tag, attrs) {
     var n = D.createElement(tag);
@@ -33,11 +47,12 @@
   }
 
   // --- Basis Buttons ---------------------------------------------------------
+  // label kann String ODER {de:'…', en:'…'} sein
   function btn(label, onClick, extraCls, ic) {
     var a = { 'class':'ppx-b ' + (extraCls || ''), 'onclick':onClick, 'type':'button' };
     if (ic) a['data-ic'] = ic;
     var n = el('button', a);
-    n.appendChild(el('span', { 'class':'ppx-label' }, label));
+    n.appendChild(el('span', { 'class':'ppx-label' }, pick(label)));
     return n;
   }
 
@@ -45,13 +60,13 @@
     var a = { 'class':'ppx-chip ' + (extraCls || ''), 'onclick':onClick, 'type':'button' };
     if (ic) a['data-ic'] = ic;
     var n = el('button', a);
-    n.appendChild(el('span', { 'class':'ppx-label' }, label));
+    n.appendChild(el('span', { 'class':'ppx-label' }, pick(label)));
     return n;
   }
 
   // --- Navigation ------------------------------------------------------------
   function backBtnAt(scopeIdx) {
-    return btn('← Zurück', function () {
+    return btn(t('ui.back','← Zurück'), function () {
       try { PPX.ui.popToScope(scopeIdx); } catch (e) {}
     }, 'ppx-secondary ppx-back');
   }
@@ -66,11 +81,11 @@
   }
 
   function homeBtn() {
-    return btn('Zurück ins Hauptmenü', goHome, 'ppx-secondary', '🏠');
+    return btn(t('ui.home','Zurück ins Hauptmenü'), goHome, 'ppx-secondary', '🏠');
   }
 
   function homeNavBtn() {
-    return btn('Zurück ins Hauptmenü', goHome, 'ppx-secondary ppx-back', '🏠');
+    return btn(t('ui.home','Zurück ins Hauptmenü'), goHome, 'ppx-secondary ppx-back', '🏠');
   }
 
   function navBottom(scopeIdx) {

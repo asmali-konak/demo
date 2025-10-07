@@ -1,9 +1,10 @@
 /* ============================================================================
-   PPX Core (core.js) – v7.9.4
+   PPX Core (core.js) – v8.4.0
    - Namespace & Version
-   - Datenzugriff auf window.PPX_DATA / __PPX_DATA__
+   - Datenzugriff auf window.PPX_DATA / __PPX_DATA__ (SST)
    - Delays & delay()
    - Utilities (isObj, pretty)
+   - I18N-Basis: nowLang(), pick(), t(), reg() – außerhalb der bot.json
    - Boot-Sequenz (ruft PPX.ui.bindOnce mit gleichen Fallbacks)
    ============================================================================ */
 (function () {
@@ -14,10 +15,11 @@
 
   // Namespace
   var PPX = W.PPX = W.PPX || {};
-  PPX.VERSION = '7.9.4';
+  PPX.VERSION = '8.4.0';
 
-  // --- Datenzugriff ----------------------------------------------------------
-  // Immer frisch aus PPX_DATA oder __PPX_DATA__ lesen (Single Source of Truth)
+  // ---------------------------------------------------------------------------
+  // Datenzugriff (Single Source of Truth: window.PPX_DATA / __PPX_DATA__)
+  // ---------------------------------------------------------------------------
   function raw() {
     return (W.PPX_DATA || W.__PPX_DATA__ || {});
   }
@@ -42,11 +44,12 @@
     faqs: faqs
   };
 
-  // --- Delays & Helper -------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Delays & Helper
+  // ---------------------------------------------------------------------------
   var Delays = { tiny:120, tap:260, step:450, sub:550, long:1000 };
   function delay(fn, ms) { return setTimeout(fn, ms); }
 
-  // Utilities
   function isObj(v) { return v && typeof v === 'object' && !Array.isArray(v); }
   function pretty(s) {
     return String(s || '')
@@ -63,8 +66,86 @@
   };
   PPX.D = Delays;
 
-  // --- Boot-Sequenz (entspricht ursprünglicher Bind-Logik) -------------------
+  // ---------------------------------------------------------------------------
+  // I18N-Foundation (außerhalb bot.json; Module registrieren ihre UI-Texte hier)
+  // Ziel: ein Kunde kann per Flag "english: true" die UI sofort umschalten.
+  // - nowLang(): aktuelle Sprache (PPX.lang, default 'de')
+  // - pick(v):   holt v.de/v.en aus Objekten; fällt auf de/en/String zurück
+  // - t(key):    holt registrierten UI-Text (de/en) nach Sprache, optional Fallback
+  // - reg(dict): merge UI-Texte (key: {de, en}) in zentrale Registry
+  // ---------------------------------------------------------------------------
+  var I18N = PPX.i18n || {};
+  var DICT = I18N._dict || {};
+  function nowLang() {
+    return (PPX.lang || 'de');
+  }
+  function pick(v) {
+    // Unterstützt Strukturen: {de:'…', en:'…'} ODER title/title_en etc.
+    var L = nowLang();
+    if (isObj(v)) {
+      if (typeof v[L] !== 'undefined') return v[L];
+      if (typeof v.de !== 'undefined') return v.de;
+      if (typeof v.en !== 'undefined') return v.en;
+      // häufiges Muster: title/title_en, name/name_en, desc/desc_en …
+      var m = [
+        ['title','title_en'], ['name','name_en'], ['label','label_en'],
+        ['desc','desc_en'], ['text','text_en'], ['category','category_en']
+      ];
+      for (var i=0;i<m.length;i++){
+        var base=m[i][0], alt=m[i][1];
+        if (L==='en' && typeof v[alt] !== 'undefined') return v[alt];
+        if (L==='de' && typeof v[base] !== 'undefined') return v[base];
+      }
+    }
+    return v;
+  }
+  function t(key, fallback) {
+    var L = nowLang();
+    var entry = DICT[key];
+    if (entry && typeof entry === 'object') {
+      if (typeof entry[L] !== 'undefined') return entry[L];
+      if (typeof entry.de !== 'undefined') return entry.de;
+      if (typeof entry.en !== 'undefined') return entry.en;
+    }
+    return (typeof fallback !== 'undefined') ? fallback : (key || '');
+  }
+  function reg(dict) {
+    if (!isObj(dict)) return;
+    Object.keys(dict).forEach(function (k) {
+      var v = dict[k];
+      if (isObj(v)) {
+        var cur = DICT[k] || {};
+        DICT[k] = {
+          de: (typeof v.de !== 'undefined') ? v.de : cur.de,
+          en: (typeof v.en !== 'undefined') ? v.en : cur.en
+        };
+      }
+    });
+  }
+  I18N._dict = DICT;
+  I18N.nowLang = nowLang;
+  I18N.pick = pick;
+  I18N.t = t;
+  I18N.reg = reg;
+  PPX.i18n = I18N;
+
+  // Sprache sofort verfügbar machen (falls index.js sie früh gesetzt hat)
+  // und auf Wechsel reagieren.
+  try {
+    DOC.documentElement.setAttribute('data-ppx-lang', nowLang());
+  } catch (e) {}
+  try {
+    W.addEventListener('ppx:lang', function (ev) {
+      try {
+        DOC.documentElement.setAttribute('data-ppx-lang', ev && ev.detail && ev.detail.lang ? ev.detail.lang : nowLang());
+      } catch (e2) {}
+    });
+  } catch (e) {}
+
+  // ---------------------------------------------------------------------------
+  // Boot-Sequenz (entspricht ursprünglicher Bind-Logik)
   // Ruft PPX.ui.bindOnce() sobald DOM & Elemente bereit sind.
+  // ---------------------------------------------------------------------------
   function tryBind() {
     if (PPX.ui && typeof PPX.ui.bindOnce === 'function') {
       try { return !!PPX.ui.bindOnce(); } catch (e) { /* noop */ }
@@ -84,7 +165,7 @@
       tryBind();
     }
 
-    // 2) Fallback via MutationObserver (wie zuvor im Widget)
+    // 2) Fallback via MutationObserver
     var mo = new MutationObserver(function () {
       if (tryBind()) {
         try { mo.disconnect(); } catch (e) {}
@@ -100,7 +181,7 @@
   PPX.boot = boot;
 
   // Vorbereiten von Teil-Namespaces, die andere Dateien befüllen
-  PPX.ui = PPX.ui || {};            // panel, components, helpers
+  PPX.ui = PPX.ui || {};             // panel, components, helpers
   PPX.services = PPX.services || {}; // email, openHours
-  PPX.flows = PPX.flows || {};      // home, speisen, reservieren, hours, kontakt, contactform, faq
+  PPX.flows = PPX.flows || {};       // home, speisen, reservieren, hours, kontakt, contactform, faq
 })();

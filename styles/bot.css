@@ -1,6 +1,8 @@
 /* ============================================================================
-   Bot UI Shell (styles/bot.css) – Launcher, Panel & Basislayout
+   Bot UI Shell (styles/bot.css) – v8.4.0
+   Launcher, Panel & Basislayout
    - Nutzt CSS-Variablen (Fallbacks), Fonts kommen aus --font-heading/body
+   - Neu: Header-Controls + Sprach-Toggler (.ppx-lang) Styles
    ============================================================================ */
 
 :root{
@@ -51,8 +53,21 @@
 .ppx-title{
   font-family:var(--font-heading, serif);font-weight:700;letter-spacing:.3px
 }
+.ppx-controls{display:flex;align-items:center;gap:8px}
 .ppx-x{border:none;background:transparent;font-size:22px;color:#fff;cursor:pointer;opacity:.9}
 .ppx-x:hover{opacity:1}
+
+/* Language toggle (DE/EN) */
+.ppx-lang{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:4px 8px;border-radius:999px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.28);
+  background:rgba(255,255,255,.06);color:#fff;font-size:13px;
+  user-select:none;opacity:.92
+}
+.ppx-lang:hover{opacity:1;background:rgba(255,255,255,.12)}
+.ppx-lang .ppx-flag{font-size:14px;line-height:1}
+.ppx-lang .ppx-langcode{font-weight:700;letter-spacing:.3px}
 
 /* Viewport */
 .ppx-v{
@@ -70,7 +85,7 @@
   padding:12px;border-radius:12px
 }
 
-/* Options & Chips */
+/* Options & Chips (ältere Optik; neue .ppx-b/.ppx-chip kommen über styles-inject.js) */
 .ppx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:2px}
 .ppx-opt{
   display:flex;align-items:center;gap:10px;
