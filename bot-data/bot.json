@@ -42,6 +42,14 @@
       "brandbarBg": "rgba(255,255,255,.92)",
       "brandbarText": "#11231c"
     },
+    "toggle": {
+      "trackOn": "#1e7a5a",
+      "trackOff": "rgba(255,255,255,.18)",
+      "knob": "#ffffff",
+      "border": "rgba(255,255,255,.35)",
+      "focus": "#c9a667",
+      "size": 28
+    },
     "typography": { "baseSize": 17.5 }
   },
 

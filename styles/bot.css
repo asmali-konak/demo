@@ -1,12 +1,8 @@
 /* ============================================================================
-   Bot UI Shell (styles/bot.css) – v8.4.0
-   Launcher, Panel & Basislayout
-   - Nutzt CSS-Variablen (Fallbacks), Fonts kommen aus --font-heading/body
-   - Neu: Header-Controls + Sprach-Toggler (.ppx-lang) Styles
+   Bot UI Shell (styles/bot.css) – v8.5.1 + stable height + home-width fix
    ============================================================================ */
 
 :root{
-  /* Bot-Theme (Fallbacks; optional per JS aus bot.json setzen) */
   --ppx-bot-bg:#0a2a21;
   --ppx-bot-surface:rgba(255,255,255,.06);
   --ppx-bot-header:#0f3a2f;
@@ -18,103 +14,65 @@
   --ppx-bot-brandbar-text:#11231c;
   --ppx-bot-gold:#c9a667;
 
-  /* Fonts aus site.css/JS: --font-heading / --font-body */
+  --ppx-toggle-size:28px;
+  --ppx-toggle-track-on:#1e7a5a;
+  --ppx-toggle-track-off:rgba(255,255,255,.18);
+  --ppx-toggle-knob:#ffffff;
+  --ppx-toggle-border:rgba(255,255,255,.35);
+  --ppx-toggle-focus:#c9a667;
 }
 
 /* Launcher */
-.ppx-launch{
-  position:fixed;right:22px;bottom:22px;z-index:99999;
-  display:flex;align-items:center;gap:10px;
-  background:#fff;color:#0e1b16;border-radius:999px;padding:10px 14px;
-  border:1px solid #e7ebee;box-shadow:0 14px 36px rgba(0,0,0,.18);
-  cursor:pointer;user-select:none;font-family:var(--font-body, system-ui, sans-serif)
-}
-.ppx-dot{
-  width:38px;height:38px;border-radius:50%;
-  background:var(--ppx-bot-header);display:grid;place-items:center;
-  color:#fff;font-size:18px
-}
+.ppx-launch{position:fixed;right:22px;bottom:22px;z-index:99999;display:flex;align-items:center;gap:10px;background:#fff;color:#0e1b16;border-radius:999px;padding:10px 14px;border:1px solid #e7ebee;box-shadow:0 14px 36px rgba(0,0,0,.18);cursor:pointer;user-select:none;font-family:var(--font-body, system-ui, sans-serif)}
+.ppx-dot{width:38px;height:38px;border-radius:50%;background:var(--ppx-bot-header);display:grid;place-items:center;color:#fff;font-size:18px}
 
 /* Panel */
 .ppx-panel{
-  position:fixed;right:22px;bottom:86px;width:480px;max-width:calc(100vw - 44px);
+  position:fixed;right:22px;bottom:86px;
+  width:480px;max-width:calc(100vw - 44px);
   display:none;z-index:100000;border-radius:18px;overflow:hidden;
   border:1px solid rgba(0,0,0,.08);box-shadow:0 28px 80px rgba(0,0,0,.35);
-  background:var(--ppx-bot-bg);flex-direction:column;max-height:78vh
+  background:var(--ppx-bot-bg);flex-direction:column;
+  height:clamp(560px,85dvh,880px); /* stabile Höhe */
 }
 .ppx-open{display:flex}
 
 /* Header */
-.ppx-h{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:12px 16px;background:var(--ppx-bot-header);color:#fff;
-  border-bottom:1px solid rgba(0,0,0,.25)
-}
-.ppx-title{
-  font-family:var(--font-heading, serif);font-weight:700;letter-spacing:.3px
-}
-.ppx-controls{display:flex;align-items:center;gap:8px}
+.ppx-h{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--ppx-bot-header);color:#fff;border-bottom:1px solid rgba(0,0,0,.25)}
+.ppx-title{font-family:var(--font-heading, serif);font-weight:700;letter-spacing:.3px}
+.ppx-controls{display:flex;align-items:center;gap:8px;margin-left:auto}
 .ppx-x{border:none;background:transparent;font-size:22px;color:#fff;cursor:pointer;opacity:.9}
 .ppx-x:hover{opacity:1}
 
-/* Language toggle (DE/EN) */
-.ppx-lang{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 8px;border-radius:999px;cursor:pointer;
-  border:1px solid rgba(255,255,255,.28);
-  background:rgba(255,255,255,.06);color:#fff;font-size:13px;
-  user-select:none;opacity:.92
-}
-.ppx-lang:hover{opacity:1;background:rgba(255,255,255,.12)}
-.ppx-lang .ppx-flag{font-size:14px;line-height:1}
-.ppx-lang .ppx-langcode{font-weight:700;letter-spacing:.3px}
+/* Language Switch (Kugel) */
+.ppx-switch{position:relative;display:inline-flex;align-items:center;height:var(--ppx-toggle-size);width:calc(var(--ppx-toggle-size) * 2.05);border-radius:999px;border:1px solid var(--ppx-toggle-border);background:var(--ppx-toggle-track-off);cursor:pointer;user-select:none;padding:0;margin-right:8px;outline:none;transition:background .18s ease, box-shadow .18s ease, border-color .18s ease}
+.ppx-switch:focus-visible{box-shadow:0 0 0 3px color-mix(in oklab, var(--ppx-toggle-focus) 55%, transparent);border-color:var(--ppx-toggle-focus)}
+.ppx-switch[data-state="en"]{background:var(--ppx-toggle-track-on)}
+.ppx-switch-track{position:relative;flex:1;height:100%;display:block;overflow:hidden;border-radius:inherit}
+.ppx-switch-label{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;letter-spacing:.2px;color:#fff;opacity:.85;pointer-events:none}
+.ppx-switch-de{left:8px}
+.ppx-switch-en{right:8px}
+.ppx-switch-knob{position:absolute;top:2px;left:2px;width:calc(var(--ppx-toggle-size) - 4px);height:calc(var(--ppx-toggle-size) - 4px);border-radius:999px;background:var(--ppx-toggle-knob);box-shadow:0 2px 8px rgba(0,0,0,.35);transition:transform .18s ease}
+.ppx-switch[data-state="en"] .ppx-switch-knob{transform:translateX(calc(var(--ppx-toggle-size) - 2px))}
 
 /* Viewport */
-.ppx-v{
-  padding:14px;flex:1;overflow:auto;
-  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)), var(--ppx-bot-bg);
-  color:var(--ppx-bot-text);display:flex;flex-direction:column;gap:12px;min-height:520px;
-  font-family:var(--font-body, system-ui, sans-serif)
-}
-
+.ppx-v{padding:14px;flex:1;overflow:auto;background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)), var(--ppx-bot-bg);color:var(--ppx-bot-text);display:flex;flex-direction:column;gap:12px;font-family:var(--font-body, system-ui, sans-serif)}
 .ppx-m{line-height:1.35;white-space:pre-wrap}
 .ppx-link{color:#f3e9c9;text-decoration:underline}
-.ppx-bot{
-  background:var(--ppx-bot-surface);
-  border:1px solid var(--ppx-bot-chip-border);
-  padding:12px;border-radius:12px
-}
+.ppx-bot{background:var(--ppx-bot-surface);border:1px solid var(--ppx-bot-chip-border);padding:12px;border-radius:12px}
 
-/* Options & Chips (ältere Optik; neue .ppx-b/.ppx-chip kommen über styles-inject.js) */
+/* Options & Chips */
 .ppx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:2px}
-.ppx-opt{
-  display:flex;align-items:center;gap:10px;
-  border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);
-  border-radius:14px;padding:12px;cursor:pointer;
-  transition:transform .15s ease, box-shadow .15s ease
-}
+.ppx-opt{display:flex;align-items:center;gap:10px;border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);border-radius:14px;padding:12px;cursor:pointer;transition:transform .15s ease, box-shadow .15s ease}
 .ppx-opt:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(0,0,0,.18)}
-.ppx-ico{
-  width:26px;height:26px;border-radius:999px;display:grid;place-items:center;
-  background:linear-gradient(135deg,var(--ppx-bot-gold),#ead09b);
-  color:#0c1f18;font-weight:700;font-size:14px
-}
+.ppx-ico{width:26px;height:26px;border-radius:999px;display:grid;place-items:center;background:linear-gradient(135deg,var(--ppx-bot-gold),#ead09b);color:#0c1f18;font-weight:700;font-size:14px}
 
 /* Pills & Cards */
-.ppx-pill{
-  display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;
-  border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);
-  cursor:pointer;user-select:none
-}
+.ppx-pill{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);cursor:pointer;user-select:none}
 .ppx-pill:hover{transform:translateY(-1px)}
-.ppx-card{
-  border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);
-  border-radius:14px;padding:12px
-}
+.ppx-card{border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);border-radius:14px;padding:12px}
 .ppx-card.compact{padding:8px 10px}
-.ppx-heading{
-  font-family:var(--font-heading, serif);margin:0 0 6px;color:#efe6d6
-}
+.ppx-heading{font-family:var(--font-heading, serif);margin:0 0 6px;color:#efe6d6}
 .ppx-heading.compact{font-size:17px;margin:0}
 .ppx-price.compact{font-size:16px;font-weight:700;white-space:nowrap}
 .ppx-headrow{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
@@ -127,17 +85,10 @@
 
 /* Small icon buttons */
 .ppx-iconrow{display:flex;gap:8px;margin-top:6px}
-.ppx-iconbtn{
-  width:28px;height:28px;border-radius:999px;display:grid;place-items:center;
-  border:1px solid rgba(255,255,255,.3);background:var(--ppx-bot-chip);font-size:12px;font-weight:700;letter-spacing:.2px
-}
+.ppx-iconbtn{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.3);background:var(--ppx-bot-chip);font-size:12px;font-weight:700;letter-spacing:.2px}
 
 /* Brandbar */
-.ppx-brandbar{
-  padding:8px 12px;background:var(--ppx-bot-brandbar-bg);
-  color:var(--ppx-bot-brandbar-text);border-top:1px solid rgba(0,0,0,.08);
-  font-size:12px;text-align:center
-}
+.ppx-brandbar{padding:8px 12px;background:var(--ppx-bot-brandbar-bg);color:var(--ppx-bot-brandbar-text);border-top:1px solid rgba(0,0,0,.08);font-size:12px;text-align:center}
 
 /* Anim */
 .ppx-appear{animation:ppxFade .25s ease both}
@@ -145,28 +96,37 @@
 
 /* Responsive */
 @media (max-width:640px){
-  .ppx-panel{width:auto;left:22px;right:22px;max-height:85vh}
-  .ppx-v{min-height:60vh}
+  .ppx-panel{width:auto;left:22px;right:22px;height:85dvh}
 }
 
 /* States & Inputs */
-.ppx-opt.ppx-selected,.ppx-pill.ppx-selected{
-  background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.45);
-  box-shadow:0 0 0 2px rgba(201,166,103,.35) inset;transform:translateY(-1px)
-}
+.ppx-opt.ppx-selected,.ppx-pill.ppx-selected{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.45);box-shadow:0 0 0 2px rgba(201,166,103,.35) inset;transform:translateY(-1px)}
 .ppx-input{display:flex;gap:8px;margin-top:8px}
-.ppx-input input,.ppx-input select,.ppx-input textarea{
-  width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.28);
-  background:rgba(255,255,255,.1);color:#fff;font-size:15px;outline:none
-}
+.ppx-input input,.ppx-input select,.ppx-input textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.1);color:#fff;font-size:15px;outline:none}
 .ppx-input textarea{min-height:72px;resize:vertical}
 
 .ppx-minirow{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-.ppx-mini{
-  padding:8px 12px;border:1px solid var(--ppx-bot-chip-border);
-  background:var(--ppx-bot-chip);border-radius:999px;cursor:pointer;user-select:none
-}
+.ppx-mini{padding:8px 12px;border:1px solid var(--ppx-bot-chip-border);background:var(--ppx-bot-chip);border-radius:999px;cursor:pointer;user-select:none}
 
 /* Startansicht mittig */
 #ppx-v > .ppx-appear > .ppx-opt{justify-content:center}
 #ppx-v > .ppx-appear > .ppx-opt .ppx-m{text-align:center}
+
+/* -------------------------------------------------------------------------
+   Fix: Home-Buttons volle Zeile – übersteuert styles-inject (ppx-v5)
+   ------------------------------------------------------------------------- */
+#ppx-v [data-block=home] .ppx-row{width:100%}
+#ppx-v [data-block=home] .ppx-row > *{width:100%}
+
+/* ganz gezielt gegen styles-inject v8.6.0, das center erzwingt: */
+#ppx-panel.ppx-v5 #ppx-v [data-block=home] .ppx-row{justify-content:flex-start !important}
+#ppx-panel.ppx-v5 #ppx-v [data-block=home] .ppx-row > *{
+  flex:1 1 100% !important;
+  width:100% !important;
+  max-width:none !important;
+  display:block !important;
+}
+/* Home: Block darf volle Breite haben (übersteuert styles-inject v8.6.0) */
+#ppx-panel.ppx-v5 #ppx-v [data-block=home].ppx-bot{max-width:100% !important;margin-left:0 !important;margin-right:0 !important;}
+#ppx-panel.ppx-v5 #ppx-v [data-block=home] .ppx-row{justify-content:flex-start !important;}
+#ppx-panel.ppx-v5 #ppx-v [data-block=home] .ppx-row > *{flex:1 1 100% !important;width:100% !important;}

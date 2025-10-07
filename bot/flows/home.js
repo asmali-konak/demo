@@ -1,8 +1,9 @@
 /* ============================================================================
-   PPX Flow: Home (home.js) – v8.4.1
-   - stepHome(force): baut das Hauptmenü (zentriert), identische Reihenfolge/Icons
+   PPX Flow: Home (home.js) – v8.4.3
+   - stepHome(force): baut das Hauptmenü, identische Reihenfolge/Icons
    - I18N: Alle UI-Texte außerhalb der bot.json registriert (DE/EN)
-   - Typo-Check: Nur UI.line für Texte (kein UI.note → keine Bold-Optik)
+   - Fix: Reihen/Buttons füllen immer die komplette Zeile (DE & EN)
+   - Neu: Sichtbarer Abstand zwischen Icon und Label via withGap()
    ============================================================================ */
 (function () {
   'use strict';
@@ -14,7 +15,7 @@
     try { return (PPX.data && PPX.data.cfg && PPX.data.cfg()) || {}; } catch(e){ return {}; }
   }
 
-  // I18N Setup: Schlüssel registrieren (DE/EN)
+  // I18N Setup
   (function registerI18N(){
     try {
       var I = PPX.i18n; if (!I || !I.reg) return;
@@ -35,6 +36,24 @@
 
   function t(key, fb){ try { return (PPX.i18n && PPX.i18n.t) ? PPX.i18n.t(key, fb) : (fb||key); } catch(e){ return fb||key; } }
 
+  // Sichtbarer Abstand zwischen Icon und Textlabel
+  // NBSP (U+00A0) kollabiert nicht und bleibt auch bei Flex/Inline sichtbar.
+  function withGap(label){
+    try { label = String(label||''); } catch(e){ label = label||''; }
+    return '\u00A0' + label;
+  }
+
+  // Helper: baut eine Row, die IMMER volle Breite füllt
+  function fullRow(UI){
+    var r = UI.row();
+    try {
+      r.style.width = '100%';
+      r.style.display = 'flex';
+      r.style.flex = '1 1 100%';
+    } catch(e){}
+    return r;
+  }
+
   function stepHome(force){
     var UI = PPX.ui || {};
     var $view = D.getElementById('ppx-v');
@@ -49,41 +68,40 @@
     C.className = 'ppx-body';
     B.appendChild(C);
 
-    // Willkommenstexte (Brand-Placeholder ersetzen) – nur UI.line
+    // Willkommenstexte (Brand einsetzen)
     var welcome1 = t('home.welcome.1','👋 WILLKOMMEN BEI {brand}!').replace('{brand}', brand);
     var welcome2 = t('home.welcome.2','Schön, dass du da bist. Wie können wir dir heute helfen?');
-
     C.appendChild(UI.line(welcome1));
     C.appendChild(UI.line(welcome2));
 
     // 1) Speisen
-    var r1 = UI.row();
-    r1.appendChild(UI.btn(t('home.menu.dishes','Speisen'), function(){ try { PPX.flows.stepSpeisen(); } catch(e){} }, '', '🍽️'));
+    var r1 = fullRow(UI);
+    r1.appendChild(UI.btn(withGap(t('home.menu.dishes','Speisen')), function(){ try { PPX.flows.stepSpeisen(); } catch(e){} }, '', '🍽️'));
     C.appendChild(r1);
 
     // 2) Reservieren
-    var r2 = UI.row();
-    r2.appendChild(UI.btn(t('home.menu.reserve','Reservieren'), function(){ try { PPX.flows.stepReservieren(); } catch(e){} }, '', '📅'));
+    var r2 = fullRow(UI);
+    r2.appendChild(UI.btn(withGap(t('home.menu.reserve','Reservieren')), function(){ try { PPX.flows.stepReservieren(); } catch(e){} }, '', '📅'));
     C.appendChild(r2);
 
     // 3) Kontaktdaten
-    var r3 = UI.row();
-    r3.appendChild(UI.btn(t('home.menu.contact','Kontaktdaten'), function(){ try { PPX.flows.stepKontakt(); } catch(e){} }, '', '☎️'));
+    var r3 = fullRow(UI);
+    r3.appendChild(UI.btn(withGap(t('home.menu.contact','Kontaktdaten')), function(){ try { PPX.flows.stepKontakt(); } catch(e){} }, '', '☎️'));
     C.appendChild(r3);
 
     // 4) Kontaktformular
-    var r4 = UI.row();
-    r4.appendChild(UI.btn(t('home.menu.form','Kontaktformular'), function(){ try { PPX.flows.stepContactForm(); } catch(e){} }, '', '📝'));
+    var r4 = fullRow(UI);
+    r4.appendChild(UI.btn(withGap(t('home.menu.form','Kontaktformular')), function(){ try { PPX.flows.stepContactForm(); } catch(e){} }, '', '📝'));
     C.appendChild(r4);
 
     // 5) Öffnungszeiten
-    var r5 = UI.row();
-    r5.appendChild(UI.btn(t('home.menu.hours','Öffnungszeiten'), function(){ try { PPX.flows.stepHours(); } catch(e){} }, '', '⏰'));
+    var r5 = fullRow(UI);
+    r5.appendChild(UI.btn(withGap(t('home.menu.hours','Öffnungszeiten')), function(){ try { PPX.flows.stepHours(); } catch(e){} }, '', '⏰'));
     C.appendChild(r5);
 
     // 6) Q&As
-    var r6 = UI.row();
-    r6.appendChild(UI.btn(t('home.menu.faq','Q&As'), function(){ try { PPX.flows.stepQAs(); } catch(e){} }, '', '❓'));
+    var r6 = fullRow(UI);
+    r6.appendChild(UI.btn(withGap(t('home.menu.faq','Q&As')), function(){ try { PPX.flows.stepQAs(); } catch(e){} }, '', '❓'));
     C.appendChild(r6);
 
     try { UI.keepBottom && UI.keepBottom(); } catch(e){}

@@ -1,12 +1,13 @@
 /* ============================================================================
-   PPX Core (core.js) – v8.4.0
+   PPX Core (core.js) – v8.5.0
    - Namespace & Version
    - Datenzugriff auf window.PPX_DATA / __PPX_DATA__ (SST)
    - Delays & delay()
    - Utilities (isObj, pretty)
-   - I18N-Basis: nowLang(), pick(), t(), reg() – außerhalb der bot.json
+   - I18N-Basis: nowLang(), pick(), t(), reg() – unabhängig von bot.json
    - Boot-Sequenz (ruft PPX.ui.bindOnce mit gleichen Fallbacks)
-   ============================================================================ */
+   - WICHTIG: Keine Persistenz der Sprache (immer DE als Start, Umschalten via panel.js)
+============================================================================ */
 (function () {
   'use strict';
 
@@ -15,7 +16,10 @@
 
   // Namespace
   var PPX = W.PPX = W.PPX || {};
-  PPX.VERSION = '8.4.0';
+  PPX.VERSION = '8.5.0';
+
+  // Startsprache sicherstellen (index.js setzt bereits 'de'; hier doppelt abgesichert)
+  PPX.lang = PPX.lang || 'de';
 
   // ---------------------------------------------------------------------------
   // Datenzugriff (Single Source of Truth: window.PPX_DATA / __PPX_DATA__)
@@ -68,7 +72,6 @@
 
   // ---------------------------------------------------------------------------
   // I18N-Foundation (außerhalb bot.json; Module registrieren ihre UI-Texte hier)
-  // Ziel: ein Kunde kann per Flag "english: true" die UI sofort umschalten.
   // - nowLang(): aktuelle Sprache (PPX.lang, default 'de')
   // - pick(v):   holt v.de/v.en aus Objekten; fällt auf de/en/String zurück
   // - t(key):    holt registrierten UI-Text (de/en) nach Sprache, optional Fallback
@@ -76,17 +79,18 @@
   // ---------------------------------------------------------------------------
   var I18N = PPX.i18n || {};
   var DICT = I18N._dict || {};
+
   function nowLang() {
     return (PPX.lang || 'de');
   }
+
   function pick(v) {
-    // Unterstützt Strukturen: {de:'…', en:'…'} ODER title/title_en etc.
     var L = nowLang();
     if (isObj(v)) {
       if (typeof v[L] !== 'undefined') return v[L];
       if (typeof v.de !== 'undefined') return v.de;
       if (typeof v.en !== 'undefined') return v.en;
-      // häufiges Muster: title/title_en, name/name_en, desc/desc_en …
+      // häufige Muster: title/title_en, name/name_en, desc/desc_en …
       var m = [
         ['title','title_en'], ['name','name_en'], ['label','label_en'],
         ['desc','desc_en'], ['text','text_en'], ['category','category_en']
@@ -99,6 +103,7 @@
     }
     return v;
   }
+
   function t(key, fallback) {
     var L = nowLang();
     var entry = DICT[key];
@@ -109,6 +114,7 @@
     }
     return (typeof fallback !== 'undefined') ? fallback : (key || '');
   }
+
   function reg(dict) {
     if (!isObj(dict)) return;
     Object.keys(dict).forEach(function (k) {
@@ -122,6 +128,7 @@
       }
     });
   }
+
   I18N._dict = DICT;
   I18N.nowLang = nowLang;
   I18N.pick = pick;
@@ -129,15 +136,14 @@
   I18N.reg = reg;
   PPX.i18n = I18N;
 
-  // Sprache sofort verfügbar machen (falls index.js sie früh gesetzt hat)
-  // und auf Wechsel reagieren.
-  try {
-    DOC.documentElement.setAttribute('data-ppx-lang', nowLang());
-  } catch (e) {}
+  // Sprache sofort verfügbar machen und auf Wechsel reagieren
+  try { DOC.documentElement.setAttribute('data-ppx-lang', nowLang()); } catch (e) {}
   try {
     W.addEventListener('ppx:lang', function (ev) {
       try {
-        DOC.documentElement.setAttribute('data-ppx-lang', ev && ev.detail && ev.detail.lang ? ev.detail.lang : nowLang());
+        var next = (ev && ev.detail && ev.detail.lang) ? ev.detail.lang : nowLang();
+        PPX.lang = next; // Core hält PPX.lang in Sync
+        DOC.documentElement.setAttribute('data-ppx-lang', next);
       } catch (e2) {}
     });
   } catch (e) {}

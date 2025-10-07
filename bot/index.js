@@ -1,11 +1,11 @@
 /* ============================================================================
-   PPX Widget Orchestrator (index.js) – v8.4.0
+   PPX Widget Orchestrator (index.js) – v8.5.0
    Lädt die Modul-Dateien sequentiell und startet den Bot (1:1 Verhalten).
-   Neu:
+   Änderungen:
    - Initialisiert window.PPX Namespace früh (ohne Globals außer window.PPX)
-   - Liest bevorzugte Sprache aus localStorage ("ppx.lang") → PPX.lang
+   - Immer DE als Startsprache (KEIN localStorage-Read mehr)
    - Setzt data-ppx-lang am <html> früh, damit Styles/Module es nutzen können
-   ============================================================================ */
+============================================================================ */
 (function () {
   'use strict';
   try {
@@ -13,12 +13,8 @@
 
     // --- Früh: Namespace + Sprache ------------------------------------------
     var PPX = w.PPX = w.PPX || {};
-    // gewählte Sprache (persistiert in panel.js, aber hier früh verfügbar)
-    try {
-      PPX.lang = PPX.lang || localStorage.getItem('ppx.lang') || 'de';
-    } catch (e) {
-      PPX.lang = PPX.lang || 'de';
-    }
+    // Startsprache immer DE (Persistenz abgeschaltet; Panel steuert Umschaltung)
+    PPX.lang = 'de';
     try { d.documentElement.setAttribute('data-ppx-lang', PPX.lang); } catch (e) {}
 
     // --- Basis-URL und Cache-Buster aus dem eigenen <script src=".../bot/index.js?v=...">

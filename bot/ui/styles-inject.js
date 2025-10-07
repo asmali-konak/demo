@@ -1,10 +1,11 @@
 /* ============================================================================
-   PPX UI Styles Injector (styles-inject.js) – THEME Variablen + Bot-Extras
-   - Liest THEME aus window.PPX_DATA / __PPX_DATA__ / fetch('bot-data/bot.json')
-   - Setzt CSS-Variablen global (:root) und für den Bot-Scoped (#ppx-panel / .ppx-launch)
-   - Injiziert zusätzlich die bestehenden Bot-UI Verfeinerungen (Grid, Chips, etc.)
-   - Neu: Basis-Styles für den Sprach-Toggler (#ppx-lang.ppx-lang-btn)
-   ============================================================================ */
+   PPX UI Styles Injector (styles-inject.js) – v8.6.0
+   - Liest THEME aus window.PPX_DATA / __PPX_DATA__ / PPX.data
+   - Setzt CSS-Variablen global (:root) + Bot-Scope (#ppx-panel / .ppx-launch)
+   - Injiziert PPX-UI-Verfeinerungen (Grid, Chips, Inputs, etc.)
+   - Neu: Toggle-Variablen (THEME.toggle.*) → --ppx-toggle-*
+     und Extra-Styles für den Kugel-Switch (.ppx-switch)
+============================================================================ */
 (function () {
   'use strict';
 
@@ -22,15 +23,21 @@
 
   function readThemeSync() {
     var src = (window.PPX_DATA) || (window.__PPX_DATA__) || (window.PPX && window.PPX.data);
-    if (src && src.THEME) return src.THEME;
-    return null;
+    return (src && src.THEME) ? src.THEME : null;
+  }
+
+  function px(n, fallback) {
+    if (typeof n === 'number' && isFinite(n)) return n + 'px';
+    if (typeof n === 'string' && n.trim()) return n;
+    return fallback;
   }
 
   function asVars(theme) {
-    var r = (theme && theme.root) || {};
-    var b = (theme && theme.bot)  || {};
+    var r = (theme && theme.root)   || {};
+    var b = (theme && theme.bot)    || {};
+    var t = (theme && theme.toggle) || {};
 
-    // Map root → CSS vars
+    // Global vars (:root)
     var css = ':root{'
       + '--ppx-font-body:' + (r.fontBody || "system-ui, sans-serif") + ';'
       + '--ppx-font-heading:' + (r.fontHeading || "system-ui, sans-serif") + ';'
@@ -81,14 +88,21 @@
       + '--ppx-bot-dot:' + (b.brandDot || '#0f3a2f') + ';'
       + '--ppx-bot-brandbar-bg:' + (b.brandbarBg || 'rgba(255,255,255,.92)') + ';'
       + '--ppx-bot-brandbar-text:' + (b.brandbarText || '#11231c') + ';'
+
+      /* Toggle vars (konfigurierbar je Kunde) */
+      + '--ppx-toggle-size:' + px(t.size, '28px') + ';'
+      + '--ppx-toggle-track-on:' + (t.trackOn || '#1e7a5a') + ';'
+      + '--ppx-toggle-track-off:' + (t.trackOff || 'rgba(255,255,255,.18)') + ';'
+      + '--ppx-toggle-knob:' + (t.knob || '#ffffff') + ';'
+      + '--ppx-toggle-border:' + (t.border || 'rgba(255,255,255,.35)') + ';'
+      + '--ppx-toggle-focus:' + (t.focus || '#c9a667') + ';'
       + '}';
 
     return css;
   }
 
   function applyTheme(theme) {
-    var css = asVars(theme);
-    ensureStyleTag(STYLE_ID_VARS, css);
+    ensureStyleTag(STYLE_ID_VARS, asVars(theme));
   }
 
   function initExtraStyles() {
@@ -127,17 +141,19 @@
 #ppx-panel.ppx-v5 #ppx-v .ppx-nav.ppx-bottom{justify-content:space-between!important}
 #ppx-panel.ppx-v5 #ppx-v .ppx-b.ppx-back{width:auto!important;min-width:130px!important;flex:0 0 auto!important;font-size:14px!important;padding:8px 10px!important}
 
-/* --- Language Toggle (neben dem X) --------------------------------------- */
-#ppx-panel.ppx-v5 .ppx-lang-btn{background:rgba(255,255,255,.85);color:#1e2b24;border:1px solid rgba(0,0,0,.08);box-shadow:0 2px 8px rgba(0,0,0,.10);transition:transform var(--ppx-t-fast),filter var(--ppx-t),box-shadow var(--ppx-t);font-family:var(--ppx-font-body);font-weight:700;letter-spacing:.02em}
-#ppx-panel.ppx-v5 .ppx-lang-btn:hover{filter:brightness(0.98);transform:translateY(-1px)}
-#ppx-panel.ppx-v5 .ppx-lang-btn:active{transform:translateY(0)}
-#ppx-panel.ppx-v5 .ppx-lang-btn:focus-visible{outline:var(--ppx-focus)}
-/* Darker header background → invert button a bit */
-#ppx-panel.ppx-v5[data-lang="en"] .ppx-lang-btn{background:var(--ppx-accent);color:#2a2a1f;border-color:transparent}
+/* --- Language Switch (Kugel, neben dem X) -------------------------------- */
+#ppx-panel.ppx-v5 .ppx-switch{position:relative;display:inline-flex;align-items:center;height:var(--ppx-toggle-size);width:calc(var(--ppx-toggle-size) * 2.05);border-radius:999px;border:1px solid var(--ppx-toggle-border);background:var(--ppx-toggle-track-off);cursor:pointer;user-select:none;padding:0;margin-right:8px;outline:none;transition:background var(--ppx-t-fast),box-shadow var(--ppx-t),border-color var(--ppx-t);}
+#ppx-panel.ppx-v5 .ppx-switch:focus-visible{box-shadow:0 0 0 3px color-mix(in oklab, var(--ppx-toggle-focus) 55%, transparent);border-color:var(--ppx-toggle-focus);}
+#ppx-panel.ppx-v5 .ppx-switch[data-state="en"]{background:var(--ppx-toggle-track-on);}
+#ppx-panel.ppx-v5 .ppx-switch-track{position:relative;flex:1;height:100%;display:block;overflow:hidden;border-radius:inherit;}
+#ppx-panel.ppx-v5 .ppx-switch-label{position:absolute;top:50%;transform:translateY(-50%);font-size:12px;font-weight:700;letter-spacing:.2px;color:#fff;opacity:.85;pointer-events:none}
+#ppx-panel.ppx-v5 .ppx-switch-de{left:8px}
+#ppx-panel.ppx-v5 .ppx-switch-en{right:8px}
+#ppx-panel.ppx-v5 .ppx-switch-knob{position:absolute;top:2px;left:2px;width:calc(var(--ppx-toggle-size) - 4px);height:calc(var(--ppx-toggle-size) - 4px);border-radius:999px;background:var(--ppx-toggle-knob);box-shadow:0 2px 8px rgba(0,0,0,.35);transition:transform var(--ppx-t-fast);}
+#ppx-panel.ppx-v5 .ppx-switch[data-state="en"] .ppx-switch-knob{transform:translateX(calc(var(--ppx-toggle-size) - 2px));}
 `;
     ensureStyleTag(STYLE_ID_EXTRA, css);
   }
-
   function bootstrap() {
     var theme = readThemeSync();
     if (theme) {
