@@ -1,7 +1,8 @@
 /* ============================================================================
-   PPX Flow: Home (home.js) – v8.4.0
+   PPX Flow: Home (home.js) – v8.4.1
    - stepHome(force): baut das Hauptmenü (zentriert), identische Reihenfolge/Icons
    - I18N: Alle UI-Texte außerhalb der bot.json registriert (DE/EN)
+   - Typo-Check: Nur UI.line für Texte (kein UI.note → keine Bold-Optik)
    ============================================================================ */
 (function () {
   'use strict';
@@ -18,16 +19,16 @@
     try {
       var I = PPX.i18n; if (!I || !I.reg) return;
       I.reg({
-        'home.title':        { de:'Hauptmenü',                en:'Main Menu' },
+        'home.title':        { de:'Hauptmenü',                 en:'Main Menu' },
         'home.welcome.1':    { de:'👋 WILLKOMMEN BEI {brand}!', en:'👋 WELCOME TO {brand}!' },
         'home.welcome.2':    { de:'Schön, dass du da bist. Wie können wir dir heute helfen?',
                                en:'Glad you’re here. How can we help today?' },
-        'home.menu.dishes':  { de:'Speisen',                  en:'Menu' },
-        'home.menu.reserve': { de:'Reservieren',              en:'Reserve' },
-        'home.menu.contact': { de:'Kontaktdaten',             en:'Contact Info' },
-        'home.menu.form':    { de:'Kontaktformular',          en:'Contact Form' },
-        'home.menu.hours':   { de:'Öffnungszeiten',           en:'Opening Hours' },
-        'home.menu.faq':     { de:'Q&As',                     en:'Q&As' }
+        'home.menu.dishes':  { de:'Speisen',                   en:'Menu' },
+        'home.menu.reserve': { de:'Reservieren',               en:'Reserve' },
+        'home.menu.contact': { de:'Kontaktdaten',              en:'Contact Info' },
+        'home.menu.form':    { de:'Kontaktformular',           en:'Contact Form' },
+        'home.menu.hours':   { de:'Öffnungszeiten',            en:'Opening Hours' },
+        'home.menu.faq':     { de:'Q&As',                      en:'Q&As' }
       });
     } catch(e){}
   })();
@@ -48,7 +49,7 @@
     C.className = 'ppx-body';
     B.appendChild(C);
 
-    // Willkommenstexte (Brand-Placeholder ersetzen)
+    // Willkommenstexte (Brand-Placeholder ersetzen) – nur UI.line
     var welcome1 = t('home.welcome.1','👋 WILLKOMMEN BEI {brand}!').replace('{brand}', brand);
     var welcome2 = t('home.welcome.2','Schön, dass du da bist. Wie können wir dir heute helfen?');
 

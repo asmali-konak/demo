@@ -1,11 +1,12 @@
 /* ============================================================================
-   PPX Flow: Speisen (speisen.js) – v8.4.0
+   PPX Flow: Speisen (speisen.js) – v8.4.1
    - stepSpeisen() Intro + Delay → renderSpeisenRoot()
    - orderCats(keys) mit CFG.menuOrder
    - renderSpeisenRoot(): PDF-Button + Kategorien-Grid
    - renderCategory(): Items-Grid (Fallback, wenn leer)
    - renderItem(): Detail + Reservierungsfrage nach 3s
    - I18N: Alle UI-Texte außerhalb bot.json; Items/Labels lesen *_en bei EN
+   - Änderung: Drei UI.note(...) → UI.line(...) (Intro, orPick, selFor)
    ============================================================================ */
 (function () {
   'use strict';
@@ -26,18 +27,18 @@
 
   // ---- I18N Keys registrieren ----------------------------------------------
   try { I.reg && I.reg({
-    'speisen.head':           { de:'SPEISEN',                 en:'MENU' },
+    'speisen.head':           { de:'SPEISEN', en:'MENU' },
     'speisen.intro':          { de:'Super Wahl 👍  Hier sind unsere Speisen-Kategorien:',
                                 en:'Great choice 👍  Here are our menu categories:' },
-    'speisen.pdf':            { de:'Speisekarte als PDF',     en:'Menu as PDF' },
+    'speisen.pdf':            { de:'Speisekarte als PDF', en:'Menu as PDF' },
     'speisen.orPick':         { de:'…oder wähle eine Kategorie:', en:'…or pick a category:' },
     'speisen.selFor':         { de:'Gern! Hier ist die Auswahl für {cat}:',
                                 en:'Sure! Here is the selection for {cat}:' },
-    'speisen.price':          { de:'Preis:',                  en:'Price:' },
-    'speisen.hint':           { de:'ℹ️ ',                     en:'ℹ️ ' },
+    'speisen.price':          { de:'Preis:', en:'Price:' },
+    'speisen.hint':           { de:'ℹ️ ', en:'ℹ️ ' },
     'speisen.ask':            { de:'Na, Appetit bekommen? 😍 Soll ich dir gleich einen Tisch reservieren?',
                                 en:'Feeling hungry? 😍 Shall I book you a table right away?' },
-    'speisen.yesReserve':     { de:'Ja, bitte reservieren',   en:'Yes, reserve a table' },
+    'speisen.yesReserve':     { de:'Ja, bitte reservieren', en:'Yes, reserve a table' },
     'speisen.noHome':         { de:'Nein, zurück ins Hauptmenü', en:'No, back to main menu' }
   }); } catch(e) {}
 
@@ -46,14 +47,12 @@
   // ---- Helpers: Category/Item Label nach Sprache ---------------------------
   function catTitle(catKey){
     var R = raw(), C = cfg(), DSH = dishes(), L = nowLang();
-    // Optionen: cfg.menuTitles[catKey] = {de,en}  | dishes().__titles__[catKey] = {de,en}
     var titleObj =
       (C.menuTitles && C.menuTitles[catKey]) ||
       (DSH.__titles__ && DSH.__titles__[catKey]) || null;
     if (titleObj && typeof titleObj === 'object') {
       return (L==='en' && titleObj.en) ? titleObj.en : (titleObj.de || titleObj.name || pretty(catKey));
     }
-    // Fallback: pretty(catKey)
     return pretty(catKey);
   }
   function pickField(it, base){
@@ -69,7 +68,8 @@
     var M = UI.block(null, { maxWidth:'100%' });
     M.setAttribute('data-block','speisen-info');
     var Cb = D.createElement('div'); Cb.className = 'ppx-body'; M.appendChild(Cb);
-    Cb.appendChild(UI.note(t('speisen.intro','Super Wahl 👍  Hier sind unsere Speisen-Kategorien:')));
+    // NOTE→LINE (Intro)
+    Cb.appendChild(UI.line(t('speisen.intro','Super Wahl 👍  Hier sind unsere Speisen-Kategorien:')));
     try { UI.keepBottom && UI.keepBottom(); } catch(e){}
     delay(function(){ renderSpeisenRoot(scopeIdx); }, DLY.step || 450);
   }
@@ -102,7 +102,6 @@
     B.appendChild(UI.navBottom ? UI.navBottom(scopeIdx) : D.createTextNode(''));
     try { UI.keepBottom && UI.keepBottom(); } catch(e){}
 
-    // PDF URL-Auflösung
     var Cfg = cfg();
     var pdfUrl = (Cfg.menuPdf) || (Cfg.pdf && (Cfg.pdf.menu || Cfg.pdf.url)) || Cfg.menuPDF || 'speisekarte.pdf';
 
@@ -111,7 +110,8 @@
       try { window.open(pdfUrl, '_blank', 'noopener'); } catch(e){}
     }, '', '📄'));
     C.appendChild(r);
-    C.appendChild(UI.note(t('speisen.orPick','…oder wähle eine Kategorie:')));
+    // NOTE→LINE (…oder wähle…)
+    C.appendChild(UI.line(t('speisen.orPick','…oder wähle eine Kategorie:')));
     try { UI.keepBottom && UI.keepBottom(); } catch(e){}
 
     delay(function(){
@@ -125,7 +125,7 @@
       var G = UI.grid();
       cats.forEach(function(catPretty){
         var rawKey = map[catPretty] || catPretty.toLowerCase();
-        var label  = catTitle(rawKey); // DE/EN Titel falls vorhanden
+        var label  = catTitle(rawKey);
         G.appendChild(UI.chip(label, function(){ renderCategory(rawKey); }, 'ppx-cat', '►'));
       });
       C.appendChild(G);
@@ -145,7 +145,8 @@
 
     var catLbl = catTitle(catKey);
     var msg = t('speisen.selFor','Gern! Hier ist die Auswahl für {cat}:').replace('{cat}', catLbl);
-    C.appendChild(UI.note(msg));
+    // NOTE→LINE (Gern! Hier ist…)
+    C.appendChild(UI.line(msg));
     try { UI.keepBottom && UI.keepBottom(); } catch(e){}
 
     var list = [];

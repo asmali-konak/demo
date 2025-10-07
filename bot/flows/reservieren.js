@@ -1,7 +1,8 @@
 /* ============================================================================
-   PPX Flow: Reservieren (reservieren.js) – v8.4.0
+   PPX Flow: Reservieren (reservieren.js) – v8.4.1
    Nutzt PPX.services.email.sendReservation(...)
    - I18N voll unterstützt (DE/EN) – Texte außerhalb bot.json
+   - Änderung: Alle UI.note(...) → UI.line(...) für ruhige Typo
    ============================================================================ */
 (function () {
   'use strict';
@@ -90,9 +91,9 @@
     RESV = { name:'', dateISO:'', dateReadable:'', time:'', persons:'', phone:'', email:'' };
     var B = UI.block(t('resv.title','RESERVIEREN'), { maxWidth:'100%' }); B.setAttribute('data-block','resv-name');
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    C.appendChild(UI.note(t('resv.intro.1','Du möchtest gerne reservieren?'))); try{UI.keepBottom();}catch(e){}
+    C.appendChild(UI.line(t('resv.intro.1','Du möchtest gerne reservieren?'))); try{UI.keepBottom();}catch(e){}
     U.delay(function(){
-      C.appendChild(UI.note(t('resv.ask.name','Darf ich bitte deinen Namen wissen?')));
+      C.appendChild(UI.line(t('resv.ask.name','Darf ich bitte deinen Namen wissen?')));
       var rIn=Forms.inputRow({ type:'text', placeholder:t('resv.ph.name','Vor- und Nachname') }); C.appendChild(rIn.row);
       var r=UI.row();
       r.appendChild(UI.btn(t('resv.next','Weiter'), function(){
@@ -106,9 +107,9 @@
   function renderResvDate(){
     var B = UI.block(null, { maxWidth:'100%' }); B.setAttribute('data-block','resv-date');
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    C.appendChild(UI.note(t('resv.great','Perfekt, {name}! :)').replace('{name}', RESV.name))); try{UI.keepBottom();}catch(e){}
+    C.appendChild(UI.line(t('resv.great','Perfekt, {name}! :)').replace('{name}', RESV.name))); try{UI.keepBottom();}catch(e){}
     U.delay(function(){
-      C.appendChild(UI.note(t('resv.ask.date','Für welches Datum möchtest du reservieren?')));
+      C.appendChild(UI.line(t('resv.ask.date','Für welches Datum möchtest du reservieren?')));
       var rIn=Forms.inputRow({ type:'date', min:todayISO(), placeholder:t('resv.ph.date','TT.MM.JJJJ') }); C.appendChild(rIn.row);
       var r=UI.row();
       r.appendChild(UI.btn(t('resv.next','Weiter'), function(){
@@ -124,7 +125,7 @@
   function renderResvTime(dateObj){
     var B=UI.block(null,{maxWidth:'100%'}); B.setAttribute('data-block','resv-time');
     var C=D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    C.appendChild(UI.note(t('resv.ask.time','Um welche Uhrzeit möchtest du reservieren?'))); try{UI.keepBottom();}catch(e){}
+    C.appendChild(UI.line(t('resv.ask.time','Um welche Uhrzeit möchtest du reservieren?'))); try{UI.keepBottom();}catch(e){}
     var minutes=OH.buildSlotsForDate?OH.buildSlotsForDate(dateObj):[];
     if(!minutes.length){ C.appendChild(UI.line(t('resv.no.slots','Für dieses Datum sind aktuell keine Reservierungszeiten verfügbar (geschlossen oder zu kurzfristig).'))); try{UI.keepBottom();}catch(e){}; return; }
     var groups=OH.groupSlots?OH.groupSlots(minutes):[{from:minutes[0],to:minutes[minutes.length-1]+30,slots:minutes}];
@@ -155,9 +156,9 @@
   function renderResvPersons(){
     var B=UI.block(null,{maxWidth:'100%'}); B.setAttribute('data-block','resv-persons');
     var C=D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    C.appendChild(UI.note(t('resv.ok.name','Super, {name}!').replace('{name}', RESV.name))); try{UI.keepBottom();}catch(e){}
+    C.appendChild(UI.line(t('resv.ok.name','Super, {name}!').replace('{name}', RESV.name))); try{UI.keepBottom();}catch(e){}
     U.delay(function(){
-      C.appendChild(UI.note(t('resv.ask.persons','Für wie viele Personen darf ich den Tisch vorbereiten?')));
+      C.appendChild(UI.line(t('resv.ask.persons','Für wie viele Personen darf ich den Tisch vorbereiten?')));
       var rIn=Forms.inputRow({ type:'number', min:'1', max:'20', value:'2' }); C.appendChild(rIn.row);
       var r=UI.row();
       r.appendChild(UI.btn(t('resv.next','Weiter'), function(){
@@ -172,7 +173,7 @@
   function renderResvPhone(){
     var B=UI.block(null,{maxWidth:'100%'}); B.setAttribute('data-block','resv-phone');
     var C=D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    C.appendChild(UI.note(t('resv.ask.phone','Magst du mir deine Nummer dalassen? (optional)')));
+    C.appendChild(UI.line(t('resv.ask.phone','Magst du mir deine Nummer dalassen? (optional)')));
     var rIn=Forms.inputRow({ type:'tel', placeholder:t('resv.ph.phone','+49 …') }); C.appendChild(rIn.row);
     var r=UI.row();
     r.appendChild(UI.btn(t('resv.next','Weiter'), function(){ RESV.phone=Forms.val(rIn.input); U.delay(renderResvEmail, DLY.step||450); }, 'ppx-cta', '➡️'));
@@ -183,9 +184,9 @@
   function renderResvEmail(){
     var B=UI.block(null,{maxWidth:'100%'}); B.setAttribute('data-block','resv-email');
     var C=D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    C.appendChild(UI.note(t('resv.ask.email.1','Und deine E-Mail für die Bestätigung?'))); try{UI.keepBottom();}catch(e){}
+    C.appendChild(UI.line(t('resv.ask.email.1','Und deine E-Mail für die Bestätigung?'))); try{UI.keepBottom();}catch(e){}
     U.delay(function(){
-      C.appendChild(UI.note(t('resv.ask.email.2','Wir schicken dir dort eine kurze Eingangsbestätigung.')));
+      C.appendChild(UI.line(t('resv.ask.email.2','Wir schicken dir dort eine kurze Eingangsbestätigung.')));
       var rIn=Forms.inputRow({ type:'email', placeholder:t('resv.ph.email','dein.name@example.com') }); C.appendChild(rIn.row);
       var r=UI.row();
       r.appendChild(UI.btn(t('resv.send','Anfrage senden'), function(){

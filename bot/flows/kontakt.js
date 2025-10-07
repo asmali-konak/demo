@@ -1,7 +1,8 @@
 /* ============================================================================
-   PPX Flow: Kontaktdaten (kontakt.js) – v8.4.0
+   PPX Flow: Kontaktdaten (kontakt.js) – v8.4.1
    - Zeigt Telefon, E-Mail, Adresse mit passenden Aktionen (Call/Mail/Maps)
    - I18N (DE/EN) – Texte außerhalb bot.json
+   - Typo-Check: Nur UI.line für ruhige Textdarstellung (kein UI.note)
    ============================================================================ */
 (function () {
   'use strict';
@@ -59,7 +60,7 @@
       var maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(Cfg.address);
       var r3 = UI.row(); r3.style.justifyContent = 'flex-start';
       r3.appendChild(UI.btn(t('contact.route','Anfahrt öffnen'), function(){
-        try { window.open(maps, '_blank'); } catch(e){}
+        try { window.open(maps, '_blank', 'noopener'); } catch(e){}
       }, '', '🗺️'));
       C.appendChild(r3);
     }

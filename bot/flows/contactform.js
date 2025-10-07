@@ -1,7 +1,8 @@
 /* ============================================================================
-   PPX Flow: Kontaktformular (contactform.js) – v8.4.0
+   PPX Flow: Kontaktformular (contactform.js) – v8.4.1
    Nutzt PPX.services.email.sendEmailJS('contact', …)
    - I18N (DE/EN) – alle UI-Texte außerhalb der bot.json
+   - Änderung: Drei UI.note(...) → UI.line(...) (Intro, ask.email, ask.msg)
    ============================================================================ */
 (function () {
   'use strict';
@@ -52,7 +53,8 @@
     var B = UI.block(t('cf.title','KONTAKTFORMULAR'), { maxWidth:'100%' });
     B.setAttribute('data-block','cf-intro');
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    C.appendChild(UI.note(t('cf.intro','Du möchtest uns gerne eine Nachricht da lassen?')));
+    // NOTE→LINE (Intro)
+    C.appendChild(UI.line(t('cf.intro','Du möchtest uns gerne eine Nachricht da lassen?')));
     try { UI.keepBottom(); } catch(e){}
     U.delay(renderContactEmail, DLY.step || 450);
   }
@@ -61,7 +63,8 @@
     var B = UI.block(null, { maxWidth:'100%' }); B.setAttribute('data-block','cf-email');
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
     B.appendChild(UI.navBottom ? UI.navBottom((UI.getScopeIndex?UI.getScopeIndex():1)-1) : D.createTextNode(''));
-    C.appendChild(UI.note(t('cf.ask.email','Alles klar – dann brauche ich erstmal deine E-Mail-Adresse.')));
+    // NOTE→LINE (ask.email)
+    C.appendChild(UI.line(t('cf.ask.email','Alles klar – dann brauche ich erstmal deine E-Mail-Adresse.')));
     var rIn = Forms.inputRow({ type:'email', placeholder:t('cf.ph.email','dein.name@example.com') }); C.appendChild(rIn.row);
     var r = UI.row();
     r.appendChild(UI.btn(t('cf.next','Weiter'), function(){
@@ -78,7 +81,8 @@
     var B = UI.block(null, { maxWidth:'100%' }); B.setAttribute('data-block','cf-msg');
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
     B.appendChild(UI.navBottom ? UI.navBottom((UI.getScopeIndex?UI.getScopeIndex():1)-1) : D.createTextNode(''));
-    C.appendChild(UI.note(t('cf.ask.msg','Lass uns unten eine Nachricht da.')));
+    // NOTE→LINE (ask.msg)
+    C.appendChild(UI.line(t('cf.ask.msg','Lass uns unten eine Nachricht da.')));
     var rTa = Forms.textareaRow({ placeholder:t('cf.ph.msg','Hier kannst du dein Anliegen äußern. Wir freuen uns über deine Nachricht! :)') }); C.appendChild(rTa.row);
     var r = UI.row();
     r.appendChild(UI.btn(t('cf.send','Absenden'), function(){

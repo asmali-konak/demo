@@ -1,9 +1,10 @@
 /* ============================================================================
-   PPX UI Messages (v1)
+   PPX UI Messages (v1.1)
    - Keine Globals außer window.PPX
    - Liest nur aus window.PPX_DATA (optional: .UI_TEXT, .cfg.brand)
    - Bietet minimale Helfer zum Erzeugen/Anhängen von Chatblasen,
      damit der Orchestrator v8.x nicht mehr auf "missing module" läuft.
+   - Änderung: Systemtitel ohne <strong> (keine fette Typo)
 ============================================================================ */
 (function () {
   var w = window;
@@ -83,7 +84,8 @@
 
   M.system = function (text) {
     var T = getTextMap();
-    var title = '<strong>' + T.system + ':</strong> ';
+    // Kein <strong>, damit System-Hinweise typografisch ruhig bleiben
+    var title = T.system + ': ';
     return bubble('sys', title + messageHTMLFromText(text));
   };
 

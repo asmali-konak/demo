@@ -1,7 +1,8 @@
 /* ============================================================================
-   PPX Flow: Öffnungszeiten (hours.js) – v8.4.0
+   PPX Flow: Öffnungszeiten (hours.js) – v8.4.1
    - stepHours(): zeigt Stundenliste zentriert (I18N)
    - askReserveAfterHours(): Follow-up CTA (I18N)
+   - Änderung: UI.note → UI.line bei hours.ask (ruhige Typo)
    ============================================================================ */
 (function () {
   'use strict';
@@ -9,11 +10,11 @@
   var W = window, D = document;
   var PPX = W.PPX = W.PPX || {};
 
-  var UI = PPX.ui || {};
-  var U  = PPX.util || {};
+  var UI  = PPX.ui || {};
+  var U   = PPX.util || {};
   var DLY = PPX.D || {};
-  var OH = (PPX.services && PPX.services.openHours) || {};
-  var I  = PPX.i18n || {};
+  var OH  = (PPX.services && PPX.services.openHours) || {};
+  var I   = PPX.i18n || {};
 
   function cfg(){ try { return (PPX.data && PPX.data.cfg && PPX.data.cfg()) || {}; } catch(e){ return {}; } }
   function L(){ try { return (I && I.nowLang && I.nowLang()) || PPX.lang || 'de'; } catch(e){ return 'de'; } }
@@ -64,7 +65,8 @@
   function askReserveAfterHours(scopeIdx){
     var Q = UI.block(null, { maxWidth:'100%' });
     Q.setAttribute('data-block','hours-ask');
-    Q.appendChild(UI.note(t('hours.ask','Samstagabend ist meist voll – möchtest du dir jetzt schon einen Platz sichern?')));
+    // NOTE→LINE (hours.ask)
+    Q.appendChild(UI.line(t('hours.ask','Samstagabend ist meist voll – möchtest du dir jetzt schon einen Platz sichern?')));
     var r = UI.row(); r.style.justifyContent = 'flex-start';
     r.appendChild(UI.btn(t('hours.reserve','Ja, bitte reservieren'), function(){ try { U.delay(PPX.flows.stepReservieren, DLY.step || 450); } catch(e){} }, 'ppx-cta', '🗓️'));
     r.appendChild(UI.btn(t('hours.nohome','Nein, zurück ins Hauptmenü'), function(){ try { UI.goHome(); } catch(e){} }, 'ppx-secondary', '🏠'));

@@ -1,8 +1,9 @@
 /* ============================================================================
-   PPX Flow: FAQ / Q&As (faq.js) – v8.4.0
+   PPX Flow: FAQ / Q&As (faq.js) – v8.4.1
    - stepQAs(): Root mit PDF-Button + Kategorien (I18N)
    - renderFaqCat(ct): Header im Screenshot-Stil + Fragenliste (I18N)
    - renderFaqAnswer(ct,it): Antwort, optional Quick-Bestell-CTA (I18N)
+   - Änderung: UI.note → UI.line für lookup/choose/question/helpAsk
    ============================================================================ */
 (function () {
   'use strict';
@@ -51,7 +52,6 @@
 
   function normTitleToOrderKey(title){
     var s = String(title||'').trim();
-    // Normalisierungen
     if (/speisekarte/i.test(s) || /^menu$/i.test(s)) return L()==='en' ? 'Menu' : 'Speisekarte';
     if (/allergen/i.test(s)) return L()==='en' ? 'Allergens' : 'Allergene';
     if (/liefer/i.test(s) || /delivery/i.test(s)) return L()==='en' ? 'Delivery' : 'Lieferung';
@@ -68,7 +68,6 @@
   function orderFaqCats(cats){
     var allowList = orderListForLang();
     var allow = Object.create(null); allowList.forEach(function(t){ allow[t]=1; });
-    // Filter + Norm
     var filtered = cats.map(function(c){
       var t = (c.title || c.name || '').trim();
       var norm = normTitleToOrderKey(t);
@@ -100,12 +99,10 @@
   function getFaqCats(){
     var F = faqsRaw();
     if (Array.isArray(F)) {
-      // Single list → "Speisekarte/Menu"
       return orderFaqCats([{ key:'all', title:(L()==='en'?'Menu':'Speisekarte'), icon:'🍕', items:F }]);
     }
     if (F && typeof F === 'object') {
       if (Array.isArray(F.cats)) {
-        // Localize titles if *_en present
         var list = F.cats.map(function(c){
           var t = catTitle(c);
           return Object.assign({}, c, { title: t });
@@ -145,7 +142,8 @@
     U.delay(function(){
       var cats = getFaqCats();
       if (!cats.length){ C.appendChild(UI.line(t('faq.soon','Häufige Fragen folgen in Kürze.'))); try { UI.keepBottom(); } catch(e){} return; }
-      C.appendChild(UI.note(t('faq.lookup','Wonach möchtest du schauen?')));
+      // NOTE→LINE (lookup)
+      C.appendChild(UI.line(t('faq.lookup','Wonach möchtest du schauen?')));
 
       var G = UI.grid();
       cats.forEach(function(ct){
@@ -172,7 +170,8 @@
     var C = D.createElement('div'); C.className = 'ppx-body'; B.appendChild(C);
     B.appendChild(UI.navBottom ? UI.navBottom(scopeIdx) : D.createTextNode(''));
 
-    C.appendChild(UI.note(t('faq.choose','Wähle eine Frage:')));
+    // NOTE→LINE (choose)
+    C.appendChild(UI.line(t('faq.choose','Wähle eine Frage:')));
 
     var items = (ct && Array.isArray(ct.items)) ? ct.items.slice() : [];
     if (!items.length){ C.appendChild(UI.line(t('faq.emptyCat','Für diese Kategorie sind noch keine Fragen hinterlegt.'))); try { UI.keepBottom(); } catch(e){} return; }
@@ -199,7 +198,8 @@
     var a = pickQA(it,'a') || '';
     var more = pickQA(it,'more');
 
-    C.appendChild(UI.note(q));
+    // NOTE→LINE (question)
+    C.appendChild(UI.line(q));
     if (a)    C.appendChild(UI.line(a));
     if (more) C.appendChild(UI.line(more));
     try { UI.keepBottom(); } catch(e){}
@@ -225,7 +225,8 @@
   function askAfterFaqAnswer(backScopeIdx){
     var Q = UI.block(null, { maxWidth:'100%' });
     Q.setAttribute('data-block','faq-answer-ask');
-    Q.appendChild(UI.note(t('faq.helpAsk','Konnte dir das helfen? Wenn nicht, lass uns gerne eine Nachricht da!')));
+    // NOTE→LINE (helpAsk)
+    Q.appendChild(UI.line(t('faq.helpAsk','Konnte dir das helfen? Wenn nicht, lass uns gerne eine Nachricht da!')));
     var r = UI.row(); r.style.justifyContent = 'flex-start';
     r.appendChild(UI.btn(t('faq.toForm','Ja, bitte zum Kontaktformular'), function(){ try { U.delay(PPX.flows.stepContactForm, DLY.step || 450); } catch(e){} }, 'ppx-cta', '📝'));
     r.appendChild(UI.btn(t('faq.noHome','Nein, zurück ins Hauptmenü'), function(){ try { UI.goHome(); } catch(e){} }, 'ppx-secondary', '🏠'));
