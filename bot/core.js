@@ -1,12 +1,12 @@
 /* ============================================================================
-   PPX Core (core.js) – v8.5.0
+   PPX Core (core.js) – v8.5.1
    - Namespace & Version
    - Datenzugriff auf window.PPX_DATA / __PPX_DATA__ (SST)
    - Delays & delay()
    - Utilities (isObj, pretty)
-   - I18N-Basis: nowLang(), pick(), t(), reg() – unabhängig von bot.json
+   - I18N-Basis: nowLang(), pick(), t(), reg()
    - Boot-Sequenz (ruft PPX.ui.bindOnce mit gleichen Fallbacks)
-   - WICHTIG: Keine Persistenz der Sprache (immer DE als Start, Umschalten via panel.js)
+   - NEU: PPX.data.ai() Getter (AI-Block aus bot.json)
 ============================================================================ */
 (function () {
   'use strict';
@@ -16,7 +16,7 @@
 
   // Namespace
   var PPX = W.PPX = W.PPX || {};
-  PPX.VERSION = '8.5.0';
+  PPX.VERSION = '8.5.1';
 
   // Startsprache sicherstellen (index.js setzt bereits 'de'; hier doppelt abgesichert)
   PPX.lang = PPX.lang || 'de';
@@ -39,13 +39,19 @@
     var R = raw();
     return R.faqs || R.faq || [];
   }
+  // NEU: AI Getter
+  function ai() {
+    var R = raw();
+    return R.AI || {};
+  }
 
   // Public Getter
   PPX.data = {
     raw: raw,
     cfg: cfg,
     dishes: dishes,
-    faqs: faqs
+    faqs: faqs,
+    ai: ai
   };
 
   // ---------------------------------------------------------------------------
@@ -71,11 +77,7 @@
   PPX.D = Delays;
 
   // ---------------------------------------------------------------------------
-  // I18N-Foundation (außerhalb bot.json; Module registrieren ihre UI-Texte hier)
-  // - nowLang(): aktuelle Sprache (PPX.lang, default 'de')
-  // - pick(v):   holt v.de/v.en aus Objekten; fällt auf de/en/String zurück
-  // - t(key):    holt registrierten UI-Text (de/en) nach Sprache, optional Fallback
-  // - reg(dict): merge UI-Texte (key: {de, en}) in zentrale Registry
+  // I18N-Foundation
   // ---------------------------------------------------------------------------
   var I18N = PPX.i18n || {};
   var DICT = I18N._dict || {};
@@ -90,7 +92,6 @@
       if (typeof v[L] !== 'undefined') return v[L];
       if (typeof v.de !== 'undefined') return v.de;
       if (typeof v.en !== 'undefined') return v.en;
-      // häufige Muster: title/title_en, name/name_en, desc/desc_en …
       var m = [
         ['title','title_en'], ['name','name_en'], ['label','label_en'],
         ['desc','desc_en'], ['text','text_en'], ['category','category_en']
@@ -147,7 +148,6 @@
       } catch (e2) {}
     });
   } catch (e) {}
-
   // ---------------------------------------------------------------------------
   // Boot-Sequenz (entspricht ursprünglicher Bind-Logik)
   // Ruft PPX.ui.bindOnce() sobald DOM & Elemente bereit sind.
@@ -188,6 +188,6 @@
 
   // Vorbereiten von Teil-Namespaces, die andere Dateien befüllen
   PPX.ui = PPX.ui || {};             // panel, components, helpers
-  PPX.services = PPX.services || {}; // email, openHours
+  PPX.services = PPX.services || {}; // email, openHours, telemetry, ai
   PPX.flows = PPX.flows || {};       // home, speisen, reservieren, hours, kontakt, contactform, faq
 })();

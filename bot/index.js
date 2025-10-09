@@ -1,10 +1,11 @@
 /* ============================================================================
-   PPX Widget Orchestrator (index.js) – v8.5.0
+   PPX Widget Orchestrator (index.js) – v8.5.1
    Lädt die Modul-Dateien sequentiell und startet den Bot (1:1 Verhalten).
    Änderungen:
    - Initialisiert window.PPX Namespace früh (ohne Globals außer window.PPX)
    - Immer DE als Startsprache (KEIN localStorage-Read mehr)
    - Setzt data-ppx-lang am <html> früh, damit Styles/Module es nutzen können
+   - NEU: telemetry.js wird vor ai.js geladen
 ============================================================================ */
 (function () {
   'use strict';
@@ -41,6 +42,8 @@
       'ui/components/forms.js',
       'services/email.js',
       'services/openHours.js',
+      // NEU: Telemetry vor AI
+      'services/telemetry.js',
       // NEU: AI-Service (Dock + Logik) – bewusst NACH UI, aber VOR Flows ok
       'services/ai.js',
       'flows/home.js',

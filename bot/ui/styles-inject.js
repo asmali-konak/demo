@@ -3,8 +3,7 @@
    - Liest THEME aus window.PPX_DATA / __PPX_DATA__ / PPX.data
    - Setzt CSS-Variablen global (:root) + Bot-Scope (#ppx-panel / .ppx-launch)
    - Injiziert PPX-UI-Verfeinerungen (Grid, Chips, Inputs, etc.)
-   - Neu: Toggle-Variablen (THEME.toggle.*) → --ppx-toggle-*
-     und Extra-Styles für den Kugel-Switch (.ppx-switch)
+   - Toggle-Variablen (THEME.toggle.*) → --ppx-toggle-*
 ============================================================================ */
 (function () {
   'use strict';
@@ -89,7 +88,6 @@
       + '--ppx-bot-brandbar-bg:' + (b.brandbarBg || 'rgba(255,255,255,.92)') + ';'
       + '--ppx-bot-brandbar-text:' + (b.brandbarText || '#11231c') + ';'
 
-      /* Toggle vars (konfigurierbar je Kunde) */
       + '--ppx-toggle-size:' + px(t.size, '28px') + ';'
       + '--ppx-toggle-track-on:' + (t.trackOn || '#1e7a5a') + ';'
       + '--ppx-toggle-track-off:' + (t.trackOff || 'rgba(255,255,255,.18)') + ';'

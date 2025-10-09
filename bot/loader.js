@@ -3,6 +3,7 @@
    - Lädt bot.json sicher
    - Setzt IMMER window.PPX_DATA (+ Alias __PPX_DATA__)
    - Übernimmt EMAIL / EMAILJS und spiegelt EMAIL -> cfg.EMAIL (falls nicht da)
+   - NEU: Übernimmt AI und spiegelt AI -> cfg.AI (falls nicht da)
    - Stellt minimales PPX.data-API bereit
    - Optional: EmailJS laden (per data-emailjs)
    - Lädt danach bot/index.js
@@ -36,15 +37,22 @@
       cfg:    (src.cfg || src.config || current.cfg || {}),
       dishes: (src.dishes || src.menu || current.dishes || {}),
       faqs:   (src.faqs || src.faq || current.faqs || []),
-      // <-- FIX: EMAIL-Blöcke übernehmen
+      // EMAIL übernehmen
       EMAIL:  (src.EMAIL || src.email || src.EMAILJS || current.EMAIL || current.email || null),
-      EMAILJS:(src.EMAILJS || null)
+      EMAILJS:(src.EMAILJS || null),
+      // *** NEU: AI übernehmen ***
+      AI:     (src.AI || current.AI || null)
     };
-    // Bridge: EMAIL auch unter cfg.EMAIL verfügbar machen (ohne zu überschreiben)
+    // Bridges: EMAIL/AI auch unter cfg.* verfügbar machen (ohne zu überschreiben)
     if (safe.EMAIL && (!safe.cfg || !safe.cfg.EMAIL)) {
       safe.cfg = safe.cfg || {};
       safe.cfg.EMAIL = safe.EMAIL;
     }
+    if (safe.AI && (!safe.cfg || !safe.cfg.AI)) {
+      safe.cfg = safe.cfg || {};
+      safe.cfg.AI = safe.AI;
+    }
+
     W.PPX_DATA = safe;
     W.__PPX_DATA__ = W.PPX_DATA; // Alias für Altcode
   }
@@ -58,7 +66,8 @@
     // Debug:
     W.PPX_DEBUG = function () {
       var x = PPX.data.raw();
-      console.info('[PPX DEBUG] EMAIL at top =', !!x.EMAIL, 'cfg.EMAIL =', !!(x.cfg && x.cfg.EMAIL));
+      console.info('[PPX DEBUG] EMAIL at top =', !!x.EMAIL, 'cfg.EMAIL =', !!(x.cfg && x.cfg.EMAIL),
+                   '| AI at top =', !!x.AI, 'cfg.AI =', !!(x.cfg && x.cfg.AI));
       return x;
     };
   }
@@ -92,7 +101,8 @@
           .then(ensurePPXNamespace)
           .then(function(){
             var x = (W.PPX_DATA || {});
-            console.info('[PPX Loader] PPX_DATA ready – EMAIL:', !!x.EMAIL, 'cfg.EMAIL:', !!(x.cfg && x.cfg.EMAIL));
+            console.info('[PPX Loader] PPX_DATA ready – EMAIL:', !!x.EMAIL, 'cfg.EMAIL:', !!(x.cfg && x.cfg.EMAIL),
+                         '| AI:', !!x.AI, 'cfg.AI:', !!(x.cfg && x.cfg.AI));
           });
       })
       .then(function () {

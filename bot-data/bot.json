@@ -105,7 +105,6 @@
     "autoReplyTemplate": "template_kunde_asmali",
     "contactTemplate": "template_kontakt_asmali"
   },
-
   "dishes": {
     "meze": [
       { "id": "hummus",       "name": "Hummus",                    "name_en": "Hummus",                     "price": "6,90 €", "info": "Kichererbsen, Tahin, Zitrone, Olivenöl. Mit Brot.",              "info_en": "Chickpeas, tahini, lemon, olive oil. With bread." },
@@ -323,19 +322,76 @@
       }
     ]
   },
-
   "AI": {
     "enabled": true,
     "workerUrl": "https://ppx-ai.muciyil.workers.dev",
     "provider": "openai",
     "model": "gpt-4o-mini",
-    "rateLimitPerMin": 6,
-    "maxTokens": 500,
-    "systemPrompt": "You are the helpful assistant for the restaurant Asmali Konak. Keep answers short, friendly, and on-brand. Prefer triggering flows when appropriate: if the user wants to reserve a table, set tool=reservieren; for contact, set tool=kontakt; for opening hours, set tool=öffnungszeiten. Use information implied by the UI and the provided metadata; do not invent prices or unavailable dishes. Answer in the user’s language (German or English).",
+
+    "limits": {
+      "ratePerMin": 15,
+      "dailyCapEur": 5,
+      "maxTokens": 300,
+      "timeoutMs": 8000
+    },
+
+    "tone": {
+      "voice": "freundlich, direkt, sachlich",
+      "length": "kurz",
+      "emojis": 0,
+      "exclamationsMax": 1,
+      "address": "du"
+    },
+
+    "languages": ["de","en"],
+
     "intents": {
-      "reservieren": ["reservieren", "reserve", "tisch", "table", "buchen", "booking"],
-      "kontakt": ["kontakt", "contact", "email", "mail", "anrufen", "call", "telefon"],
-      "öffnungszeiten": ["öffnungszeiten", "zeiten", "open", "geöffnet", "hours"]
-    }
+      "reservieren": { "keywords": ["reserv", "tisch", "table", "buchen", "booking"], "behavior": "silent" },
+      "kontakt":     { "keywords": ["kontakt", "contact", "email", "mail", "anrufen", "call", "telefon"], "behavior": "silent" },
+      "öffnungszeiten": { "keywords": ["öffnungszeiten","zeiten","open","geöffnet","hours"], "behavior": "one_liner" },
+
+      "speisen": {
+        "behavior": "two_liners",
+        "categories": {
+          "meze":       { "keywords": ["meze","vorspeise","hummus","cacik","ezme","sigara böreği","börek","meze mix"] },
+          "pide":       { "keywords": ["pide","kasar","käse","kıymalı","hack","sucuk","spinat","mix"] },
+          "kebap":      { "keywords": ["kebab","kebap","adana","urfa","şiş","tavuk","kuzu","iskender"] },
+          "guevec":     { "keywords": ["güveç","eintopf","tontopf","karnıyarık","aubergine"] },
+          "vegetarisch":{ "keywords": ["vegetarisch","veggie","falafel","imam bayıldı","ispanaklı","spinat"] },
+          "beilagen":   { "keywords": ["beilage","bulgur","reis","salat","brot"] },
+          "getraenke":  { "keywords": ["getränk","getraenk","cola","fanta","sprite","ayran","şalgam","tee","çay","raki","wasser","softdrink"] },
+          "desserts":   { "keywords": ["dessert","nachspeise","baklava","sütlaç","sutlac","künefe","kunefe"] }
+        }
+      },
+
+      "faq": {
+        "behavior": "two_liners",
+        "categories": {
+          "reservierung":  { "keywords": ["stornieren","storno","frist","wie reservieren","telefonisch reservieren"] },
+          "oeffnungszeiten": { "keywords": ["feiertage","heiligabend","weihnachten","heute offen"] },
+          "kueche":        { "keywords": ["allergen","gluten","vegan","vegetarisch"] },
+          "abholung":      { "keywords": ["abholen","pickup","mitnehmen","takeaway","lieferung","delivery"] },
+          "bezahlung":     { "keywords": ["zahlen","zahlung","karte","bar","apple pay","google pay"] },
+          "speisenkarte":  { "keywords": ["karte","menu","speisekarte","kinder"] },
+          "kontakt":       { "keywords": ["adresse","route","anreise","maps","telefonnummer"] },
+          "bestellung":    { "keywords": ["vorbestellen","pre-order","schnellbestellung"] }
+        }
+      }
+    },
+
+    "knowledgeHints": {
+      "prioritize": ["hours","menu","faq"],
+      "forbid": ["andere_restaurants","wetter","news","preise_erfinden","medizin","recht","smalltalk"],
+      "contextShort": "Türkisches Restaurant in Köln. Antworten nur aus Bot/Website-Daten."
+    },
+
+    "compliance": {
+      "consentText": "Deine Frage wird an unseren KI-Dienst gesendet, um dir zu antworten. Keine sensiblen Daten eingeben.",
+      "privacyUrl": "/datenschutz",
+      "imprintUrl": "/impressum",
+      "disclaimer": "Keine Rechts- oder Medizinberatung."
+    },
+
+    "systemPrompt": "Sprich ultrakurz (1 Satz; FAQ/Speisen max. 2 Sätze). Sprich nur über Inhalte aus bot.json/aktiven Flows/Website. Keine Infos über andere Anbieter/Branchen. Keine Preise/Allergene erfinden. Reservieren & Kontakt: silent (Flows übernehmen). Öffnungszeiten: one_liner mit Live-Daten. FAQ/Speisen: two_liners, ggf. passenden Flow öffnen. Sprache spiegeln (DE/EN). Bei fehlender Info: kurz sagen und Kontaktformular öffnen. Keine Smalltalk/Wetter/News."
   }
 }

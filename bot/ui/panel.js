@@ -87,7 +87,7 @@
   // --- UI building blocks ----------------------------------------------------
   function block(title,opts){
     opts=opts||{};
-    var w=el('div',{'class':'ppx-bot ppx-appear',style:{maxWidth:(opts.maxWidth||'640px'),margin:'12px auto'}});
+    var w=el('div',{'class':'ppx-bot ppx-appear',style:{maxWidth:(opts.maxWidth||'640px'),margin:'12px auto'}, 'data-block': (opts.blockKey || '')});
     if(title){
       var hStyle=opts.hCenter?{justifyContent:'center',textAlign:'center'}:null;
       var h=el('div',{'class':'ppx-h',style:hStyle},title); w.appendChild(h);
