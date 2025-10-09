@@ -13,7 +13,6 @@
 
     // --- Früh: Namespace + Sprache ------------------------------------------
     var PPX = w.PPX = w.PPX || {};
-    // Startsprache immer DE (Persistenz abgeschaltet; Panel steuert Umschaltung)
     PPX.lang = 'de';
     try { d.documentElement.setAttribute('data-ppx-lang', PPX.lang); } catch (e) {}
 
@@ -42,6 +41,8 @@
       'ui/components/forms.js',
       'services/email.js',
       'services/openHours.js',
+      // NEU: AI-Service (Dock + Logik) – bewusst NACH UI, aber VOR Flows ok
+      'services/ai.js',
       'flows/home.js',
       'flows/speisen.js',
       'flows/reservieren.js',
@@ -81,17 +82,14 @@
 
     function finish() {
       try {
-        // Falls core ein boot() bereitstellt → bevorzugt nutzen
         if (w.PPX && typeof w.PPX.boot === 'function') {
           w.PPX.boot();
         } else if (w.PPX && w.PPX.ui && typeof w.PPX.ui.bindOnce === 'function') {
-          // Fallback – sollte selten gebraucht werden
           w.PPX.ui.bindOnce();
         }
       } catch (e) {
         console.error('[PPX index] Boot failed:', e);
       } finally {
-        // Ready-Queue ausführen (z. B. Module, die erst nach Boot arbeiten sollen)
         try { drainReadyQueue(); } catch (e) {}
       }
     }

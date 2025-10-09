@@ -178,7 +178,7 @@
           },
           {
             "q": "Bis wann kann ich kostenfrei stornieren?",
-            "q_en": "Until when can I cancel free of charge?",
+            "q_en": "Until when can I cancel for free?",
             "a": "Bis 2 Stunden vor Termin – danach bitte kurz durchrufen.",
             "a_en": "Up to 2 hours before your time slot — after that please give us a quick call."
           }
@@ -322,5 +322,20 @@
         ]
       }
     ]
+  },
+
+  "AI": {
+    "enabled": true,
+    "workerUrl": "https://ppx-ai.muciyil.workers.dev",
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "rateLimitPerMin": 6,
+    "maxTokens": 500,
+    "systemPrompt": "You are the helpful assistant for the restaurant Asmali Konak. Keep answers short, friendly, and on-brand. Prefer triggering flows when appropriate: if the user wants to reserve a table, set tool=reservieren; for contact, set tool=kontakt; for opening hours, set tool=öffnungszeiten. Use information implied by the UI and the provided metadata; do not invent prices or unavailable dishes. Answer in the user’s language (German or English).",
+    "intents": {
+      "reservieren": ["reservieren", "reserve", "tisch", "table", "buchen", "booking"],
+      "kontakt": ["kontakt", "contact", "email", "mail", "anrufen", "call", "telefon"],
+      "öffnungszeiten": ["öffnungszeiten", "zeiten", "open", "geöffnet", "hours"]
+    }
   }
 }
