@@ -1,15 +1,16 @@
 /* ============================================================================
-   PPX Flow: Kontaktformular (contactform.js) – v8.4.1
-   Nutzt PPX.services.email.sendEmailJS('contact', …)
-   - I18N (DE/EN) – alle UI-Texte außerhalb der bot.json
-   - Änderung: Drei UI.note(...) → UI.line(...) (Intro, ask.email, ask.msg)
-   ============================================================================ */
+   PPX Flow: Kontaktformular (contactform.js) – v9.0.0
+   Änderungen:
+   - Direkteinstieg via Optionen: { startAt: 'email'|'intro', skipHeader: true|false }
+   - Text DE geändert zu: "Dann bräuchte ich erstmal bitte deine E-Mail-Adresse."
+   - Kompatibel zu PPX.flows.stepContactForm(detail)
+============================================================================ */
 (function () {
   'use strict';
   var W = window, D = document;
   var PPX = W.PPX = W.PPX || {};
   var UI = PPX.ui || {}, U = PPX.util || {}, DLY = PPX.D || {};
-  function EM(){ return (W.PPX && W.PPX.services && W.PPX.services.email) || null; } // <- live lookup
+  function EM(){ return (W.PPX && W.PPX.services && W.PPX.services.email) || null; }
   var Forms = (UI && UI.forms) || {};
   var I = PPX.i18n || {};
   var CF = null;
@@ -18,7 +19,7 @@
   try { I.reg && I.reg({
     'cf.title':        { de:'KONTAKTFORMULAR', en:'CONTACT FORM' },
     'cf.intro':        { de:'Du möchtest uns gerne eine Nachricht da lassen?', en:'You’d like to leave us a message?' },
-    'cf.ask.email':    { de:'Alles klar – dann brauche ich erstmal deine E-Mail-Adresse.', en:'Great—first I’ll need your email address.' },
+    'cf.ask.email':    { de:'Dann bräuchte ich erstmal bitte deine E-Mail-Adresse.', en:'First, I’ll need your email address, please.' },
     'cf.ph.email':     { de:'dein.name@example.com', en:'your.name@example.com' },
     'cf.next':         { de:'Weiter', en:'Next' },
     'cf.err.email':    { de:'Bitte gib eine gültige E-Mail-Adresse ein.', en:'Please enter a valid email address.' },
@@ -48,23 +49,30 @@
   function L(){ try { return (I && I.nowLang && I.nowLang()) || PPX.lang || 'de'; } catch(e){ return 'de'; } }
 
   // ---------- Flow -----------------------------------------------------------
-  function stepContactForm(){
+  function stepContactForm(opts){
+    opts = opts || {};
     CF = { email:'', message:'' };
+    if (opts.startAt === 'email' || opts.skipHeader){
+      // Direkteinstieg: ohne Titel/Intro
+      U.delay(function(){ renderContactEmail({ skipHeader:true }); }, DLY.step || 300);
+      return;
+    }
+    // Standard-Intro
     var B = UI.block(t('cf.title','KONTAKTFORMULAR'), { maxWidth:'100%' });
     B.setAttribute('data-block','cf-intro');
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
-    // NOTE→LINE (Intro)
     C.appendChild(UI.line(t('cf.intro','Du möchtest uns gerne eine Nachricht da lassen?')));
     try { UI.keepBottom(); } catch(e){}
-    U.delay(renderContactEmail, DLY.step || 450);
+    U.delay(function(){ renderContactEmail({ skipHeader:false }); }, DLY.step || 450);
   }
 
-  function renderContactEmail(){
-    var B = UI.block(null, { maxWidth:'100%' }); B.setAttribute('data-block','cf-email');
+  function renderContactEmail(ctx){
+    ctx = ctx || {};
+    var B = UI.block(ctx.skipHeader ? null : t('cf.title','KONTAKTFORMULAR'), { maxWidth:'100%' });
+    B.setAttribute('data-block','cf-email');
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
     B.appendChild(UI.navBottom ? UI.navBottom((UI.getScopeIndex?UI.getScopeIndex():1)-1) : D.createTextNode(''));
-    // NOTE→LINE (ask.email)
-    C.appendChild(UI.line(t('cf.ask.email','Alles klar – dann brauche ich erstmal deine E-Mail-Adresse.')));
+    C.appendChild(UI.line(t('cf.ask.email','Dann bräuchte ich erstmal bitte deine E-Mail-Adresse.')));
     var rIn = Forms.inputRow({ type:'email', placeholder:t('cf.ph.email','dein.name@example.com') }); C.appendChild(rIn.row);
     var r = UI.row();
     r.appendChild(UI.btn(t('cf.next','Weiter'), function(){
@@ -76,12 +84,10 @@
     }, 'ppx-cta', '➡️'));
     C.appendChild(r); try { UI.keepBottom(); } catch(e){}
   }
-
   function renderContactMessage(){
     var B = UI.block(null, { maxWidth:'100%' }); B.setAttribute('data-block','cf-msg');
     var C = D.createElement('div'); C.className='ppx-body'; B.appendChild(C);
     B.appendChild(UI.navBottom ? UI.navBottom((UI.getScopeIndex?UI.getScopeIndex():1)-1) : D.createTextNode(''));
-    // NOTE→LINE (ask.msg)
     C.appendChild(UI.line(t('cf.ask.msg','Lass uns unten eine Nachricht da.')));
     var rTa = Forms.textareaRow({ placeholder:t('cf.ph.msg','Hier kannst du dein Anliegen äußern. Wir freuen uns über deine Nachricht! :)') }); C.appendChild(rTa.row);
     var r = UI.row();

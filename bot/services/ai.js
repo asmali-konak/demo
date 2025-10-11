@@ -1,12 +1,10 @@
 /* ============================================================================
-   PPX AI Service – v2.3.4
+   PPX AI Service – v2.4.2 (Option A)
    Änderungen:
-   - STRIKTES FAQ-Matching (Hybrid):
-     * Triggern über exakte Kategorienamen (key, title, title_en)
-     * PLUS nur explizite Synonyme aus AI.intents.faq.categories.<key>
-     * Keine Tokenisierung, keine Heuristik.
-   - Prematch läuft vor dem Worker (verhindert ⏳ bei klaren Treffern).
-   - Dock-Fix: Eingabefeld erscheint auch, wenn #ppx-v spät vorhanden ist.
+   - Fallback öffnet jetzt ausdrücklich den Flow-Namen "contactForm" (CamelCase)
+     → openFlow('contactForm', { startAt:'email', skipHeader:true })
+   - Kein Alias-Hack nötig; Naming konsistent mit stepContactForm
+   - Weiterhin: striktes FAQ-Prematching, Wetter/out-of-scope → Kontaktformular
 ============================================================================ */
 (function () {
   'use strict';
@@ -154,7 +152,6 @@
     var span=el('span',{html:esc(text)}); wrap.appendChild(span); v.appendChild(wrap);
     moveThreadToEnd(true); return wrap;
   }
-
   // --- notes / rate-limit + dock --------------------------------------------
   var rl={hits:[],max:15};
   function allowHit(){
@@ -162,7 +159,7 @@
     if(rl.hits.length>=rl.max) return false; rl.hits.push(t); return true;
   }
 
-  var $panel;
+  var $panel,$vroot;
   function showNote(txt){
     var t=ensureThread(); if(!t) return;
     var n=el('div',{class:'ppx-note',style:{
@@ -172,13 +169,14 @@
     t.appendChild(n); moveThreadToEnd(true);
   }
 
-  // Dock sicher anlegen – auch wenn #ppx-v beim ersten Mal fehlt
+  // Dock sicher anlegen – auch wenn #ppx-v spät kommt
   function ensureDock(){
     var panel=document.getElementById('ppx-panel'); $panel=panel;
     if(!panel) return false;
 
     var exist=panel.querySelector('.ppx-ai-dock');
     if(exist){
+      $vroot=viewEl(); // keep fresh
       $dock=exist; $inp=$dock.querySelector('.ai-inp'); $send=$dock.querySelector('.ai-send'); $consent=$dock.querySelector('.ai-consent');
       return true;
     }
@@ -208,9 +206,7 @@
     var row=el('div',{class:'ai-row'},$inp,$send);
     $dock=el('div',{class:'ppx-ai-dock'},$consent,row);
 
-    $v=viewRoot();
-    if($v && $v.nextSibling){ panel.insertBefore($dock,$v.nextSibling); }
-    else { panel.appendChild($dock); }
+    $v=viewEl(); if($v && $v.nextSibling){ panel.insertBefore($dock,$v.nextSibling); } else { panel.appendChild($dock); }
 
     $inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); }});
     $send.addEventListener('click',send);
@@ -238,7 +234,8 @@
   function cap(s){ s=String(s||''); return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
   function openFlow(tool,detail){
     try{
-      var fn = PPX.flows && PPX.flows['step'+cap(tool)];
+      var tname=String(tool||'');
+      var fn = PPX.flows && (PPX.flows['step'+cap(tname)]);
       if (typeof fn === 'function'){ fn(detail||{}); return true; }
       if(PPX.flows&&typeof PPX.flows.open==='function'){ PPX.flows.open(tool,detail||{}); return true; }
     }catch(e){}
@@ -246,11 +243,11 @@
     return openFlowHint(tool);
   }
   function openFlowHint(tool){
-    var v=viewRoot(); var words={
+    var v=viewEl(); var words={
       reservieren:['reservieren','reserve','buchen','booking','tisch','table'],
       kontakt:['kontakt','contact','email','mail','anrufen','call','telefon'],
       'öffnungszeiten':['öffnungszeiten','zeiten','hours','open','geöffnet'],
-      speisen:['speisen','speise','gerichte','gericht','menu','menue','speisekarte','essen','durst','getränk','getraenk','ayran','cola','fanta','sprite','raki','tee','cay','çay','wasser'],
+      speisen:['speisen','speise','gerichte','gericht','menu','speisekarte','essen','getränk','getraenk','cola','ayran','raki','tee','cay','çay','wasser'],
       faq:['faq','fragen','hilfe']
     }[tool]||[tool];
     if(!v){ return false; }
@@ -281,9 +278,8 @@
     var S=st(); if(!S.activeFlowId||!tool) return false;
     return String(tool).toLowerCase()===String(S.activeFlowId).toLowerCase();
   }
+
   // --- FAQ strict hybrid map -------------------------------------------------
-  // Nur exakte Namen (key, title, title_en) + explizite Synonyme aus
-  // AI.intents.faq.categories.<key>. Keine Tokenisierung/Heuristik.
   function faqCategoryMapStrict(){
     var out=Object.create(null);
     try{
@@ -292,7 +288,6 @@
       if (F && Array.isArray(F.cats)) cats=F.cats;
       else if (F && Array.isArray(F.items)) cats=[{key:'all',title:F.title||'FAQ',title_en:F.title_en||'FAQ'}];
 
-      // Namen (key, title, title_en)
       cats.forEach(function(c){
         var k = (c && c.key) ? String(c.key) : '';
         var t = (c && c.title) ? String(c.title) : '';
@@ -302,30 +297,39 @@
         if(te){ out[_norm(te)]=k||_norm(te); }
       });
 
-      // Explizite Synonyme aus AI.intents.faq.categories
       var A=aiCfg()||{}, intents=(A.intents||{}), faq=(intents.faq||{}), catsCfg=(faq.categories||{});
       Object.keys(catsCfg).forEach(function(catKey){
         var entry=catsCfg[catKey];
         var arr = Array.isArray(entry) ? entry : (Array.isArray(entry.keywords) ? entry.keywords : []);
-        arr.forEach(function(s){
-          var n=_norm(s); if(!n) return;
-          out[n]=catKey; // Synonym → Ziel-Category-Key
+        (arr||[]).forEach(function(s){
+          var n=_norm(s); if(!n) return; out[n]=catKey;
         });
       });
     }catch(e){}
     return out;
   }
-
-  // Findet Category-Key anhand exakter Namen oder expliziter Synonyme
   function faqMatchFromTextStrict(txt){
     var map=faqCategoryMapStrict();
-    var n=_norm(txt);
-    if(!n) return null;
-    // 1) Volltext (z. B. "küche & allergene")
+    var n=_norm(txt); if(!n) return null;
     if(map[n]) return map[n];
-    // 2) Exakte Wörter nur wenn vom Benutzer genau so eingegeben (kein Tokenizing)
-    // → nicht nötig, da oben bereits Volltext und explizite Synonyme abgedeckt.
     return null;
+  }
+  // --- Fallback → Kontaktformular (Direkteinstieg E-Mail) --------------------
+  function fallbackToContactForm(botBubble){
+    try{
+      var A=aiCfg()||{}, L=nowLang();
+      var msg=(A.fallback && A.fallback.message && (A.fallback.message[L]||A.fallback.message.de)) ||
+              'Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?';
+      if(botBubble){ botBubble.innerHTML=esc(msg); }
+      else {
+        var t=ensureThread(); if(t){ t.appendChild(bubble('bot',esc(msg))); }
+      }
+      if(st().activeFlowId && !toolMatchesActive('contactForm')){ pauseActiveFlow('ai-fallback'); }
+      var step=(A.fallback && A.fallback.step)||'email';
+      var skip=(A.fallback && A.fallback.skipHeader)!==false; // default true
+      openFlow('contactForm',{ startAt: step, skipHeader: skip });
+      moveThreadToEnd(true);
+    }catch(e){}
   }
 
   // --- send() ---------------------------------------------------------------
@@ -336,12 +340,11 @@
     if(!_consented){ if(!ensureConsent()){ _consented=true; if($consent) $consent.style.display='none'; } }
     if(!allowHit()){ showNote('Bitte kurz warten ⏳'); return; }
 
-    // Sofort UI-Echo (wie zuvor)
     $inp.value=''; userEcho(q);
 
     var cfg=aiCfg();
 
-    // 1) Prematch: SPEISEN (Items > Kategorien) – unverändert
+    // 1) Prematch: SPEISEN
     try{
       var DSH=dishes(), cats=Object.keys(DSH||{});
       for(var i=0;i<cats.length;i++){
@@ -360,7 +363,7 @@
       }
     }catch(e){}
 
-    // 2) Prematch: FAQ (strikt: exakte Namen + explizite Synonyme)
+    // 2) Prematch: FAQ (strikt)
     try{
       var fc=faqMatchFromTextStrict(q);
       if(fc){
@@ -380,33 +383,38 @@
       }
     }
 
-    // 4) Worker als Fallback
+    // 4) Worker als Fallback – mit neuem Routing
     var t=ensureThread(); if(!t) return;
-    var bBot=bubble('bot','⏳ ...'); t.appendChild(bBot); moveThreadToEnd(true);
+    var bBot=bubble('bot','⏳ …'); t.appendChild(bBot); moveThreadToEnd(true);
     var res=null;
     try{ res=await askWorker(q,cfg); }catch(e){ res=null; }
-    if(!res || res.error){
-      bBot.innerHTML='Ups, die KI antwortet gerade nicht 😞';
-      return;
-    }
 
-    // Kleine Veredelung: Öffnungszeiten-One-Liner falls zutreffend
+    // Kein/fehlerhafter Output → Fallback
+    if(!res || res.error){ fallbackToContactForm(bBot); return; }
+
+    // Öffnungszeiten-One-Liner ggf. überschreiben
     if(res.tool==='öffnungszeiten' && res.behavior==='one_liner'){
       var h=hoursOneLiner(); if(h) res.text=h;
     }
 
-    // Wenn der Worker "faq" ohne Detail liefert, versuchen wir ein striktes Match
+    // FAQ ohne Detail → striktes Match versuchen
     if(res.tool==='faq' && (!res.detail || !res.detail.category)){
       var m=faqMatchFromTextStrict(q); if(m) res.detail={category:m};
     }
 
-    // Flow öffnen oder Antwort ausgeben
-    if(res.tool){
-      if(st().activeFlowId && !toolMatchesActive(res.tool)){ pauseActiveFlow('ai-redirect'); }
-      openFlow(String(res.tool).toLowerCase(), res.detail||{}); return;
+    // Erlaubte Tools laut Allowlist – sonst Fallback
+    var allow=(cfg.allowlist||['reservieren','kontakt','öffnungszeiten','speisen','faq']).map(function(s){return String(s).toLowerCase();});
+    var tool=(res.tool||'').toLowerCase();
+
+    // Spezieller Wunsch: wenn Worker "kontakt" schickt (z. B. bei Wetter/Out-of-scope) → Fallback ins Kontaktformular
+    if(!tool || allow.indexOf(tool)===-1 || tool==='kontakt'){
+      fallbackToContactForm(bBot); return;
     }
 
-    bBot.innerHTML=linkify(esc(res.text||'Gerne.'));
+    // Bot-Antwort anzeigen (falls vorhanden), dann Flow öffnen
+    if(res.text){ bBot.innerHTML=linkify(esc(res.text)); }
+    if(st().activeFlowId && !toolMatchesActive(tool)){ pauseActiveFlow('ai-redirect'); }
+    openFlow(tool, res.detail||{});
     moveThreadToEnd(true);
   }
 
@@ -468,22 +476,16 @@
       compliance:{consentText:(CMP.consentText||"Deine Frage wird an unseren KI-Dienst gesendet. Keine sensiblen Daten eingeben."),
                   privacyUrl:CMP.privacyUrl||"/datenschutz",imprintUrl:CMP.imprintUrl||"/impressum",
                   disclaimer:CMP.disclaimer||"Keine Rechts- oder Medizinberatung."},
-      systemPrompt:A.systemPrompt||""
+      systemPrompt:A.systemPrompt||"",
+      fallback:A.fallback||null
     };
   }
 
   function boot(){
-    // Sofort versuchen
     ensureDock(); ensureThread();
-
-    // DOMContentLoaded
     if(document.readyState==='loading'){
-      document.addEventListener('DOMContentLoaded', function(){
-        ensureDock(); ensureThread();
-      }, {once:true});
+      document.addEventListener('DOMContentLoaded', function(){ ensureDock(); ensureThread(); }, {once:true});
     }
-
-    // Fallback: sobald #ppx-panel / #ppx-v auftauchen
     try{
       var mo=new MutationObserver(function(){
         var panel=document.getElementById('ppx-panel');
@@ -495,8 +497,6 @@
       mo.observe(document.documentElement||document.body,{childList:true,subtree:true});
       setTimeout(function(){ try{ mo.disconnect(); }catch(e){} },10000);
     }catch(e){}
-
-    // Sicherstellen bei Panel-Open
     window.addEventListener('click', function(){
       var p=document.getElementById('ppx-panel');
       if(p && p.classList.contains('ppx-open') && !p.querySelector('.ppx-ai-dock')) ensureDock();

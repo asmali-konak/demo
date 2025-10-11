@@ -303,105 +303,63 @@
   },
   "AI": {
     "enabled": true,
-    "workerUrl": "https://ppx-ai.muciyil.workers.dev",
     "provider": "openai",
     "model": "gpt-4o-mini",
-    "limits": { "ratePerMin": 15, "dailyCapEur": 5, "maxTokens": 300, "timeoutMs": 8000 },
-    "tone": { "voice": "freundlich, direkt, sachlich", "length": "kurz", "emojis": 0, "exclamationsMax": 1, "address": "du" },
-    "languages": ["de","en"],
-    "templates": {
-      "hoursOneLiner": { "de": "Aktuell haben wir {{isOpen ? 'geöffnet' : 'geschlossen'}}. Hier unsere Zeiten:", "en": "Right now we are {{isOpen ? 'open' : 'closed'}}. Here are our hours:" },
-      "contactQuestion": { "de": "Möchtest du Kontakt mit uns aufnehmen?", "en": "Would you like to contact us?" },
-      "menuTeaserCat": { "de": "Oh, du hast Lust auf {{category}}! Schau mal hier!", "en": "Craving {{category}}? Take a look!" },
-      "menuTeaserItem": { "de": "Oh, du hast Lust auf {{item}}! Schau mal hier!", "en": "In the mood for {{item}}? Here you go!" }
+    "workerUrl": "https://ppx-ai.muciyil.workers.dev",
+    "limits": {
+      "ratePerMin": 15,
+      "dailyCapEur": 5,
+      "maxTokens": 300,
+      "timeoutMs": 8000
+    },
+    "tone": {
+      "voice": "freundlich, direkt, sachlich",
+      "length": "kurz",
+      "emojis": 0,
+      "exclamationsMax": 1,
+      "address": "du"
+    },
+    "languages": ["de", "en"],
+    "fallback": {
+      "message": {
+        "de": "Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?",
+        "en": "This exceeds my ability. Would you like to leave us a message?"
+      },
+      "flow": "contactForm",
+      "step": "email",
+      "skipHeader": true
     },
     "intents": {
       "reservieren": {
-        "keywords": ["reserv","reservier","reserviere","reservierung","tisch","table","buchen","booking","platz"],
-        "behavior": "silent",
-        "flow": "reservieren"
+        "keywords": ["reservieren","tisch","buchen","booking","reserve"],
+        "behavior": "silent"
+      },
+      "kontakt": {
+        "keywords": ["kontakt","email","mail","anrufen","telefon","call"],
+        "behavior": "silent"
       },
       "öffnungszeiten": {
-        "keywords": ["öffnungszeiten","oeffnungszeiten","zeiten","open","geöffnet","geschlossen","hours","wann offen","wann geöffnet","bis wann","heute offen","today open","today hours","closed?","open?"],
-        "behavior": "one_liner",
-        "preMessage": "@hoursOneLiner",
-        "flow": "hours"
+        "keywords": ["öffnungszeiten","zeiten","hours","open","geöffnet"],
+        "behavior": "one_liner"
       },
       "speisen": {
-        "behavior": "silent",
-        "keywords": [
-          "speise","speisen","speis","speiss","speisse","speisn",
-          "menü","menue","menu","karte","speisekarte",
-          "gericht","gerichte","essen","food","dish","dishes","küche","kueche"
-        ],
-        "categories": {
-          "meze":       { "keywords": ["meze","vorspeise","vorspeisen","hummus","cacik","acili","ezme","sigara böreği","sigara borek","börek","boerek","meze mix","sigara böregi"] },
-          "pide":       { "keywords": ["pide","kasar","käse","kaese","kıymalı","kiymali","hack","sucuk","spinat","ispanak","mix","pides"] },
-          "kebap":      { "keywords": ["kebab","kebap","adana","urfa","şiş","sis","tavuk","kuzu","iskender","kebabs"] },
-          "guevec":     { "keywords": ["güveç","guvec","eintopf","tontopf","karnıyarık","karniyarik","aubergine","auflauf"] },
-          "vegetarisch":{ "keywords": ["vegetarisch","veggie","falafel","imam bayıldı","imam bayildi","ispanaklı","ispanakli","spinat","vegetarische","vegan"] },
-          "beilagen":   { "keywords": ["beilage","beilagen","bulgur","reis","salat","brot","ofenbrot"] },
-          "getraenke":  { "keywords": ["getränk","getraenk","getränke","getraenke","drinks","drink","durst","trinken","cola","fanta","sprite","ayran","şalgam","salgam","tee","çay","cay","raki","wasser","softdrink","softdrinks"] },
-          "desserts":   { "keywords": ["dessert","nachspeise","nachspeisen","süß","suess","baklava","sütlaç","sutlac","künefe","kunefe","desserts","sues"] }
-        },
-        "items": [
-          { "names": ["Hummus"], "category": "meze", "itemId": "hummus" },
-          { "names": ["Cacık","Cacik"], "category": "meze", "itemId": "cacik" },
-          { "names": ["Acılı Ezme","Ezme"], "category": "meze", "itemId": "ezme" },
-          { "names": ["Sigara Böreği","Sigara Börek","Börek","Boerek"], "category": "meze", "itemId": "sigaraboerek" },
-          { "names": ["Meze Mix"], "category": "meze", "itemId": "mixe" },
-          { "names": ["Pide Kaşarlı","Pide Kasarli","Pide Käse","Pide Kaese"], "category": "pide", "itemId": "pide_kas" },
-          { "names": ["Pide Kıymalı","Pide Kiymali"], "category": "pide", "itemId": "pide_kıym" },
-          { "names": ["Pide Sucuklu"], "category": "pide", "itemId": "pide_sucuk" },
-          { "names": ["Pide Ispanaklı","Pide Spinat"], "category": "pide", "itemId": "pide_spin" },
-          { "names": ["Pide Mix"], "category": "pide", "itemId": "pide_mix" },
-          { "names": ["Adana","Adana Kebap"], "category": "kebap", "itemId": "adana" },
-          { "names": ["Urfa","Urfa Kebap"], "category": "kebap", "itemId": "urfa" },
-          { "names": ["Tavuk Şiş","Tavuk Sis","Chicken Şiş","Chicken Sis"], "category": "kebap", "itemId": "sis_tavuk" },
-          { "names": ["Kuzu Şiş","Kuzu Sis","Lamm Şiş","Lamm Sis"], "category": "kebap", "itemId": "sis_kuzu" },
-          { "names": ["İskender","Iskender"], "category": "kebap", "itemId": "iskender" },
-          { "names": ["Güveç Tavuk","Guvec Tavuk"], "category": "guevec", "itemId": "guvec_tavuk" },
-          { "names": ["Güveç Kuzu","Guvec Kuzu"], "category": "guevec", "itemId": "guvec_kuzu" },
-          { "names": ["Karnıyarık","Karniyarik"], "category": "guevec", "itemId": "karniyarik" },
-          { "names": ["Falafel-Teller","Falafel"], "category": "vegetarisch", "itemId": "falafel" },
-          { "names": ["Manti Veggie","Veggie Manti"], "category": "vegetarisch", "itemId": "manti_veg" },
-          { "names": ["İmam Bayıldı","Imam Bayildi"], "category": "vegetarisch", "itemId": "imam" },
-          { "names": ["Bulgur Pilavı","Bulgur"], "category": "beilagen", "itemId": "bulgur" },
-          { "names": ["Reis"], "category": "beilagen", "itemId": "reis" },
-          { "names": ["Beilagensalat","Salat"], "category": "beilagen", "itemId": "salat" },
-          { "names": ["Ofenbrot","Brot"], "category": "beilagen", "itemId": "brot" },
-          { "names": ["Ayran"], "category": "getraenke", "itemId": "ayran" },
-          { "names": ["Şalgam","Salgam"], "category": "getraenke", "itemId": "salgam" },
-          { "names": ["Çay","Cay","Türkischer Tee","Turkish Tea"], "category": "getraenke", "itemId": "cay" },
-          { "names": ["Rakı","Raki"], "category": "getraenke", "itemId": "raki" },
-          { "names": ["Softdrinks","Cola","Fanta","Sprite"], "category": "getraenke", "itemId": "soft" },
-          { "names": ["Mineralwasser","Wasser"], "category": "getraenke", "itemId": "wasser" },
-          { "names": ["Baklava"], "category": "desserts", "itemId": "baklava" },
-          { "names": ["Sütlaç","Sutlac","Milchreis"], "category": "desserts", "itemId": "sutlac" },
-          { "names": ["Künefe","Kunefe"], "category": "desserts", "itemId": "kunefe" }
-        ],
-        "preMessageCategory": "@menuTeaserCat",
-        "preMessageItem": "@menuTeaserItem",
-        "flow": "speisen"
+        "behavior": "two_liners",
+        "keywords": ["speisen","essen","menu","menü","karte","speisekarte","food","gerichte"],
+        "items": [],
+        "categories": {}
       },
       "faq": {
         "behavior": "two_liners",
         "categories": {
-          "reservierung":   { "keywords": ["stornieren","storno","frist","wie reservieren","telefonisch reservieren"] },
-          "oeffnungszeiten":{ "keywords": ["feiertage","heiligabend","weihnachten","heute offen"] },
-          "kueche":         { "keywords": ["allergen","allergene","gluten","laktose","vegan","vegetarisch"] },
-          "abholung":       { "keywords": ["abholen","pickup","mitnehmen","takeaway","lieferung","delivery"] },
-          "bezahlung":      { "keywords": ["zahlen","zahlung","karte","bar","apple pay","google pay"] },
-          "speisenkarte":   { "keywords": ["karte","menu","menü","menue","speisekarte","kinder"] },
-          "kontakt":        { "keywords": ["adresse","route","anreise","maps","telefonnummer"] },
-          "bestellung":     { "keywords": ["vorbestellen","pre-order","schnellbestellung"] }
+          "reservierung": { "keywords": ["stornieren","storno","frist","wie reservieren","telefonisch reservieren"] },
+          "oeffnungszeiten": { "keywords": ["feiertage","heiligabend","weihnachten","heute offen"] },
+          "kueche": { "keywords": ["allergen","allergene","gluten","laktose","vegan","vegetarisch"] },
+          "abholung": { "keywords": ["abholen","pickup","mitnehmen","takeaway","lieferung","delivery"] },
+          "bezahlung": { "keywords": ["zahlen","zahlung","karte","bar","apple pay","google pay"] },
+          "speisenkarte": { "keywords": ["karte","menu","menü","menue","speisekarte","kinder"] },
+          "kontakt": { "keywords": ["adresse","route","anreise","maps","telefonnummer"] },
+          "bestellung": { "keywords": ["vorbestellen","pre-order","schnellbestellung"] }
         }
-      },
-      "kontakt": {
-        "keywords": ["kontakt","contact","email","e-mail","mail","anrufen","call","telefon","nummer","telefonnummer","erreichen"],
-        "behavior": "silent",
-        "preMessage": "@contactQuestion",
-        "flow": "kontakt"
       }
     },
     "knowledgeHints": {
@@ -416,5 +374,79 @@
       "disclaimer": "Keine Rechts- oder Medizinberatung."
     },
     "systemPrompt": "Sprich ultrakurz (1 Satz; FAQ/Speisen max. 2 Sätze). Sprich nur über Inhalte aus bot.json/aktiven Flows/Website. Keine Infos über andere Anbieter/Branchen. Keine Preise/Allergene erfinden. Reservieren & Kontakt: silent (Flows übernehmen). Öffnungszeiten: one_liner mit Live-Daten. FAQ/Speisen: two_liners, ggf. passenden Flow öffnen. Sprache spiegeln (DE/EN). Bei fehlender Info: kurz sagen und Kontaktformular öffnen. Keine Smalltalk/Wetter/News."
-  }
+  },
+  "AI": {
+    "enabled": true,
+    "provider": "openai",
+    "model": "gpt-4o-mini",
+    "workerUrl": "https://ppx-ai.muciyil.workers.dev",
+    "limits": {
+      "ratePerMin": 15,
+      "dailyCapEur": 5,
+      "maxTokens": 300,
+      "timeoutMs": 8000
+    },
+    "tone": {
+      "voice": "freundlich, direkt, sachlich",
+      "length": "kurz",
+      "emojis": 0,
+      "exclamationsMax": 1,
+      "address": "du"
+    },
+    "languages": ["de", "en"],
+    "fallback": {
+      "message": {
+        "de": "Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?",
+        "en": "This exceeds my ability. Would you like to leave us a message?"
+      },
+      "flow": "contactForm",
+      "step": "email",
+      "skipHeader": true
+    },
+    "intents": {
+      "reservieren": {
+        "keywords": ["reservieren","tisch","buchen","booking","reserve"],
+        "behavior": "silent"
+      },
+      "kontakt": {
+        "keywords": ["kontakt","email","mail","anrufen","telefon","call"],
+        "behavior": "silent"
+      },
+      "öffnungszeiten": {
+        "keywords": ["öffnungszeiten","zeiten","hours","open","geöffnet"],
+        "behavior": "one_liner"
+      },
+      "speisen": {
+        "behavior": "two_liners",
+        "keywords": ["speisen","essen","menu","menü","karte","speisekarte","food","gerichte"],
+        "items": [],
+        "categories": {}
+      },
+      "faq": {
+        "behavior": "two_liners",
+        "categories": {
+          "reservierung": { "keywords": ["stornieren","storno","frist","wie reservieren","telefonisch reservieren"] },
+          "oeffnungszeiten": { "keywords": ["feiertage","heiligabend","weihnachten","heute offen"] },
+          "kueche": { "keywords": ["allergen","allergene","gluten","laktose","vegan","vegetarisch"] },
+          "abholung": { "keywords": ["abholen","pickup","mitnehmen","takeaway","lieferung","delivery"] },
+          "bezahlung": { "keywords": ["zahlen","zahlung","karte","bar","apple pay","google pay"] },
+          "speisenkarte": { "keywords": ["karte","menu","menü","menue","speisekarte","kinder"] },
+          "kontakt": { "keywords": ["adresse","route","anreise","maps","telefonnummer"] },
+          "bestellung": { "keywords": ["vorbestellen","pre-order","schnellbestellung"] }
+        }
+      }
+    },
+    "knowledgeHints": {
+      "prioritize": ["hours","menu","faq"],
+      "forbid": ["andere_restaurants","wetter","news","preise_erfinden","medizin","recht","smalltalk"],
+      "contextShort": "Türkisches Restaurant in Köln. Antworten nur aus Bot/Website-Daten."
+    },
+    "compliance": {
+      "consentText": "Deine Frage wird an unseren KI-Dienst gesendet, um dir zu antworten. Keine sensiblen Daten eingeben.",
+      "privacyUrl": "/datenschutz",
+      "imprintUrl": "/impressum",
+      "disclaimer": "Keine Rechts- oder Medizinberatung."
+    },
+    "systemPrompt": "Sprich ultrakurz (1 Satz; FAQ/Speisen max. 2 Sätze). Sprich nur über Inhalte aus bot.json/aktiven Flows/Website. Keine Infos über andere Anbieter/Branchen. Keine Preise/Allergene erfinden. Reservieren & Kontakt: silent (Flows übernehmen). Öffnungszeiten: one_liner mit Live-Daten. FAQ/Speisen: two_liners, ggf. passenden Flow öffnen. Sprache spiegeln (DE/EN). Bei fehlender Info: kurz sagen und Kontaktformular öffnen. Keine Smalltalk/Wetter/News."
+  },
 }
