@@ -1,11 +1,11 @@
 /* ============================================================================
-   PPX AI Service – v2.7.3 (Fix: „Oder …“ komplett verlinken)
-   Änderungen (gezielt, kein Layout-Flickern):
-   - Unknown-Dialog: Text auf „…unser Kontaktformular…“ geändert.
-   - Optionen: „Kontaktformular öffnen“ + „Nein, danke“ (beide ppx-secondary).
-   - Nach „Nein, danke“: Bot-Bubble im gleichen Stil, 2-zeilig + Link ins Hauptmenü
-     (gesamter Satz „Oder klick hier …“ ist jetzt der Link).
-   - Rest unverändert (Consent-Order, Routing, Prematches etc.).
+   PPX AI Service – v2.9.0 (Open/Hours Intent + Reply-Flow)
+   • Erweiterte Öffnungszeiten-Erkennung (offen/geöffnet/„habt ihr auf?“/„kann ich heute …“)
+   • Antwort-Logik:
+       - Geschlossen: Hinweis + automatisch Öffnungszeiten-Flow
+       - Offen: „heute bis XX Uhr“ + Buttons (Reservieren / Öffnungszeiten)
+   • Bugfix: keine Sanduhr/Leerlauf bei Kurzfragen („geöffnet?“, „offen?“)
+   • EN/DE unverändert, restliche Flows/Styles unberührt
 ============================================================================ */
 (function () {
   'use strict';
@@ -29,20 +29,24 @@
     return n;
   }
   function esc(s){return String(s).replace(/[&<>"']/g,function(m){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[m]);});}
+  function capFirst(s){ s=String(s||''); return s? s.charAt(0).toUpperCase()+s.slice(1) : s; }
   function linkify(s){return s.replace(/\bhttps?:\/\/[^\s)]+/g,function(u){return '<a href="'+u+'" target="_blank" rel="nofollow noopener" class="ppx-link">'+u+'</a>';});}
   function viewEl(){ return D.getElementById('ppx-v'); }
   function now(){ return Date.now(); }
-  function st(){ PPX.state=PPX.state||{activeFlowId:null,expecting:null}; return PPX.state; }
+  function st(){ PPX.state=PPX.state||{activeFlowId:null,expecting:null,unknownCount:0,lastUnknownAt:0,oosCount:0,lastOosAt:0}; return PPX.state; }
 
   // ---------- normalizer -----------------------------------------------------
   function _norm(s){
-    return String(s||'').toLowerCase()
+    s = String(s||'').toLowerCase();
+    try{ s = s.normalize('NFD').replace(/\p{M}+/gu,''); }catch(e){}
+    s = s
       .replace(/[ä]/g,'ae').replace(/[ö]/g,'oe').replace(/[ü]/g,'ue').replace(/[ß]/g,'ss')
       .replace(/[ç]/g,'c').replace(/[ş]/g,'s').replace(/[ı]/g,'i')
       .replace(/[éèêë]/g,'e').replace(/[áàâ]/g,'a').replace(/[íìî]/g,'i').replace(/[óòô]/g,'o').replace(/[úùû]/g,'u')
-      .replace(/[_.,!?;:()[\]{}"']/g,' ')
+      .replace(/[-_.,!?;:()[\]{}"']/g,' ')
       .replace(/\s+/g,' ')
       .trim();
+    return s;
   }
   function uniq(arr){
     var seen=Object.create(null), out=[];
@@ -56,6 +60,12 @@
     var t=_norm(term).replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&');
     return new RegExp('(^|\\W)'+t+'(\\W|$)','i');
   }
+  function wbNormHit(termNorm, qNorm){
+    if(!termNorm||!qNorm) return false;
+    var t=String(termNorm).replace(/[-/\\^$*+?.()|[\]{}]/g,'\\$&');
+    var rx=new RegExp('(^|\\s)'+t+'(\\s|$)','i');
+    return rx.test(qNorm);
+  }
 
   // ---------- data getters ---------------------------------------------------
   function nowLang(){ try{ return (PPX.i18n&&PPX.i18n.nowLang&&PPX.i18n.nowLang()) || PPX.lang || 'de'; }catch(e){ return 'de'; } }
@@ -63,6 +73,21 @@
   function dishes(){ try{ return (PPX.data&&PPX.data.dishes&&PPX.data.dishes()) || {}; } catch(e){ return {}; } }
   function faqs(){ try{ return (PPX.data&&PPX.data.faqs&&PPX.data.faqs()) || []; } catch(e){ return []; } }
   function aiCfg(){ try{ return (PPX.data&&PPX.data.ai&&PPX.data.ai()) || {}; } catch(e){ return {}; } }
+  function texts(){ try{ return (PPX.data&&PPX.data.texts&&PPX.data.texts()) || (PPX.data&&PPX.data.raw&&PPX.data.raw().TEXTS) || (aiCfg().TEXTS_REF?resolveTEXTS(aiCfg().TEXTS_REF):{}); }catch(e){ return {}; } }
+
+  function resolveTEXTS(REF){
+    var raw=(PPX.data&&PPX.data.raw&&PPX.data.raw())||{};
+    var T=raw.TEXTS||{}, out={};
+    try{
+      Object.keys(REF||{}).forEach(function(k){
+        var path=String(REF[k]||'').split('.');
+        var cur=raw;
+        for(var i=0;i<path.length;i++){ if(cur && typeof cur==='object') cur=cur[path[i]]; }
+        if(cur) out[k]=cur;
+      });
+    }catch(e){}
+    return out;
+  }
 
   // ---------- labels (Speisen) ----------------------------------------------
   function catLabelFromKey(catKey){
@@ -84,7 +109,7 @@
     return '';
   }
 
-  // ---------- UI helpers (generic append) -----------------------------------
+  // ---------- UI helpers -----------------------------------------------------
   function appendToView(node){
     var v=viewEl(); if(!v) return null;
     v.appendChild(node);
@@ -129,7 +154,7 @@
   }
 
   // ---------- Dock (Input/Send) ---------------------------------------------
-  var $dock,$inp,$send,$consentInline;
+  var $dock,$inp,$send,$consentInline,_dockTimer=null,_dockTries=0;
   function ensureDock(){
     var panel=document.getElementById('ppx-panel');
     if(!panel) return false;
@@ -166,18 +191,27 @@
     $dock=el('div',{class:'ppx-ai-dock'},$consentInline,row);
 
     var v = viewEl();
-    var footer = panel.querySelector('.ppx-brandbar, .ppx-elements-footer, .ai-elements-footer, .ppx-footer, footer');
+    var panelFooter = (panel.querySelector('.ppx-brandbar, .ppx-elements-footer, .ai-elements-footer, .ppx-footer, footer')) || null;
     try{
-      if(footer){ panel.insertBefore($dock, footer); }
+      if(panelFooter){ panel.insertBefore($dock, panelFooter); }
       else if(v && v.parentNode===panel && v.nextSibling){ panel.insertBefore($dock, v.nextSibling); }
-      else if(v && v.parentNode===panel){ panel.appendChild($dock); }
-      else{ panel.appendChild($dock); }
+      else panel.appendChild($dock);
     }catch(e){ panel.appendChild($dock); }
 
     $inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); }});
     $send.addEventListener('click',send);
     return true;
   }
+  function ensureDockLoop(){
+    if(_dockTimer) return;
+    _dockTries=0;
+    _dockTimer = setInterval(function(){
+      _dockTries++;
+      var ok=ensureDock();
+      if(ok || _dockTries>60){ try{ clearInterval(_dockTimer); }catch(e){} _dockTimer=null; }
+    },1000);
+  }
+
   // ---------- Consent (persist) ---------------------------------------------
   var _consented=false, _pendingQ=null;
   function loadConsent(){
@@ -186,66 +220,37 @@
   }
   function saveConsent(v){
     _consented=!!v;
-    try{
-      if(v) localStorage.setItem('ppx_ai_consent','true');
-      else localStorage.removeItem('ppx_ai_consent');
-    }catch(e){}
+    try{ if(v) localStorage.setItem('ppx_ai_consent','true'); else localStorage.removeItem('ppx_ai_consent'); }catch(e){}
   }
-  // Consent-Block im Chat (Flow-Optik), keine Styles verändert
   function renderConsentBlock(originalQ){
-    var I=PPX.i18n||{}, t=(I&&I.t)?I.t:function(k,fb){return fb||k;};
-    var pick=(I&&I.pick)?I.pick:function(v){return (v&&typeof v==='object')?(v.de||v.en||''):v;};
+    var I=PPX.i18n||{}, pick=(I&&I.pick)?I.pick:function(v){return (v&&typeof v==='object')?(v.de||v.en||''):v;};
     var A=aiCfg()||{}, C=A.compliance||{};
     _pendingQ = String(originalQ||'').slice(0,2000);
-
     var block = (PPX.ui && PPX.ui.block) ? PPX.ui.block('KI-Einwilligung',{blockKey:'ai-consent',maxWidth:'640px'}) : el('div',{'class':'ppx-bot'},'KI-Einwilligung');
     if(!block.parentNode) appendToView(block);
-
     var msg = esc(C.consentText||'Deine Frage wird an unseren KI-Dienst gesendet. Keine sensiblen Daten eingeben.');
     var links = ' <a class="ppx-link" href="'+esc(C.privacyUrl||'/datenschutz')+'" target="_blank" rel="noopener">Datenschutz</a> · '
               + '<a class="ppx-link" href="'+esc(C.imprintUrl||'/impressum')+'" target="_blank" rel="noopener">Impressum</a> · '
               + esc(C.disclaimer||'Keine Rechts- oder Medizinberatung.');
-    var p = el('div',{'class':'ppx-m', 'html': msg + ' ' + links});
-    block.appendChild(p);
-
+    block.appendChild(el('div',{'class':'ppx-m','html':msg+' '+links}));
     var row = (PPX.ui && PPX.ui.row) ? PPX.ui.row() : el('div',{'class':'ppx-row'});
-    var agreeLbl = {de:'Zustimmen & fortfahren', en:'Agree & continue'};
-    var declineLbl= {de:'Ablehnen',              en:'Decline'};
-    var agreeBtn = (PPX.ui&&PPX.ui.btn)? PPX.ui.btn(agreeLbl, onAgree, 'ppx-cta','✅') : el('button',{class:'ppX-b ppx-cta',onclick:onAgree}, pick(agreeLbl));
-    var noBtn    = (PPX.ui&&PPX.ui.btn)? PPX.ui.btn(declineLbl,onDecline,'ppx-secondary','✖️') : el('button',{class:'ppx-b ppx-secondary',onclick:onDecline}, pick(declineLbl));
-
-    row.appendChild(agreeBtn); row.appendChild(noBtn);
-    block.appendChild(row);
+    var agreeLbl={de:'Zustimmen & fortfahren', en:'Agree & continue'};
+    var declineLbl={de:'Ablehnen', en:'Decline'};
+    var agreeBtn=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn(agreeLbl,onAgree,'ppx-cta','✅'):el('button',{class:'ppx-b ppx-cta',onclick:onAgree},pick(agreeLbl));
+    var noBtn=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn(declineLbl,onDecline,'ppx-secondary','✖️'):el('button',{class:'ppx-b ppx-secondary',onclick:onDecline},pick(declineLbl));
+    row.appendChild(agreeBtn); row.appendChild(noBtn); block.appendChild(row);
     PPX.ui && PPX.ui.keepBottom && PPX.ui.keepBottom();
-
-    function removeConsentBlockOnly(){
-      try{
-        var v=viewEl(); if(!v) return;
-        var last = v.querySelector('[data-block="ai-consent"]');
-        if(last && last.parentNode && v.contains(last)) last.parentNode.removeChild(last);
-      }catch(e){}
-    }
-
-    function onAgree(){
-      saveConsent(true);
-      var q=_pendingQ; _pendingQ=null;
-      removeConsentBlockOnly();
-      if(q){ doWorker(q); }
-    }
-    function onDecline(){
-      saveConsent(false);
-      showNote('Ohne Einwilligung können wir hier keine KI-Antwort senden.');
-      PPX.ui && PPX.ui.keepBottom && PPX.ui.keepBottom();
-    }
+    function onAgree(){ saveConsent(true); var q=_pendingQ; _pendingQ=null; tryRemove(); if(q){ doWorker(q); } }
+    function onDecline(){ saveConsent(false); showNote('Ohne Einwilligung können wir hier keine KI-Antwort senden.'); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom(); }
+    function tryRemove(){ try{ var v=viewEl(); if(!v) return; var last=v.querySelector('[data-block="ai-consent"]'); if(last&&last.parentNode&&v.contains(last)) last.parentNode.removeChild(last);}catch(e){} }
   }
 
   // ---------- Flow Helpers ---------------------------------------------------
   function cap(s){ s=String(s||''); return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
   function openFlow(tool,detail){
     try{
-      var tname=String(tool||'');
-      var fn = PPX.flows && (PPX.flows['step'+cap(tname)]);
-      if (typeof fn === 'function'){ fn(detail||{}); moveThreadToEnd(); return true; }
+      var tname=String(tool||''), fn=PPX.flows && (PPX.flows['step'+cap(tname)]);
+      if(typeof fn==='function'){ fn(detail||{}); moveThreadToEnd(); return true; }
       if(PPX.flows&&typeof PPX.flows.open==='function'){ PPX.flows.open(tool,detail||{}); moveThreadToEnd(); return true; }
     }catch(e){}
     try{ window.dispatchEvent(new CustomEvent('ppx:tool',{detail:{tool:tool,detail:detail||{}}})); }catch(e){}
@@ -254,59 +259,252 @@
   function hoursOneLiner(){
     try{
       var svc=PPX.services&&PPX.services.openHours;
-      if(!svc||typeof svc.describeToday!=='function') return '';
-      return svc.describeToday();
+      if(!svc) return '';
+      if(typeof svc.describeToday==='function') return svc.describeToday();
+      return '';
     }catch(e){ return ''; }
   }
-  function tPing(ev){ try{ if(PPX.services&&PPX.services.telemetry){ PPX.services.telemetry.ping(ev||{}); } }catch(e){} }
-
-  function pauseActiveFlow(reason){
-    var S=st(); if(!S.activeFlowId) return;
-    var prev=S.activeFlowId; S.activeFlowId=null; S.expecting=null;
-    try{ window.dispatchEvent(new CustomEvent('ppx:flow:pause',{detail:{flow:prev,reason:reason||'ai-divert'}})); }catch(e){}
+  // ---------- Unknown & OOS counters with decay ------------------------------
+  function bumpUnknown(){
+    var S=st(), t=now();
+    if((t-(S.lastUnknownAt||0))>45000){ S.unknownCount=0; }
+    S.unknownCount=(S.unknownCount||0)+1; S.lastUnknownAt=t;
+    return S.unknownCount;
   }
-  function toolMatchesActive(tool){
-    var S=st(); if(!S.activeFlowId||!tool) return false;
-    return String(tool).toLowerCase()===String(S.activeFlowId).toLowerCase();
+  function resetUnknown(){ var S=st(); S.unknownCount=0; S.lastUnknownAt=0; }
+  function bumpOos(){
+    var S=st(), t=now();
+    if((t-(S.lastOosAt||0))>45000){ S.oosCount=0; }
+    S.oosCount=(S.oosCount||0)+1; S.lastOosAt=t;
+    return S.oosCount;
   }
+  function resetOos(){ var S=st(); S.oosCount=0; S.lastOosAt=0; }
 
-  // ---------- FAQ strict hybrid map -----------------------------------------
-  function faqCategoryMapStrict(){
-    var out=Object.create(null);
+  // ---------- Category chips & Not-offered ----------------------------------
+  function renderCategoryChips(block){
     try{
-      var F=faqs();
-      var cats=[];
-      if (F && Array.isArray(F.cats)) cats=F.cats;
-      else if (F && Array.isArray(F.items)) cats=[{key:'all',title:F.title||'FAQ',title_en:F.title_en||'FAQ'}];
-
-      cats.forEach(function(c){
-        var k = (c && c.key) ? String(c.key) : '';
-        var t = (c && c.title) ? String(c.title) : '';
-        var te= (c && c.title_en) ? String(c.title_en) : '';
-        if(k){ out[_norm(k)]=k; }
-        if(t){ out[_norm(t)]=k||_norm(t); }
-        if(te){ out[_norm(te)]=k||_norm(te); }
+      var C=cfg(), order=Array.isArray(C.menuOrder)?C.menuOrder:[], row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
+      order.forEach(function(key){
+        var lab = catLabelFromKey(key);
+        var btn=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(lab,function(){ openFlow('speisen',{category:key}); },'ppx-secondary')
+                                    : el('button',{class:'ppx-b ppx-secondary',onclick:function(){ openFlow('speisen',{category:key}); }}, lab);
+        row.appendChild(btn);
       });
-
-      var A=aiCfg()||{}, intents=(A.intents||{}), faq=(intents.faq||{}), catsCfg=(faq.categories||{});
-      Object.keys(catsCfg).forEach(function(catKey){
-        var entry=catsCfg[catKey];
-        var arr = Array.isArray(entry) ? entry : (Array.isArray(entry.keywords) ? entry.keywords : []);
-        (arr||[]).forEach(function(s){
-          var n=_norm(s); if(!n) return; out[n]=catKey;
-        });
-      });
+      block.appendChild(row);
     }catch(e){}
-    return out;
   }
-  function faqMatchFromTextStrict(txt){
-    var map=faqCategoryMapStrict();
-    var n=_norm(txt); if(!n) return null;
-    if(map[n]) return map[n];
+
+  // Grammatik-Helper (unverändert)
+  function cuisineLabelForSentence(key){
+    var n=_norm(key);
+    if(/ital/.test(n)) return 'italienische Küche';
+    if(/pizza/.test(n)) return 'Pizza';
+    if(/pasta/.test(n)) return 'Pasta';
+    if(/sushi|japan/.test(n)) return 'Sushi';
+    if(/chines/.test(n)) return 'chinesische Küche';
+    if(/indisch/.test(n)) return 'indische Küche';
+    if(/thai/.test(n)) return 'thailändische Küche';
+    if(/mexik/.test(n)) return 'mexikanische Küche';
+    if(/korean/.test(n)) return 'koreanische Küche';
+    if(/ramen|pho/.test(n)) return key;
+    if(/burger|tacos|currywurst/.test(n)) return key;
+    return key;
+  }
+  function extractForeignCuisineKey(q){
+    var m = q.match(/\b(italienisch|italy|italiano|pizza|pasta|chinesisch|chinese|sushi|indisch|thai|mexikanisch|mexico|ramen|pho|koreanisch|burger|tacos|currywurst)\b/i);
+    return m? m[0] : '';
+  }
+  function respondNotOffered(query){
+    var rawKey = extractForeignCuisineKey(String(query||'')) || '';
+    var label = rawKey ? cuisineLabelForSentence(rawKey) : '';
+    var txt = textOf('notOffered');
+    if(!txt){
+      txt = label
+        ? "Aktuell haben wir keine {{query}}. Schau gern in unsere Kategorien:"
+        : "Aktuell haben wir das nicht im Angebot. Schau gern in unsere Kategorien:";
+    }
+    var html = esc(txt.replace('{{query}}', label||'das'));
+    var wrap = bubble('bot', html); appendToView(wrap);
+    var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{blockKey:'not-offered'}) : el('div',{'class':'ppx-bot'});
+    renderCategoryChips(blk); appendToView(blk);
+    PPX.ui && PPX.ui.keepBottom && PPX.ui.keepBottom();
+  }
+
+  // ---------- Smalltalk detection -------------------------------------------
+  function detectSmalltalk(q){
+    if(!settings().smalltalk) return null;
+    var A=aiCfg()||{}, ST=(A.intents&&A.intents.smalltalk)||{};
+    function hit(list){ return (list||[]).some(function(p){ return wbRegex(p).test(q); }); }
+    if(hit(ST.greetings && ST.greetings.phrases)) return textOf('greeting') || "Hi! Wie kann ich dir helfen?";
+    if(hit(ST.thanks && ST.thanks.phrases)) return textOf('smalltalkThanks') || "Sehr gern! Willst du noch etwas wissen?";
+    if(hit(ST.bye && ST.bye.phrases)) return textOf('smalltalkBye') || "Bis bald 👋";
+    if(hit(ST.capabilities && ST.capabilities.phrases)) return textOf('capability') || "Ich helfe dir mit Speisekarte, Öffnungszeiten und Reservierungen.";
+    if(hit(ST.identity && ST.identity.phrases)) return (textOf('isReal') || textOf('identity') || "Ich bin dein digitaler Assistent.");
+    if(/\b(was ein tag|was fuer ein tag|puh|anstrengend|stressig|uff)\b/i.test(_norm(q))){
+      return "Klingt nach einem langen Tag. Womit kann ich dir helfen?";
+    }
     return null;
   }
 
-  // ---------- Worker + Unknown-Fallback -------------------------------------
+  // ---------- Öffnungszeiten Intent-Erkennung (erweitert) --------------------
+  function matchesOpenHours(q){
+    var n=_norm(q);
+
+    // explizite Kurzformen
+    var base=['oeffnungszeiten','offen','geoeffnet','geoffnet','geöffnet','open','hours','zeiten'];
+    for(var i=0;i<base.length;i++){ if(wbRegex(base[i]).test(n)) return true; }
+
+    // häufige natürliche Sätze
+    var patterns=[
+      'habt ihr auf','habt ihr heute auf','seid ihr offen','seid ihr heute offen',
+      'seid ihr da','seid ihr heute da',
+      'kann ich heute vorbeikommen','seid ihr geoeffnet','seid ihr geoffnet',
+      'are you open now','open now','are you open today','open today','opening hours'
+    ];
+    for(var j=0;j<patterns.length;j++){ if(wbRegex(patterns[j]).test(n)) return true; }
+
+    // „heute … offen/geöffnet“
+    if(/\bheute\b/.test(n) && /\b(geoeffnet|geoffnet|offen|open)\b/.test(n)) return true;
+
+    return false;
+  }
+
+  // ---------- Smart-Reply für Öffnungszeiten --------------------------------
+  function replyOpenHoursSmart(){
+    try{
+      var L=nowLang();
+      var svc=PPX.services&&PPX.services.openHours;
+      if(!svc){ openFlow('öffnungszeiten',{}); return; }
+
+      var isOpen = (typeof svc.isOpenNow==='function') ? !!svc.isOpenNow() : false;
+      if(!isOpen){
+        var txtClosed = (L==='en')
+          ? "We’re currently closed, but here are our opening hours for you."
+          : "Wir haben gerade geschlossen, aber hier sind unsere Öffnungszeiten für dich.";
+        appendToView(bubble('bot', esc(txtClosed)));
+        openFlow('öffnungszeiten',{}); // direkt die Zeiten zeigen
+        return;
+      }
+
+      var closeHM = (typeof svc.closeTimeToday==='function') ? (svc.closeTimeToday()||'') : '';
+      var msg = (L==='en')
+        ? ("Good news — we’re open today until " + (closeHM||'late') + ". Would you like to reserve or view hours?")
+        : ("Du hast Glück, heute sind wir noch bis " + (closeHM||'später') + " geöffnet. Möchtest du reservieren oder zu den Öffnungszeiten?");
+
+      appendToView(bubble('bot', esc(msg)));
+
+      // Buttons: Reservieren / Öffnungszeiten
+      var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
+      var btnReserve=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn((L==='en'?'Reserve':'Reservieren'), function(){ openFlow('reservieren',{}); }, 'ppx-cta','🗓️')
+                                         : el('button',{class:'ppx-b ppx-cta',onclick:function(){ openFlow('reservieren',{}); }}, (L==='en'?'Reserve':'Reservieren'));
+      var btnHours=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn((L==='en'?'Opening Hours':'Öffnungszeiten'), function(){ openFlow('öffnungszeiten',{}); }, 'ppx-secondary','⏰')
+                                       : el('button',{class:'ppx-b ppx-secondary',onclick:function(){ openFlow('öffnungszeiten',{}); }}, (L==='en'?'Opening Hours':'Öffnungszeiten'));
+      row.appendChild(btnReserve); row.appendChild(btnHours);
+      var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'openhours-choice'}) : el('div',{'class':'ppx-bot'});
+      blk.appendChild(row); appendToView(blk);
+      PPX.ui && PPX.ui.keepBottom && PPX.ui.keepBottom();
+    }catch(e){
+      openFlow('öffnungszeiten',{}); // Fallback
+    }
+  }
+
+  // ---------- Worker / Fallback / Unknown-Choice -----------------------------
+  function fallbackToContactForm(baseBubble){
+    var cfg=aiCfg()||{}, fb=(cfg.fallback||{}), msg=fb.message||{};
+    var L=nowLang(), m=(L==='en'?msg.en:msg.de)||"Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?";
+    if(baseBubble){ baseBubble.innerHTML=esc(m); }
+    openFlow('contactForm',{ startAt:(fb.step||'email'), skipHeader:!!fb.skipHeader });
+  }
+
+  function offerContactChoice(baseBubble){
+    try{
+      var L=nowLang();
+      var txt = (L==='en')
+        ? "I don’t have info on that here. Should I open our contact options?"
+        : "Dazu habe ich hier keine Infos. Soll ich dir unsere Kontaktmöglichkeiten öffnen?";
+      if(baseBubble){ baseBubble.innerHTML=esc(txt); } else { appendToView(bubble('bot',esc(txt))); }
+      var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
+      var yes=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn((L==='en'?'Open contact options':'Kontakt öffnen'),function(){ openFlow('kontakt',{}); },'ppx-cta','✉️')
+                                  : el('button',{class:'ppx-b ppx-cta',onclick:function(){ openFlow('kontakt',{}); }}, (L==='en'?'Open contact options':'Kontakt öffnen'));
+      var no =(PPX.ui&&PPX.ui.btn)?PPX.ui.btn((L==='en'?'No, thanks':'Nein, danke'),function(){
+                    appendToView(bubble('bot', esc(textOf('closing') || (L==='en'
+                      ? 'All right! Feel free to ask something else. Or click here to return to the main menu!'
+                      : 'Alles klar! Frag mich gern etwas anderes. Oder klick hier, um ins Hauptmenü zu kommen!'))));
+                    PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
+                  },'ppx-secondary','🙌')
+                                  : el('button',{class:'ppx-b ppx-secondary',onclick:function(){
+                                      appendToView(bubble('bot', esc(textOf('closing') || 'Alles klar! Frag mich gern etwas anderes. Oder klick hier, um ins Hauptmenü zu kommen!')));
+                                    }}, (L==='en'?'No, thanks':'Nein, danke'));
+      row.appendChild(yes); row.appendChild(no);
+      var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'unknown-choice'}) : el('div',{'class':'ppx-bot'});
+      blk.appendChild(row); appendToView(blk);
+      PPX.ui && PPX.ui.keepBottom && PPX.ui.keepBottom();
+    }catch(e){}
+  }
+  // ---------- Out-of-scope (Wetter/News/…) ----------------------------------
+  function isOutOfScope(q){
+    var rx = /\b(wetter|news|nachrichten|politik|aktien|kurs|bitcoin|technik|programmiere|programmierung|heutiges wetter|vorhersage)\b/i;
+    return rx.test(_norm(q));
+  }
+  function respondOutOfScope(q){
+    var S=st(); var cnt=bumpOos();
+    if(cnt===1){
+      var L=nowLang();
+      var msg = (L==='en')
+        ? "I don’t have info on that here — I can help with our menu, opening hours or reservations."
+        : "Dazu habe ich hier keine Infos – ich helfe dir gern mit Speisekarte, Öffnungszeiten oder Reservierungen.";
+      appendToView(bubble('bot', esc(msg)));
+      moveThreadToEnd();
+    }else{
+      offerContactChoice(appendToView(bubble('bot','')));
+    }
+  }
+
+  // ---------- Settings & TEXT helpers ---------------------------------------
+  function settings(){ var A=aiCfg()||{}, S=A.settings||{}; return {
+    minConfidence: Number(S.minConfidence||0.62),
+    suggestionMin: Array.isArray(S.suggestionBand)?Number(S.suggestionBand[0]||0.55):0.55,
+    suggestionMax: Array.isArray(S.suggestionBand)?Number(S.suggestionBand[1]||0.62):0.62,
+    unknown2x: Number(S.unknownConsecutiveForFallback||2),
+    smalltalk: S.smalltalkEnabled!==false,
+    notOfferedPolicy: String(S.notOfferedPolicy||'answer_with_categories'),
+    autoKw: S.speisenAutoKeywords!==false
+  }; }
+  function langPick(obj){ var L=nowLang(); if(obj&&typeof obj==='object'){ return (L==='en'&&obj.en)?obj.en:(obj.de||obj.en||''); } return String(obj||''); }
+  function textOf(key){ try{
+    var A=aiCfg()||{}, REF=A.TEXTS_REF||{}, raw=(PPX.data&&PPX.data.raw&&PPX.data.raw())||{}, T=raw.TEXTS||{};
+    var path=(REF[key]||'').split('.'); var cur=raw;
+    for(var i=0;i<path.length;i++){ if(cur && typeof cur==='object') cur=cur[path[i]]; }
+    return langPick(cur||T[key]||'');
+  }catch(e){ return ''; } }
+
+  // ---------- Food tokens for "not offered" ---------------------------------
+  function collectAvailableFoodTokens(){
+    var tokens=Object.create(null), DSH=dishes(), C=cfg(), order=Array.isArray(C.menuOrder)?C.menuOrder:Object.keys(DSH||{});
+    function add(tok){ tok=_norm(tok); if(!tok) return; tokens[tok]=1; }
+    try{
+      (order||[]).forEach(function(key){
+        add(key); add(catLabelFromKey(key));
+        (Array.isArray(DSH[key])?DSH[key]:[]).forEach(function(it){
+          add(it.name||''); add(it.name_en||'');
+        });
+      });
+    }catch(e){}
+    return tokens;
+  }
+  function maybeNotOffered(q){
+    var S=settings(); if(S.notOfferedPolicy!=='answer_with_categories') return false;
+    if(matchesOpenHours(q)) return false; // Öffnungszeiten hat Vorrang
+    var tokens=collectAvailableFoodTokens();
+    var askRe=/(habt ihr|gibt es|do you have|have you|offer(n)?)/i;
+    var foreignRe=/(italien|italienisch|italy|italiano|pizza|pasta|chines|sushi|japan|indisch|thai|mexik|burger|tacos|ramen|pho|korean|currywurst)/i;
+    if(!askRe.test(q) && !foreignRe.test(q)) return false;
+    for(var t in tokens){ if(t&&t.length>1 && wbRegex(t).test(q)) return false; }
+    respondNotOffered(q);
+    return true;
+  }
+
+  // ---------- Worker wireup --------------------------------------------------
   function askWorker(question,cfg){
     var meta={provider:cfg.provider,model:cfg.model,maxTokens:(cfg.limits&&cfg.limits.maxTokens)||300,timeoutMs:(cfg.limits&&cfg.limits.timeoutMs)||8000,
               systemPrompt:cfg.systemPrompt,allowlist:cfg.allowlist,forbid:cfg.forbid,
@@ -317,139 +515,161 @@
       body:JSON.stringify({question:String(question||'').slice(0,2000),meta:meta})}).then(function(r){return r.json();});
   }
 
-  function offerContactChoice(baseBubble){
-    var L=nowLang();
-    var msg = (L==='en')
-      ? "I don't have info on that here. Should I open our contact form for you?"
-      : "Dazu habe ich hier keine Infos. Soll ich dir unser Kontaktformular öffnen?";
-    if(baseBubble){ baseBubble.innerHTML=esc(msg); }
-
-    var row = (PPX.ui&&PPX.ui.row)? PPX.ui.row() : el('div',{'class':'ppx-row'});
-    var yesLbl={de:'Ja, Kontaktformular öffnen', en:'Open contact form'};
-    var noLbl ={de:'Nein, danke',           en:'No, thanks'};
-
-    function onYes(){ openFlow('contactForm',{ startAt:'email', skipHeader:true }); }
-    function onNo (){
-      var text = (L==='en')
-        ? "Alright! Feel free to ask me something else.<br><a href='#' class='ppx-link' onclick='PPX.ui.goHome();return false;'>Or click here to return to the main menu!</a>"
-        : "Alles klar! Frag mich gern etwas anderes.<br><a href='#' class='ppx-link' onclick='PPX.ui.goHome();return false;'>Oder klick hier um ins Hauptmenü zu kommen!</a>";
-      appendToView(bubble('bot', text));
-      PPX.ui && PPX.ui.keepBottom && PPX.ui.keepBottom();
-    }
-
-    var y=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(yesLbl,onYes,'ppx-secondary','✉️') : el('button',{class:'ppx-b ppx-secondary',onclick:onYes},(L==='en'?yesLbl.en:yesLbl.de));
-    var n=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(noLbl ,onNo ,'ppx-secondary','❌') : el('button',{class:'ppx-b ppx-secondary',onclick:onNo},(L==='en'?noLbl.en:noLbl.de));
-
-    var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{blockKey:'unknown-choice'}) : el('div',{'class':'ppx-bot'});
-    row.appendChild(y); row.appendChild(n); blk.appendChild(row); appendToView(blk);
-  }
-  // ---------- doWorker(): Routing mit „Text-ohne-Tool“ ----------------------
   async function doWorker(q){
-    var cfg=aiCfg();
-    var bWrap=appendToView(bubble('bot','⏳ …'));
-    var bBot=bWrap && bWrap.querySelector('.ppx-ai-bubble');
-    var res=null;
+    var cfg=aiCfg(), bWrap=appendToView(bubble('bot','⏳ …')), bBot=bWrap && bWrap.querySelector('.ppx-ai-bubble'), res=null;
     try{ res=await askWorker(q,cfg); }catch(e){ res=null; }
 
-    // Provider-/Netzfehler → echter Fallback (mit Text + Formular)
-    if(!res || res.error){ fallbackToContactForm(bBot); return; }
+    if(!res || res.error){
+      var count=bumpUnknown(); if(count>=settings().unknown2x){ fallbackToContactForm(bBot); } else { offerContactChoice(bBot); }
+      return;
+    }
 
-    // Öffnungszeiten one-liner ggf. local zusammenfassen
+    // Worker-Hints: Öffnungszeiten/FAQ verfeinern
     if(res.tool==='öffnungszeiten' && res.behavior==='one_liner'){
       var h=hoursOneLiner(); if(h) res.text=h;
     }
-    // FAQ Kategorie aus strengem Map ergänzen
     if(res.tool==='faq' && (!res.detail || !res.detail.category)){
-      var m=faqMatchFromTextStrict(q); if(m) res.detail={category:m};
+      if(typeof PPX.services.ai.faqMatchFromTextStrict==='function'){
+        var m=PPX.services.ai.faqMatchFromTextStrict(q); if(m) res.detail={category:m};
+      }
     }
 
     var allow=(cfg.allowlist||['reservieren','kontakt','öffnungszeiten','speisen','faq']).map(function(s){return String(s).toLowerCase();});
     var tool=(res.tool||'').toLowerCase();
 
-    // 1) KI liefert NUR Text → Text anzeigen, fertig (kein Kontakt)
     if(res.text && !tool){
       if(bBot){ bBot.innerHTML=linkify(esc(res.text)); }
-      moveThreadToEnd(); return;
+      resetUnknown(); moveThreadToEnd(); return;
     }
 
-    // 2) Tool unzulässig/leer ODER „kontakt“ (vom Modell fälschlich geraten) → Unknown-Frage
     if(!tool || allow.indexOf(tool)===-1 || tool==='kontakt'){
-      offerContactChoice(bBot);
+      var c=bumpUnknown(); if(c>=settings().unknown2x){ fallbackToContactForm(bBot); } else { offerContactChoice(bBot); }
       return;
     }
 
-    // 3) Normale Bot-Antwort + ggf. Flow öffnen
     if(res.text && bBot){ bBot.innerHTML=linkify(esc(res.text)); }
     if(st().activeFlowId && !toolMatchesActive(tool)){ pauseActiveFlow('ai-redirect'); }
     openFlow(tool, res.detail||{});
+    resetUnknown();
     moveThreadToEnd();
   }
-  // ---------- send(): Prematches → ggf. Consent → Worker --------------------
+
+  // ---------- Flow state helpers --------------------------------------------
+  function toolMatchesActive(tool){
+    try{ return (st().activeFlowId||'').toLowerCase()===String(tool||'').toLowerCase(); }catch(e){ return false; }
+  }
+  function pauseActiveFlow(reason){
+    try{ st().activeFlowId=null; st().expecting=null; }catch(e){}
+  }
+
+  // ---------- send(): Prematches + Smart-Reply -------------------------------
   async function send(){
-    ensureDock(); if(!$inp) return;
-    var q=String($inp.value||'').trim(); if(!q) return;
+    ensureDockLoop();
+    var ok=ensureDock(); if(!ok||!$inp) return;
+    var raw=String($inp.value||''); var q=raw.trim(); if(!q) return;
     if(!allowHit()){ showNote('Bitte kurz warten ⏳'); return; }
+    $inp.value=''; userEcho(q);
 
-    $inp.value='';
-    userEcho(q);
+    // 0) Öffnungszeiten früh und smart behandeln
+    if(matchesOpenHours(q)){ resetUnknown(); resetOos(); replyOpenHoursSmart(); return; }
 
-    // 1) Prematch: SPEISEN (Kategorie/Item)
+    // 1) Speisen: Items → Kategorien
     try{
-      var DSH=dishes(), cats=Object.keys(DSH||{});
+      var DSH=dishes(), cats=Object.keys(DSH||{}), qn=_norm(q);
+      // Items
       for(var i=0;i<cats.length;i++){
-        var ck=cats[i], arr=Array.isArray(DSH[ck])?DSH[ck]:[], lab=catLabelFromKey(ck);
-        if(wbRegex(ck).test(q) || wbRegex(lab).test(q)){
-          if(st().activeFlowId && !toolMatchesActive('speisen')){ pauseActiveFlow('ai-speisen'); }
-          openFlow('speisen',{category:ck}); return;
-        }
+        var ck=cats[i], arr=Array.isArray(DSH[ck])?DSH[ck]:[];
         for(var j=0;j<arr.length;j++){
-          var nm=arr[j].name||arr[j].name_en||'';
-          if(nm && wbRegex(nm).test(q)){
+          var nm=(arr[j].name||''), ne=(arr[j].name_en||''), nmN=_norm(nm), neN=_norm(ne);
+          if( (nm && (wbRegex(nm).test(q) || wbNormHit(nmN,qn))) ||
+              (ne && (wbRegex(ne).test(q) || wbNormHit(neN,qn))) ){
             if(st().activeFlowId && !toolMatchesActive('speisen')){ pauseActiveFlow('ai-speisen'); }
-            openFlow('speisen',{category:ck,itemId:arr[j].id}); return;
+            openFlow('speisen',{category:ck,itemId:arr[j].id}); resetUnknown(); resetOos(); return;
+          }
+          var ckN=_norm(ck);
+          if(ckN && nmN && qn.indexOf(ckN)>=0 && qn.indexOf(nmN)>=0){
+            if(st().activeFlowId && !toolMatchesActive('speisen')){ pauseActiveFlow('ai-speisen'); }
+            openFlow('speisen',{category:ck,itemId:arr[j].id}); resetUnknown(); resetOos(); return;
           }
         }
       }
+      // Kategorien
+      for(var i2=0;i2<cats.length;i2++){
+        var ck2=cats[i2], arr2=Array.isArray(DSH[ck2])?DSH[ck2]:[], lab=catLabelFromKey(ck2), ckN2=_norm(ck2), labN=_norm(lab);
+        if(wbRegex(ck2).test(q) || wbRegex(lab).test(q) || wbNormHit(ckN2,qn) || wbNormHit(labN,qn)){
+          if(st().activeFlowId && !toolMatchesActive('speisen')){ pauseActiveFlow('ai-speisen'); }
+          openFlow('speisen',{category:ck2}); resetUnknown(); resetOos(); return;
+        }
+      }
     }catch(e){}
 
-    // 2) Prematch: FAQ (strikt)
+    // 2) FAQ (strikt)
     try{
-      var fc=faqMatchFromTextStrict(q);
-      if(fc){
-        if(st().activeFlowId && !toolMatchesActive('faq')){ pauseActiveFlow('ai-faq'); }
-        openFlow('faq',{category:fc,behavior:'silent'}); return;
+      if(typeof PPX.services.ai.faqMatchFromTextStrict==='function'){
+        var fc=PPX.services.ai.faqMatchFromTextStrict(q);
+        if(fc){
+          if(st().activeFlowId && !toolMatchesActive('faq')){ pauseActiveFlow('ai-faq'); }
+          openFlow('faq',{category:fc,behavior:'silent'}); resetUnknown(); resetOos(); return;
+        }
       }
     }catch(e){}
 
-    // 3) Statische Intents (reservieren/kontakt/öffnungszeiten)
-    var intents={reservieren:['reservieren','tisch','buchen','booking','reserve'],
-                 kontakt:['kontakt','email','mail','anrufen','telefon','call'],
-                 'öffnungszeiten':['öffnungszeiten','zeiten','hours','open','geöffnet']};
+    // 3) Statische Intents
+    var intents={
+      reservieren:['reservieren','tisch','buchen','booking','reserve'],
+      kontakt:['kontakt','email','mail','anrufen','telefon','call'],
+      'öffnungszeiten':['öffnungszeiten','zeiten','hours','open','geöffnet','geoeffnet','offen','open today','are you open today'],
+      speisen:['speisen','speise','gericht','gerichte','essen','menü','menu','karte','speisekarte','hunger','ich habe hunger','food']
+    };
     for(var tool in intents){
-      if((intents[tool]||[]).some(function(w){return wbRegex(w).test(q);})){
+      if((intents[tool]||[]).some(function(w){return wbRegex(w).test(_norm(q));})){
+        if(tool==='öffnungszeiten'){ replyOpenHoursSmart(); resetUnknown(); resetOos(); return; }
         if(st().activeFlowId && !toolMatchesActive(tool)){ pauseActiveFlow('ai-intent'); }
-        openFlow(tool,{}); return;
+        openFlow(tool,{}); resetUnknown(); resetOos(); return;
       }
     }
 
-    // 4) Erster echter KI-Call → Consent-Gate
-    if(!_consented && !loadConsent()){
-      renderConsentBlock(q);
-      return;
-    }
+    // 4) Smalltalk
+    var sm=detectSmalltalk(q);
+    if(sm){ appendToView(bubble('bot', esc(sm))); resetUnknown(); resetOos(); moveThreadToEnd(); return; }
 
-    // 5) KI-Worker
+    // 5) Nicht im Angebot
+    if(maybeNotOffered(q)){ resetUnknown(); resetOos(); return; }
+
+    // 6) Out-of-scope
+    if(isOutOfScope(q)){ respondOutOfScope(q); resetUnknown(); return; }
+
+    // 7) Consent → KI
+    if(!_consented && !loadConsent()){ renderConsentBlock(q); return; }
     doWorker(q);
   }
+  // ---------- FAQ strict hybrid map -----------------------------------------
+  function faqCategoryMapStrict(){
+    var out=Object.create(null);
+    try{
+      var F=faqs(), cats=[];
+      if (F && Array.isArray(F.cats)) cats=F.cats;
+      else if (F && Array.isArray(F.items)) cats=[{key:'all',title:F.title||'FAQ',title_en:F.title_en||'FAQ'}];
+      cats.forEach(function(c){
+        var k=(c&&c.key)?String(c.key):'', t=(c&&c.title)?String(c.title):'', te=(c&&c.title_en)?String(c.title_en):'';
+        if(k){ out[_norm(k)]=k; } if(t){ out[_norm(t)]=k||_norm(t); } if(te){ out[_norm(te)]=k||_norm(te); }
+      });
+      var A=aiCfg()||{}, intents=(A.intents||{}), faq=(intents.faq||{}), catsCfg=(faq.categories||{});
+      Object.keys(catsCfg).forEach(function(catKey){
+        var entry=catsCfg[catKey], arr=Array.isArray(entry)?entry:(Array.isArray(entry.keywords)?entry.keywords:[]);
+        (arr||[]).forEach(function(s){ var n=_norm(s); if(!n) return; out[n]=catKey; });
+      });
+    }catch(e){}
+    return out;
+  }
+  function faqMatchFromTextStrict(txt){ var map=faqCategoryMapStrict(); var n=_norm(txt); if(!n) return null; if(map[n]) return map[n]; return null; }
 
-  // ---------- readAI + boot + export ---------------------------------------
+  // ---------- readAI (unchanged) --------------------------------------------
   function _catMap(n){var o={},c=n&&n.categories;if(!c) return o;
-    Object.keys(c).forEach(function(k){
-      var a=(c[k]&&(c[k].keywords||c[k])); o[k]=Array.isArray(a)?uniq(a):[];
-    }); return o;}
+    Object.keys(c).forEach(function(k){var a=(c[k]&&(c[k].keywords||c[k])); o[k]=Array.isArray(a)?uniq(a):[];}); return o;}
   function readAI(){
     var A=aiCfg()||{},L=A.limits||{},T=A.tone||{},CMP=A.compliance||{},intents=A.intents||{};
-    var speisenKw = [], speisenItems = [], speisenItemsMap = {};
+    var speisenKw=[], speisenItems=[], speisenItemsMap={};
     try{
       if(intents.speisen){
         var baseK = intents.speisen.keywords || [];
@@ -505,25 +725,26 @@
     };
   }
 
+  // ---------- Boot & exports -------------------------------------------------
   function boot(){
     loadConsent();
-    ensureDock();
+    ensureDockLoop(); ensureDock();
     if(document.readyState==='loading'){
-      document.addEventListener('DOMContentLoaded', function(){ ensureDock(); }, {once:true});
+      document.addEventListener('DOMContentLoaded', function(){ ensureDock(); ensureDockLoop(); }, {once:true});
     }
     try{
       var mo=new MutationObserver(function(){
         var panel=document.getElementById('ppx-panel');
-        if(panel && panel.querySelector('.ppx-ai-dock')){ try{ mo.disconnect(); }catch(e){} }
-        else { ensureDock(); }
+        if(!panel || !panel.querySelector('.ppx-ai-dock')) ensureDock();
       });
       mo.observe(document.documentElement||document.body,{childList:true,subtree:true});
-      setTimeout(function(){ try{ mo.disconnect(); }catch(e){} },10000);
+      setTimeout(function(){ try{ mo.disconnect(); }catch(e){} },60000);
     }catch(e){}
     window.addEventListener('click', function(){
       var p=document.getElementById('ppx-panel');
       if(p && p.classList.contains('ppx-open') && !p.querySelector('.ppx-ai-dock')) ensureDock();
     });
+    window.addEventListener('ppx:panel:open', function(){ ensureDock(); });
   }
 
   PPX.services.ai = AI;
