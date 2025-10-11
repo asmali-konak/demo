@@ -91,6 +91,7 @@
   function bubble(side,html){
     var wrap=el('div',{class:'ppx-ai-bwrap'});
     var b=el('div',{class:'ppx-ai-bubble',style:{
+      display:'inline-block', /* wichtig: damit text-align:right im Wrapper greift */
       margin:'8px 0',padding:'10px 12px',borderRadius:'12px',
       border:'1px solid var(--ppx-bot-chip-border, rgba(255,255,255,.18))',
       background: side==='user' ? 'rgba(255,255,255,.10)' : 'var(--ppx-bot-chip, rgba(255,255,255,.06))',
@@ -98,9 +99,9 @@
     }}); if(side==='user') wrap.style.textAlign='right';
     b.innerHTML=html; wrap.appendChild(b); return wrap;
   }
+  // User-Echo: jetzt ebenfalls als Bubble
   function userEcho(text){
-    var wrap=el('div',{class:'ppx-user-echo',style:{textAlign:'right',margin:'8px 0 0',padding:'0 4px',color:'var(--ppx-bot-text,#fff)'}});
-    var span=el('span',{html:esc(text)}); wrap.appendChild(span);
+    var wrap = bubble('user', esc(text));
     return appendToView(wrap);
   }
 
@@ -184,7 +185,6 @@
     $send.addEventListener('click',send);
     return true;
   }
-
   // ---------- Consent & Worker ----------------------------------------------
   var _consented=false;
   function ensureConsent(){
@@ -267,6 +267,7 @@
     if(map[n]) return map[n];
     return null;
   }
+
   // ---------- Fallback → Kontaktformular ------------------------------------
   function fallbackToContactForm(botBubble){
     try{
@@ -363,7 +364,6 @@
     openFlow(tool, res.detail||{});
     moveThreadToEnd();
   }
-
   // ---------- readAI + boot + export ---------------------------------------
   function _catMap(n){var o={},c=n&&n.categories;if(!c) return o;
     Object.keys(c).forEach(function(k){
