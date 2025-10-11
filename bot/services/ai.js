@@ -1,10 +1,10 @@
 /* ============================================================================
-   PPX AI Service – v2.4.2 (Option A)
+   PPX AI Service – v2.5.1 (Order-Stable + Footer-aware Dock)
    Änderungen:
-   - Fallback öffnet jetzt ausdrücklich den Flow-Namen "contactForm" (CamelCase)
-     → openFlow('contactForm', { startAt:'email', skipHeader:true })
-   - Kein Alias-Hack nötig; Naming konsistent mit stepContactForm
-   - Weiterhin: striktes FAQ-Prematching, Wetter/out-of-scope → Kontaktformular
+   - KEIN eigener Thread-Container (#ppx-ai-thread) mehr.
+   - KEIN Reparenting/Reorder: Neue Bubbles werden direkt in #ppx-v appendet.
+   - moveThreadToEnd(): nur Scroll-to-bottom (kein appendChild).
+   - Dock-Platzierung: direkt nach #ppx-v ODER vor Footer (.ppx-brandbar / Elements-Footer).
 ============================================================================ */
 (function () {
   'use strict';
@@ -12,7 +12,7 @@
   var PPX=W.PPX=W.PPX||{}; PPX.services=PPX.services||{};
   var AI={};
 
-  // --- utils -----------------------------------------------------------------
+  // ---------- utils ----------------------------------------------------------
   function el(tag,attrs){var n=D.createElement(tag);attrs=attrs||{};
     Object.keys(attrs||{}).forEach(function(k){var v=attrs[k];
       if(k==='text') n.textContent=v;
@@ -31,7 +31,7 @@
   function now(){ return Date.now(); }
   function st(){ PPX.state=PPX.state||{activeFlowId:null,expecting:null}; return PPX.state; }
 
-  // --- normalizer ------------------------------------------------------------
+  // ---------- normalizer -----------------------------------------------------
   function _norm(s){
     return String(s||'').toLowerCase()
       .replace(/[ä]/g,'ae').replace(/[ö]/g,'oe').replace(/[ü]/g,'ue').replace(/[ß]/g,'ss')
@@ -54,14 +54,14 @@
     return new RegExp('(^|\\W)'+t+'(\\W|$)','i');
   }
 
-  // --- data getters ----------------------------------------------------------
+  // ---------- data getters ---------------------------------------------------
   function nowLang(){ try{ return (PPX.i18n&&PPX.i18n.nowLang&&PPX.i18n.nowLang()) || PPX.lang || 'de'; }catch(e){ return 'de'; } }
   function cfg(){ try{ return (PPX.data&&PPX.data.cfg&&PPX.data.cfg()) || {}; } catch(e){ return {}; } }
   function dishes(){ try{ return (PPX.data&&PPX.data.dishes&&PPX.data.dishes()) || {}; } catch(e){ return {}; } }
   function faqs(){ try{ return (PPX.data&&PPX.data.faqs&&PPX.data.faqs()) || []; } catch(e){ return []; } }
   function aiCfg(){ try{ return (PPX.data&&PPX.data.ai&&PPX.data.ai()) || {}; } catch(e){ return {}; } }
 
-  // --- DOM helpers / labels (Speisen) ---------------------------------------
+  // ---------- labels (Speisen) ----------------------------------------------
   function catLabelFromKey(catKey){
     var C=cfg(), L=nowLang();
     var obj=(C.menuTitles && C.menuTitles[catKey]) || null;
@@ -81,60 +81,12 @@
     return '';
   }
 
-  // --- UI helpers ------------------------------------------------------------
-  function findChipByTextWithin(root,label){
-    if(!root||!label) return null;
-    var want=_norm(label);
-    var nodes=[].slice.call(root.querySelectorAll('.ppx-chip, .ppx-opt, button, a'));
-    for(var i=0;i<nodes.length;i++){
-      var txt=(nodes[i].innerText||nodes[i].textContent||'').trim();
-      if(_norm(txt)===want) return nodes[i];
-    }
-    for(var j=0;j<nodes.length;j++){
-      var t2=(nodes[j].innerText||nodes[j].textContent||'').trim();
-      if(_norm(t2).indexOf(want)!==-1) return nodes[j];
-    }
-    return null;
-  }
-  function clickChipAfterRender(targetFn, tries){
-    tries = (typeof tries==='number')?tries:16;
-    var i=0;(function tick(){try{ if(targetFn()===true) return; }catch(e){} if(++i>=tries) return; setTimeout(tick,100);})();
-  }
-  function selectSpeisen(detail){
-    if(!detail) return;
-    if(detail.category){
-      var catKey=String(detail.category), label=catLabelFromKey(catKey);
-      clickChipAfterRender(function(){
-        var root=D.querySelector('[data-block="speisen-root"]'); if(!root) return false;
-        var chip=findChipByTextWithin(root,label); if(!chip) return false; chip.click(); return true;
-      });
-    }
-    if(detail.category && detail.itemId){
-      var catKey2=String(detail.category), itemLbl=itemLabel(catKey2, String(detail.itemId));
-      if(itemLbl){
-        clickChipAfterRender(function(){
-          var root2=D.querySelector('[data-block="speisen-cat"]'); if(!root2) return false;
-          var itemChip=findChipByTextWithin(root2,itemLbl); if(!itemChip) return false; itemChip.click(); return true;
-        });
-      }
-    }
-  }
-
-  // --- thread & bubbles ------------------------------------------------------
-  var $v,$dock,$inp,$send,$consent; var reorderLock=false;
-  function viewRoot(){ return viewEl(); }
-  function ensureThread(){
-    $v=viewRoot(); if(!$v) return null;
-    var t=$v.querySelector('#ppx-ai-thread');
-    if(!t){ t=el('div',{id:'ppx-ai-thread',style:{marginTop:'8px'}}); $v.appendChild(t); }
-    return t;
-  }
-  function moveThreadToEnd(force){
-    if(!force && reorderLock) return;
-    $v=viewRoot(); if(!$v) return;
-    var t=$v.querySelector('#ppx-ai-thread'); if(!t) return;
-    if($v.lastElementChild!==t) $v.appendChild(t);
-    try{ $v.scrollTop=$v.scrollHeight; requestAnimationFrame(function(){ $v.scrollTop=$v.scrollHeight; }); }catch(e){}
+  // ---------- UI helpers (generic append) -----------------------------------
+  function appendToView(node){
+    var v=viewEl(); if(!v) return null;
+    v.appendChild(node);
+    moveThreadToEnd(); // nur scrollen
+    return node;
   }
   function bubble(side,html){
     var wrap=el('div',{class:'ppx-ai-bwrap'});
@@ -147,36 +99,39 @@
     b.innerHTML=html; wrap.appendChild(b); return wrap;
   }
   function userEcho(text){
-    var v=viewRoot(); if(!v) return null;
     var wrap=el('div',{class:'ppx-user-echo',style:{textAlign:'right',margin:'8px 0 0',padding:'0 4px',color:'var(--ppx-bot-text,#fff)'}});
-    var span=el('span',{html:esc(text)}); wrap.appendChild(span); v.appendChild(wrap);
-    moveThreadToEnd(true); return wrap;
+    var span=el('span',{html:esc(text)}); wrap.appendChild(span);
+    return appendToView(wrap);
   }
-  // --- notes / rate-limit + dock --------------------------------------------
+
+  // ---------- notes / rate-limit & scroll -----------------------------------
   var rl={hits:[],max:15};
   function allowHit(){
     var t=now(); rl.hits=rl.hits.filter(function(h){return t-h<60000;});
     if(rl.hits.length>=rl.max) return false; rl.hits.push(t); return true;
   }
-
-  var $panel,$vroot;
+  function moveThreadToEnd(){
+    var v=viewEl(); if(!v) return;
+    try{
+      v.scrollTop=v.scrollHeight;
+      requestAnimationFrame(function(){ v.scrollTop=v.scrollHeight; });
+    }catch(e){}
+  }
   function showNote(txt){
-    var t=ensureThread(); if(!t) return;
     var n=el('div',{class:'ppx-note',style:{
       background:'rgba(255,255,255,.10)',border:'1px solid rgba(255,255,255,.28)',
       borderLeft:'4px solid var(--ppx-accent,#c9a667)',borderRadius:'12px',
       padding:'8px 10px',marginTop:'8px'}},txt);
-    t.appendChild(n); moveThreadToEnd(true);
+    appendToView(n);
   }
-
-  // Dock sicher anlegen – auch wenn #ppx-v spät kommt
+  // ---------- Dock (Input/Send) ---------------------------------------------
+  var $dock,$inp,$send,$consent;
   function ensureDock(){
-    var panel=document.getElementById('ppx-panel'); $panel=panel;
+    var panel=document.getElementById('ppx-panel');
     if(!panel) return false;
 
     var exist=panel.querySelector('.ppx-ai-dock');
     if(exist){
-      $vroot=viewEl(); // keep fresh
       $dock=exist; $inp=$dock.querySelector('.ai-inp'); $send=$dock.querySelector('.ai-send'); $consent=$dock.querySelector('.ai-consent');
       return true;
     }
@@ -206,20 +161,36 @@
     var row=el('div',{class:'ai-row'},$inp,$send);
     $dock=el('div',{class:'ppx-ai-dock'},$consent,row);
 
-    $v=viewEl(); if($v && $v.nextSibling){ panel.insertBefore($dock,$v.nextSibling); } else { panel.appendChild($dock); }
+    // ▼▼ Footer-aware Platzierung:
+    // 1) Wenn Footer existiert (ppx-brandbar oder bekannter Elements-Footer), Dock direkt DAVOR einfügen.
+    // 2) Sonst: Dock direkt NACH #ppx-v einfügen, wenn möglich.
+    // 3) Fallback: ans Panel-Ende appenden.
+    var v = viewEl();
+    var footer = panel.querySelector('.ppx-brandbar, .ppx-elements-footer, .ai-elements-footer, .ppx-footer, footer');
+    try{
+      if(footer){
+        panel.insertBefore($dock, footer);
+      }else if(v && v.parentNode===panel && v.nextSibling){
+        panel.insertBefore($dock, v.nextSibling);
+      }else if(v && v.parentNode===panel){
+        // v ist das letzte – dann hinterher
+        panel.appendChild($dock);
+      }else{
+        panel.appendChild($dock);
+      }
+    }catch(e){ panel.appendChild($dock); }
 
     $inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); }});
     $send.addEventListener('click',send);
     return true;
   }
 
-  // --- consent & worker ------------------------------------------------------
+  // ---------- Consent & Worker ----------------------------------------------
   var _consented=false;
   function ensureConsent(){
     var cfg=aiCfg(); if(_consented){ if($consent) $consent.style.display='none'; return true; }
     if($consent){ $consent.style.display='block'; } return false;
   }
-
   function askWorker(question,cfg){
     var meta={provider:cfg.provider,model:cfg.model,maxTokens:(cfg.limits&&cfg.limits.maxTokens)||300,timeoutMs:(cfg.limits&&cfg.limits.timeoutMs)||8000,
               systemPrompt:cfg.systemPrompt,allowlist:cfg.allowlist,forbid:cfg.forbid,
@@ -230,35 +201,18 @@
       body:JSON.stringify({question:String(question||'').slice(0,2000),meta:meta})}).then(function(r){return r.json();});
   }
 
-  // --- flows öffnen ----------------------------------------------------------
+  // ---------- Flow Helpers ---------------------------------------------------
   function cap(s){ s=String(s||''); return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
   function openFlow(tool,detail){
     try{
       var tname=String(tool||'');
       var fn = PPX.flows && (PPX.flows['step'+cap(tname)]);
-      if (typeof fn === 'function'){ fn(detail||{}); return true; }
-      if(PPX.flows&&typeof PPX.flows.open==='function'){ PPX.flows.open(tool,detail||{}); return true; }
+      if (typeof fn === 'function'){ fn(detail||{}); moveThreadToEnd(); return true; }
+      if(PPX.flows&&typeof PPX.flows.open==='function'){ PPX.flows.open(tool,detail||{}); moveThreadToEnd(); return true; }
     }catch(e){}
     try{ window.dispatchEvent(new CustomEvent('ppx:tool',{detail:{tool:tool,detail:detail||{}}})); }catch(e){}
-    return openFlowHint(tool);
-  }
-  function openFlowHint(tool){
-    var v=viewEl(); var words={
-      reservieren:['reservieren','reserve','buchen','booking','tisch','table'],
-      kontakt:['kontakt','contact','email','mail','anrufen','call','telefon'],
-      'öffnungszeiten':['öffnungszeiten','zeiten','hours','open','geöffnet'],
-      speisen:['speisen','speise','gerichte','gericht','menu','speisekarte','essen','getränk','getraenk','cola','ayran','raki','tee','cay','çay','wasser'],
-      faq:['faq','fragen','hilfe']
-    }[tool]||[tool];
-    if(!v){ return false; }
-    var btn=[].find.call(v.querySelectorAll('.ppx-b,.ppx-chip,.ppx-opt,button,a'),function(n){
-      var t=(n.innerText||n.textContent||'').toLowerCase(); return words.some(function(k){return t.indexOf(k)!==-1;});
-    });
-    if(btn){ btn.click(); return true; }
     return false;
   }
-
-  // --- opening-hours & telemetry --------------------------------------------
   function hoursOneLiner(){
     try{
       var svc=PPX.services&&PPX.services.openHours;
@@ -268,7 +222,6 @@
   }
   function tPing(ev){ try{ if(PPX.services&&PPX.services.telemetry){ PPX.services.telemetry.ping(ev||{}); } }catch(e){} }
 
-  // --- flow-state helpers ----------------------------------------------------
   function pauseActiveFlow(reason){
     var S=st(); if(!S.activeFlowId) return;
     var prev=S.activeFlowId; S.activeFlowId=null; S.expecting=null;
@@ -279,7 +232,7 @@
     return String(tool).toLowerCase()===String(S.activeFlowId).toLowerCase();
   }
 
-  // --- FAQ strict hybrid map -------------------------------------------------
+  // ---------- FAQ strict hybrid map -----------------------------------------
   function faqCategoryMapStrict(){
     var out=Object.create(null);
     try{
@@ -314,25 +267,23 @@
     if(map[n]) return map[n];
     return null;
   }
-  // --- Fallback → Kontaktformular (Direkteinstieg E-Mail) --------------------
+  // ---------- Fallback → Kontaktformular ------------------------------------
   function fallbackToContactForm(botBubble){
     try{
       var A=aiCfg()||{}, L=nowLang();
       var msg=(A.fallback && A.fallback.message && (A.fallback.message[L]||A.fallback.message.de)) ||
               'Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?';
       if(botBubble){ botBubble.innerHTML=esc(msg); }
-      else {
-        var t=ensureThread(); if(t){ t.appendChild(bubble('bot',esc(msg))); }
-      }
+      else { appendToView(bubble('bot',esc(msg))); }
       if(st().activeFlowId && !toolMatchesActive('contactForm')){ pauseActiveFlow('ai-fallback'); }
       var step=(A.fallback && A.fallback.step)||'email';
       var skip=(A.fallback && A.fallback.skipHeader)!==false; // default true
       openFlow('contactForm',{ startAt: step, skipHeader: skip });
-      moveThreadToEnd(true);
+      moveThreadToEnd();
     }catch(e){}
   }
 
-  // --- send() ---------------------------------------------------------------
+  // ---------- send() ---------------------------------------------------------
   async function send(){
     ensureDock(); if(!$inp) return;
     var q=String($inp.value||'').trim(); if(!q) return;
@@ -340,7 +291,8 @@
     if(!_consented){ if(!ensureConsent()){ _consented=true; if($consent) $consent.style.display='none'; } }
     if(!allowHit()){ showNote('Bitte kurz warten ⏳'); return; }
 
-    $inp.value=''; userEcho(q);
+    $inp.value='';
+    userEcho(q);
 
     var cfg=aiCfg();
 
@@ -372,7 +324,7 @@
       }
     }catch(e){}
 
-    // 3) Statische Intents (Reservieren/Kontakt/Öffnungszeiten)
+    // 3) Statische Intents
     var intents={reservieren:['reservieren','tisch','buchen','booking','reserve'],
                  kontakt:['kontakt','email','mail','anrufen','telefon','call'],
                  'öffnungszeiten':['öffnungszeiten','zeiten','hours','open','geöffnet']};
@@ -383,48 +335,42 @@
       }
     }
 
-    // 4) Worker als Fallback – mit neuem Routing
-    var t=ensureThread(); if(!t) return;
-    var bBot=bubble('bot','⏳ …'); t.appendChild(bBot); moveThreadToEnd(true);
+    // 4) Worker als Fallback – mit Routing
+    var bWrap=appendToView(bubble('bot','⏳ …'));
+    var bBot=bWrap && bWrap.querySelector('.ppx-ai-bubble');
     var res=null;
     try{ res=await askWorker(q,cfg); }catch(e){ res=null; }
 
-    // Kein/fehlerhafter Output → Fallback
     if(!res || res.error){ fallbackToContactForm(bBot); return; }
 
-    // Öffnungszeiten-One-Liner ggf. überschreiben
     if(res.tool==='öffnungszeiten' && res.behavior==='one_liner'){
       var h=hoursOneLiner(); if(h) res.text=h;
     }
 
-    // FAQ ohne Detail → striktes Match versuchen
     if(res.tool==='faq' && (!res.detail || !res.detail.category)){
       var m=faqMatchFromTextStrict(q); if(m) res.detail={category:m};
     }
 
-    // Erlaubte Tools laut Allowlist – sonst Fallback
     var allow=(cfg.allowlist||['reservieren','kontakt','öffnungszeiten','speisen','faq']).map(function(s){return String(s).toLowerCase();});
     var tool=(res.tool||'').toLowerCase();
 
-    // Spezieller Wunsch: wenn Worker "kontakt" schickt (z. B. bei Wetter/Out-of-scope) → Fallback ins Kontaktformular
     if(!tool || allow.indexOf(tool)===-1 || tool==='kontakt'){
       fallbackToContactForm(bBot); return;
     }
 
-    // Bot-Antwort anzeigen (falls vorhanden), dann Flow öffnen
-    if(res.text){ bBot.innerHTML=linkify(esc(res.text)); }
+    if(res.text && bBot){ bBot.innerHTML=linkify(esc(res.text)); }
     if(st().activeFlowId && !toolMatchesActive(tool)){ pauseActiveFlow('ai-redirect'); }
     openFlow(tool, res.detail||{});
-    moveThreadToEnd(true);
+    moveThreadToEnd();
   }
 
-  // --- readAI + boot + export ----------------------------------------------
+  // ---------- readAI + boot + export ---------------------------------------
+  function _catMap(n){var o={},c=n&&n.categories;if(!c) return o;
+    Object.keys(c).forEach(function(k){
+      var a=(c[k]&&(c[k].keywords||c[k])); o[k]=Array.isArray(a)?uniq(a):[];
+    }); return o;}
   function readAI(){
     var A=aiCfg()||{},L=A.limits||{},T=A.tone||{},CMP=A.compliance||{},intents=A.intents||{};
-    function catMap(n){var o={},c=n&&n.categories;if(!c) return o;
-      Object.keys(c).forEach(function(k){
-        var a=(c[k]&&(c[k].keywords||c[k])); o[k]=Array.isArray(a)?uniq(a):[];
-      }); return o;}
     var speisenKw = [], speisenItems = [], speisenItemsMap = {};
     try{
       if(intents.speisen){
@@ -449,7 +395,7 @@
       kontakt:(intents.kontakt&&intents.kontakt.keywords)||intents.kontakt||[],
       "öffnungszeiten":(intents["öffnungszeiten"]&&intents["öffnungszeiten"].keywords)||intents["öffnungszeiten"]||[],
       speisen:{ keywords:speisenKw, items:speisenItems, itemsMap:speisenItemsMap },
-      faq:{ categories:catMap(intents.faq) }
+      faq:{ categories:_catMap(intents.faq) }
     };
     var behaviors={
       reservieren:(intents.reservieren&&intents.reservieren.behavior)||"silent",
@@ -482,17 +428,15 @@
   }
 
   function boot(){
-    ensureDock(); ensureThread();
+    ensureDock();
     if(document.readyState==='loading'){
-      document.addEventListener('DOMContentLoaded', function(){ ensureDock(); ensureThread(); }, {once:true});
+      document.addEventListener('DOMContentLoaded', function(){ ensureDock(); }, {once:true});
     }
     try{
       var mo=new MutationObserver(function(){
         var panel=document.getElementById('ppx-panel');
-        if(panel){
-          ensureDock(); ensureThread();
-          if(panel.querySelector('.ppx-ai-dock')){ try{ mo.disconnect(); }catch(e){} }
-        }
+        if(panel && panel.querySelector('.ppx-ai-dock')){ try{ mo.disconnect(); }catch(e){} }
+        else { ensureDock(); }
       });
       mo.observe(document.documentElement||document.body,{childList:true,subtree:true});
       setTimeout(function(){ try{ mo.disconnect(); }catch(e){} },10000);
@@ -500,7 +444,6 @@
     window.addEventListener('click', function(){
       var p=document.getElementById('ppx-panel');
       if(p && p.classList.contains('ppx-open') && !p.querySelector('.ppx-ai-dock')) ensureDock();
-      ensureThread();
     });
   }
 
