@@ -114,191 +114,69 @@
     "vegetarisch": [
       { "id": "falafel", "name": "Falafel-Teller", "name_en": "Falafel Plate", "price": "12,50 €", "info": "Kichererbsenbällchen, Hummus, Salat, Brot.", "info_en": "Chickpea falafel, hummus, salad, bread." },
       { "id": "manti_veg", "name": "Manti Veggie", "name_en": "Veggie Manti", "price": "13,90 €", "info": "Teigtaschen, Joghurt-Knoblauchsauce, Butter-Paprikaöl.", "info_en": "Dumplings, yogurt–garlic sauce, butter–paprika oil." },
-      { "id": "imam", "name": "İmam Bayıldı", "name_en": "İmam Bayıldı", "price": "12,90 €", "info": "Geschmorte Aubergine, Zwiebel, Tomate – kalt.", "info_en": "Braised eggplant, onion, tomato – served cold." }
+      { "id": "imam", "name": "İmam Bayıldı", "name_en": "İmam Bayıldı", "price": "12,90 €", "info": "Geschmorte Aubergine, Zwiebel, Tomate – kalt.", "info_en": "Braised eggplant, onion, tomato — served cold." }
     ],
     "beilagen": [
       { "id": "bulgur", "name": "Bulgur Pilavı", "name_en": "Bulgur Pilaf", "price": "3,90 €", "info": "Hausgemacht.", "info_en": "Homemade." },
       { "id": "reis", "name": "Reis", "name_en": "Rice", "price": "3,90 €", "info": "Butterreis.", "info_en": "Butter rice." },
       { "id": "salat", "name": "Beilagensalat", "name_en": "Side Salad", "price": "4,50 €", "info": "Joghurt- oder Zitronendressing.", "info_en": "Yogurt or lemon dressing." },
       { "id": "brot", "name": "Ofenbrot", "name_en": "Oven Bread", "price": "2,50 €", "info": "Frisch gebacken.", "info_en": "Freshly baked." }
-    ],
-    "getraenke": [
-      { "id": "ayran", "name": "Ayran", "name_en": "Ayran", "price": "2,50 €", "info": "Joghurtgetränk, 0,25 l.", "info_en": "Yogurt drink, 0.25 l." },
-      { "id": "salgam", "name": "Şalgam", "name_en": "Şalgam", "price": "3,20 €", "info": "Fermentiertes Rübchengetränk, 0,33 l.", "info_en": "Fermented turnip beverage, 0.33 l." },
-      { "id": "cay", "name": "Çay (türk. Tee)", "name_en": "Çay (Turkish tea)", "price": "1,90 €", "info": "Im ince belli Glas.", "info_en": "Served in ince-belli glass." },
-      { "id": "raki", "name": "Rakı (2 cl)", "name_en": "Rakı (2 cl)", "price": "4,90 €", "info": "Anisschnaps.", "info_en": "Anise spirit." },
-      { "id": "soft", "name": "Softdrinks", "name_en": "Soft Drinks", "price": "3,20 €", "info": "Cola, Fanta, Sprite – 0,33 l.", "info_en": "Cola, Fanta, Sprite – 0.33 l." },
-      { "id": "wasser", "name": "Mineralwasser", "name_en": "Mineral Water", "price": "2,90 € / 5,50 €", "info": "0,25 / 0,75 l.", "info_en": "0.25 / 0.75 l." }
-    ],
-    "desserts": [
-      { "id": "baklava", "name": "Baklava (3 Stk.)", "name_en": "Baklava (3 pcs)", "price": "5,90 €", "info": "Mit Pistazie, Sirup.", "info_en": "With pistachio, syrup." },
-      { "id": "sutlac", "name": "Sütlaç", "name_en": "Sütlaç (rice pudding)", "price": "5,50 €", "info": "Milchreis aus dem Ofen.", "info_en": "Baked rice pudding." },
-      { "id": "kunefe", "name": "Künefe", "name_en": "Künefe", "price": "7,90 €", "info": "Fadenteig, Käse, warm, Sirup.", "info_en": "Shredded pastry, cheese, warm, syrup." }
     ]
   },
-  "faqs": {
-    "title": "Asmali Konak – FAQ",
-    "title_en": "Asmali Konak – FAQ",
-    "pdfUrl": "./pdf/pizza_papa_faq.pdf",
+  "getraenke": [
+    { "id": "ayran", "name": "Ayran", "name_en": "Ayran", "price": "2,50 €", "info": "Joghurtgetränk, 0,25 l.", "info_en": "Yogurt drink, 0.25 l." },
+    { "id": "salgam", "name": "Şalgam", "name_en": "Şalgam", "price": "3,20 €", "info": "Fermentiertes Rübchengetränk, 0,33 l.", "info_en": "Fermented turnip beverage, 0.33 l." },
+    { "id": "cay", "name": "Çay (türk. Tee)", "name_en": "Çay (Turkish tea)", "price": "1,90 €", "info": "Im ince belli Glas.", "info_en": "Served in ince-belli glass." },
+    { "id": "raki", "name": "Rakı (2 cl)", "name_en": "Rakı (2 cl)", "price": "4,90 €", "info": "Anisschnaps.", "info_en": "Anise spirit." },
+    { "id": "soft", "name": "Softdrinks", "name_en": "Soft Drinks", "price": "3,20 €", "info": "Cola, Fanta, Sprite – 0,33 l.", "info_en": "Cola, Fanta, Sprite – 0.33 l." },
+    { "id": "wasser", "name": "Mineralwasser", "name_en": "Mineral Water", "price": "2,90 € / 5,50 €", "info": "0,25 / 0,75 l.", "info_en": "0.25 / 0.75 l." }
+  ],
+  "desserts": [
+    { "id": "baklava", "name": "Baklava (3 Stk.)", "name_en": "Baklava (3 pcs)", "price": "5,90 €", "info": "Mit Pistazie, Sirup.", "info_en": "With pistachio, syrup." },
+    { "id": "sutlac", "name": "Sütlaç", "name_en": "Sütlaç (rice pudding)", "price": "5,50 €", "info": "Milchreis aus dem Ofen.", "info_en": "Baked rice pudding." },
+    { "id": "kunefe", "name": "Künefe", "name_en": "Künefe", "price": "7,90 €", "info": "Fadenteig, Käse, warm, Sirup.", "info_en": "Shredded pastry, cheese, warm, syrup." }
+  ],
+  "faqs": { "title": "Asmali Konak – FAQ", "title_en": "Asmali Konak – FAQ", "pdfUrl": "./pdf/pizza_papa_faq.pdf",
     "cats": [
-      {
-        "key": "reservierung",
-        "title": "Reservierung",
-        "title_en": "Reservations",
-        "icon": "📞",
+      { "key": "reservierung","title": "Reservierung","title_en": "Reservations","icon": "📞",
         "items": [
-          {
-            "q": "Wie reserviere ich am schnellsten?",
-            "q_en": "What’s the fastest way to reserve?",
-            "a": "Am einfachsten über den Bot (Reservieren) oder telefonisch. Für Gruppen ab 8 Personen bitten wir um kurze telefonische Bestätigung.",
-            "a_en": "Easiest via the bot (Reserve) or by phone. For groups of 8+ please call briefly to confirm.",
-            "special": "contactForm"
-          },
-          {
-            "q": "Bis wann kann ich kostenfrei stornieren?",
-            "q_en": "Until when can I cancel for free?",
-            "a": "Bis 2 Stunden vor Termin – danach bitte kurz durchrufen.",
-            "a_en": "Up to 2 hours before your time slot — after that please give us a quick call."
-          }
-        ]
-      },
-      {
-        "key": "oeffnungszeiten",
-        "title": "Öffnungszeiten",
-        "title_en": "Opening Hours",
-        "icon": "⏰",
+          { "q": "Wie reserviere ich am schnellsten?","q_en": "What’s the fastest way to reserve?","a": "Am einfachsten über den Bot (Reservieren) oder telefonisch. Für Gruppen ab 8 Personen bitten wir um kurze telefonische Bestätigung.","a_en": "Easiest via the bot (Reserve) or by phone. For groups of 8+ please call briefly to confirm.","special": "contactForm" },
+          { "q": "Bis wann kann ich kostenfrei stornieren?","q_en": "Until when can I cancel for free?","a": "Bis 2 Stunden vor Termin – danach bitte kurz durchrufen.","a_en": "Up to 2 hours before your time slot — after that please give us a quick call." }
+        ]},
+      { "key": "oeffnungszeiten","title": "Öffnungszeiten","title_en": "Opening Hours","icon": "⏰",
         "items": [
-          {
-            "q": "Habt ihr heute geöffnet?",
-            "q_en": "Are you open today?",
-            "a": "Die aktuellen Zeiten zeigt dir der Bot live an.",
-            "a_en": "The bot shows today’s opening times live.",
-            "special": "openHours"
-          },
-          {
-            "q": "Feiertage?",
-            "q_en": "Public holidays?",
-            "a": "An Heiligabend geschlossen. Am 25. & 26.12. 20:00–23:59 geöffnet.",
-            "a_en": "Closed on Christmas Eve. Open on Dec 25 & 26 from 20:00–23:59."
-          }
-        ]
-      },
-      {
-        "key": "kueche",
-        "title": "Küche & Allergene",
-        "title_en": "Kitchen & Allergens",
-        "icon": "🫓",
+          { "q": "Habt ihr heute geöffnet?","q_en": "Are you open today?","a": "Die aktuellen Zeiten zeigt dir der Bot live an.","a_en": "The bot shows today’s opening times live.","special": "openHours" },
+          { "q": "Feiertage?","q_en": "Public holidays?","a": "An Heiligabend geschlossen. Am 25. & 26.12. 20:00–23:59 geöffnet.","a_en": "Closed on Christmas Eve. Open on Dec 25 & 26 from 20:00–23:59." }
+        ]},
+      { "key": "kueche","title": "Küche & Allergene","title_en": "Kitchen & Allergens","icon": "🫓",
         "items": [
-          {
-            "q": "Gibt es vegetarische/vegane Optionen?",
-            "q_en": "Do you offer vegetarian/vegan options?",
-            "a": "Ja – u. a. İmam Bayıldı, Falafel-Teller, Pide Ispanaklı; vegan auf Wunsch ohne Joghurt/Butter.",
-            "a_en": "Yes — e.g., İmam Bayıldı, Falafel Plate, Pide with spinach; vegan on request (no yogurt/butter)."
-          },
-          {
-            "q": "Glutenfrei möglich?",
-            "q_en": "Is gluten-free possible?",
-            "a": "Wir arbeiten mit Brot/Teig – Spuren können nicht ausgeschlossen werden.",
-            "a_en": "We work with bread/dough — traces of gluten cannot be excluded."
-          }
-        ]
-      },
-      {
-        "key": "abholung",
-        "title": "Abholung & Lieferung",
-        "title_en": "Pickup & Delivery",
-        "icon": "🚗",
+          { "q": "Gibt es vegetarische/vegane Optionen?","q_en": "Do you offer vegetarian/vegan options?","a": "Ja – u. a. İmam Bayıldı, Falafel-Teller, Pide Ispanaklı; vegan auf Wunsch ohne Joghurt/Butter.","a_en": "Yes — e.g., İmam Bayıldı, Falafel Plate, Pide with spinach; vegan on request (no yogurt/butter)." },
+          { "q": "Glutenfrei möglich?","q_en": "Is gluten-free possible?","a": "Wir arbeiten mit Brot/Teig – Spuren können nicht ausgeschlossen werden.","a_en": "We work with bread/dough — traces of gluten cannot be excluded." }
+        ]},
+      { "key": "abholung","title": "Abholung & Lieferung","title_en": "Pickup & Delivery","icon": "🚗",
         "items": [
-          {
-            "q": "Bietet ihr Abholung an?",
-            "q_en": "Do you offer pickup?",
-            "a": "Ja, ab Bestellung i. d. R. 15–25 Min. Abholzeit.",
-            "a_en": "Yes, usually ready for pickup 15–25 minutes after ordering."
-          },
-          {
-            "q": "Lieferung?",
-            "q_en": "Delivery?",
-            "a": "Aktuell keine eigene Lieferung. Bei Bedarf bitte anrufen – wir beraten gern.",
-            "a_en": "No in-house delivery at the moment. Call us if needed — we’re happy to advise."
-          }
-        ]
-      },
-      {
-        "key": "bezahlung",
-        "title": "Bezahlung",
-        "title_en": "Payment",
-        "icon": "💳",
+          { "q": "Bietet ihr Abholung an?","q_en": "Do you offer pickup?","a": "Ja, ab Bestellung i. d. R. 15–25 Min. Abholzeit.","a_en": "Yes, usually ready for pickup 15–25 minutes after ordering." },
+          { "q": "Lieferung?","q_en": "Delivery?","a": "Aktuell keine eigene Lieferung. Bei Bedarf bitte anrufen – wir beraten gern.","a_en": "No in-house delivery at the moment. Call us if needed — we’re happy to advise." }
+        ]},
+      { "key": "bezahlung","title": "Bezahlung","title_en": "Payment","icon": "💳",
         "items": [
-          {
-            "q": "Welche Zahlarten gibt es?",
-            "q_en": "Which payment methods do you accept?",
-            "a": "Bar, EC/Kreditkarte. Mobile Pay (Apple/Google) in Vorbereitung.",
-            "a_en": "Cash, debit/credit cards. Mobile Pay (Apple/Google) coming soon."
-          },
-          {
-            "q": "Gibt es Gruppen-/Firmenrechnung?",
-            "q_en": "Group/company invoices available?",
-            "a": "Ja, bitte beim Service Bescheid geben.",
-            "a_en": "Yes, please inform our staff."
-          }
-        ]
-      },
-      {
-        "key": "speisenkarte",
-        "title": "Speisenkarte",
-        "title_en": "Menu",
-        "icon": "📜",
+          { "q": "Welche Zahlarten gibt es?","q_en": "Which payment methods do you accept?","a": "Bar, EC/Kreditkarte. Mobile Pay (Apple/Google) in Vorbereitung.","a_en": "Cash, debit/credit cards. Mobile Pay (Apple/Google) coming soon." },
+          { "q": "Gibt es Gruppen-/Firmenrechnung?","q_en": "Group/company invoices available?","a": "Ja, bitte beim Service Bescheid geben.","a_en": "Yes, please inform our staff." }
+        ]},
+      { "key": "speisenkarte","title": "Speisenkarte","title_en": "Menu","icon": "📜",
         "items": [
-          {
-            "q": "Wo finde ich eure Karte?",
-            "q_en": "Where can I find your menu?",
-            "a": "Im Bot unter „Speisen“ sowie als PDF verlinkt.",
-            "a_en": "In the bot under “Dishes” and also linked as PDF."
-          },
-          {
-            "q": "Kinderfreundliche Gerichte?",
-            "q_en": "Kid-friendly dishes?",
-            "a": "Ja – kleine Pide, Döner-Teller klein, Reis & Hähnchen.",
-            "a_en": "Yes — small pide, small döner plate, rice & chicken."
-          }
-        ]
-      },
-      {
-        "key": "kontakt",
-        "title": "Kontakt",
-        "title_en": "Contact",
-        "icon": "✉️",
+          { "q": "Wo finde ich eure Karte?","q_en": "Where can I find your menu?","a": "Im Bot unter „Speisen“ sowie als PDF verlinkt.","a_en": "In the bot under “Dishes” and also linked as PDF." },
+          { "q": "Kinderfreundliche Gerichte?","q_en": "Kid-friendly dishes?","a": "Ja – kleine Pide, Döner-Teller klein, Reis & Hähnchen.","a_en": "Yes — small pide, small döner plate, rice & chicken." }
+        ]},
+      { "key": "kontakt","title": "Kontakt","title_en": "Contact","icon": "✉️",
         "items": [
-          {
-            "q": "Wie kontaktiere ich euch?",
-            "q_en": "How can I contact you?",
-            "a": "Über das Kontaktformular oder telefonisch.",
-            "a_en": "Via the contact form or by phone.",
-            "special": "contactForm"
-          },
-          {
-            "q": "Adresse & Route?",
-            "q_en": "Address & directions?",
-            "a": "Ostheimer Str. 20, 51103 Köln – Klick auf die Adresse öffnet Google Maps.",
-            "a_en": "Ostheimer Str. 20, 51103 Cologne — click the address to open Google Maps."
-          }
-        ]
-      },
-      {
-        "key": "bestellung",
-        "title": "Schnellbestellung",
-        "title_en": "Quick Order",
-        "icon": "⚡",
+          { "q": "Wie kontaktiere ich euch?","q_en": "How can I contact you?","a": "Über das Kontaktformular oder telefonisch.","a_en": "Via the contact form or by phone.","special": "contactForm" },
+          { "q": "Adresse & Route?","q_en": "Address & directions?","a": "Ostheimer Str. 20, 51103 Köln – Klick auf die Adresse öffnet Google Maps.","a_en": "Ostheimer Str. 20, 51103 Cologne — click the address to open Google Maps." }
+        ]},
+      { "key": "bestellung","title": "Schnellbestellung","title_en": "Quick Order","icon": "⚡",
         "items": [
-          {
-            "q": "Kann ich schnell vorbestellen?",
-            "q_en": "Can I place a quick pre-order?",
-            "a": "Kurze Nachricht im Bot mit Uhrzeit & Personenanzahl – wir bestätigen umgehend.",
-            "a_en": "Send a short message in the bot with time & party size — we’ll confirm promptly.",
-            "special": "orderQuick"
-          }
-        ]
-      }
+          { "q": "Kann ich schnell vorbestellen?","q_en": "Can I place a quick pre-order?","a": "Kurze Nachricht im Bot mit Uhrzeit & Personenanzahl – wir bestätigen umgehend.","a_en": "Send a short message in the bot with time & party size — we’ll confirm promptly.","special": "orderQuick" }
+        ]}
     ]
   },
   "AI": {
@@ -306,48 +184,18 @@
     "provider": "openai",
     "model": "gpt-4o-mini",
     "workerUrl": "https://ppx-ai.muciyil.workers.dev",
-    "limits": {
-      "ratePerMin": 15,
-      "dailyCapEur": 5,
-      "maxTokens": 300,
-      "timeoutMs": 8000
-    },
-    "tone": {
-      "voice": "freundlich, direkt, sachlich",
-      "length": "kurz",
-      "emojis": 0,
-      "exclamationsMax": 1,
-      "address": "du"
-    },
-    "languages": ["de", "en"],
+    "limits": { "ratePerMin": 15, "dailyCapEur": 5, "maxTokens": 300, "timeoutMs": 8000 },
+    "tone": { "voice": "freundlich, direkt, sachlich", "length": "kurz", "emojis": 0, "exclamationsMax": 1, "address": "du" },
+    "languages": ["de","en"],
     "fallback": {
-      "message": {
-        "de": "Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?",
-        "en": "This exceeds my ability. Would you like to leave us a message?"
-      },
-      "flow": "contactForm",
-      "step": "email",
-      "skipHeader": true
+      "message": { "de": "Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?", "en": "This exceeds my ability. Would you like to leave us a message?" },
+      "flow": "contactForm", "step": "email", "skipHeader": true
     },
     "intents": {
-      "reservieren": {
-        "keywords": ["reservieren","tisch","buchen","booking","reserve"],
-        "behavior": "silent"
-      },
-      "kontakt": {
-        "keywords": ["kontakt","email","mail","anrufen","telefon","call"],
-        "behavior": "silent"
-      },
-      "öffnungszeiten": {
-        "keywords": ["öffnungszeiten","zeiten","hours","open","geöffnet"],
-        "behavior": "one_liner"
-      },
-      "speisen": {
-        "behavior": "two_liners",
-        "keywords": ["speisen","essen","menu","menü","karte","speisekarte","food","gerichte"],
-        "items": [],
-        "categories": {}
-      },
+      "reservieren": { "keywords": ["reservieren","tisch","buchen","booking","reserve"], "behavior": "silent" },
+      "kontakt": { "keywords": ["kontakt","email","mail","anrufen","telefon","call"], "behavior": "silent" },
+      "öffnungszeiten": { "keywords": ["öffnungszeiten","zeiten","hours","open","geöffnet"], "behavior": "one_liner" },
+      "speisen": { "behavior": "two_liners", "keywords": ["speisen","essen","menu","menü","karte","speisekarte","food","gerichte"], "items": [], "categories": {} },
       "faq": {
         "behavior": "two_liners",
         "categories": {
@@ -364,7 +212,7 @@
     },
     "knowledgeHints": {
       "prioritize": ["hours","menu","faq"],
-      "forbid": ["andere_restaurants","wetter","news","preise_erfinden","medizin","recht","smalltalk"],
+      "forbid": ["andere_restaurants","wetter","news","preise_erfinden","medizin","recht"], 
       "contextShort": "Türkisches Restaurant in Köln. Antworten nur aus Bot/Website-Daten."
     },
     "compliance": {
@@ -373,80 +221,6 @@
       "imprintUrl": "/impressum",
       "disclaimer": "Keine Rechts- oder Medizinberatung."
     },
-    "systemPrompt": "Sprich ultrakurz (1 Satz; FAQ/Speisen max. 2 Sätze). Sprich nur über Inhalte aus bot.json/aktiven Flows/Website. Keine Infos über andere Anbieter/Branchen. Keine Preise/Allergene erfinden. Reservieren & Kontakt: silent (Flows übernehmen). Öffnungszeiten: one_liner mit Live-Daten. FAQ/Speisen: two_liners, ggf. passenden Flow öffnen. Sprache spiegeln (DE/EN). Bei fehlender Info: kurz sagen und Kontaktformular öffnen. Keine Smalltalk/Wetter/News."
-  },
-  "AI": {
-    "enabled": true,
-    "provider": "openai",
-    "model": "gpt-4o-mini",
-    "workerUrl": "https://ppx-ai.muciyil.workers.dev",
-    "limits": {
-      "ratePerMin": 15,
-      "dailyCapEur": 5,
-      "maxTokens": 300,
-      "timeoutMs": 8000
-    },
-    "tone": {
-      "voice": "freundlich, direkt, sachlich",
-      "length": "kurz",
-      "emojis": 0,
-      "exclamationsMax": 1,
-      "address": "du"
-    },
-    "languages": ["de", "en"],
-    "fallback": {
-      "message": {
-        "de": "Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?",
-        "en": "This exceeds my ability. Would you like to leave us a message?"
-      },
-      "flow": "contactForm",
-      "step": "email",
-      "skipHeader": true
-    },
-    "intents": {
-      "reservieren": {
-        "keywords": ["reservieren","tisch","buchen","booking","reserve"],
-        "behavior": "silent"
-      },
-      "kontakt": {
-        "keywords": ["kontakt","email","mail","anrufen","telefon","call"],
-        "behavior": "silent"
-      },
-      "öffnungszeiten": {
-        "keywords": ["öffnungszeiten","zeiten","hours","open","geöffnet"],
-        "behavior": "one_liner"
-      },
-      "speisen": {
-        "behavior": "two_liners",
-        "keywords": ["speisen","essen","menu","menü","karte","speisekarte","food","gerichte"],
-        "items": [],
-        "categories": {}
-      },
-      "faq": {
-        "behavior": "two_liners",
-        "categories": {
-          "reservierung": { "keywords": ["stornieren","storno","frist","wie reservieren","telefonisch reservieren"] },
-          "oeffnungszeiten": { "keywords": ["feiertage","heiligabend","weihnachten","heute offen"] },
-          "kueche": { "keywords": ["allergen","allergene","gluten","laktose","vegan","vegetarisch"] },
-          "abholung": { "keywords": ["abholen","pickup","mitnehmen","takeaway","lieferung","delivery"] },
-          "bezahlung": { "keywords": ["zahlen","zahlung","karte","bar","apple pay","google pay"] },
-          "speisenkarte": { "keywords": ["karte","menu","menü","menue","speisekarte","kinder"] },
-          "kontakt": { "keywords": ["adresse","route","anreise","maps","telefonnummer"] },
-          "bestellung": { "keywords": ["vorbestellen","pre-order","schnellbestellung"] }
-        }
-      }
-    },
-    "knowledgeHints": {
-      "prioritize": ["hours","menu","faq"],
-      "forbid": ["andere_restaurants","wetter","news","preise_erfinden","medizin","recht","smalltalk"],
-      "contextShort": "Türkisches Restaurant in Köln. Antworten nur aus Bot/Website-Daten."
-    },
-    "compliance": {
-      "consentText": "Deine Frage wird an unseren KI-Dienst gesendet, um dir zu antworten. Keine sensiblen Daten eingeben.",
-      "privacyUrl": "/datenschutz",
-      "imprintUrl": "/impressum",
-      "disclaimer": "Keine Rechts- oder Medizinberatung."
-    },
-    "systemPrompt": "Sprich ultrakurz (1 Satz; FAQ/Speisen max. 2 Sätze). Sprich nur über Inhalte aus bot.json/aktiven Flows/Website. Keine Infos über andere Anbieter/Branchen. Keine Preise/Allergene erfinden. Reservieren & Kontakt: silent (Flows übernehmen). Öffnungszeiten: one_liner mit Live-Daten. FAQ/Speisen: two_liners, ggf. passenden Flow öffnen. Sprache spiegeln (DE/EN). Bei fehlender Info: kurz sagen und Kontaktformular öffnen. Keine Smalltalk/Wetter/News."
-  },
+    "systemPrompt": "Sprich ultrakurz (1 Satz; FAQ/Speisen max. 2 Sätze). Sprich nur über Inhalte aus bot.json/aktiven Flows/Website. Keine Infos über andere Anbieter/Branchen. Keine Preise/Allergene erfinden. Reservieren & Kontakt: silent (Flows übernehmen). Öffnungszeiten: one_liner mit Live-Daten. FAQ/Speisen: two_liners, ggf. passenden Flow öffnen. Sprache spiegeln (DE/EN). Kurze Grüße sind ok; keine langen Smalltalk-Dialoge. Bei fehlender Info: 1 Satz Unknown + optional Kontakt anbieten."
+  }
 }

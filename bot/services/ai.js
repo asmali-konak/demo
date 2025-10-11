@@ -1,10 +1,11 @@
 /* ============================================================================
-   PPX AI Service – v2.5.1 (Order-Stable + Footer-aware Dock)
-   Änderungen:
-   - KEIN eigener Thread-Container (#ppx-ai-thread) mehr.
-   - KEIN Reparenting/Reorder: Neue Bubbles werden direkt in #ppx-v appendet.
-   - moveThreadToEnd(): nur Scroll-to-bottom (kein appendChild).
-   - Dock-Platzierung: direkt nach #ppx-v ODER vor Footer (.ppx-brandbar / Elements-Footer).
+   PPX AI Service – v2.7.3 (Fix: „Oder …“ komplett verlinken)
+   Änderungen (gezielt, kein Layout-Flickern):
+   - Unknown-Dialog: Text auf „…unser Kontaktformular…“ geändert.
+   - Optionen: „Kontaktformular öffnen“ + „Nein, danke“ (beide ppx-secondary).
+   - Nach „Nein, danke“: Bot-Bubble im gleichen Stil, 2-zeilig + Link ins Hauptmenü
+     (gesamter Satz „Oder klick hier …“ ist jetzt der Link).
+   - Rest unverändert (Consent-Order, Routing, Prematches etc.).
 ============================================================================ */
 (function () {
   'use strict';
@@ -18,6 +19,8 @@
       if(k==='text') n.textContent=v;
       else if(k==='html') n.innerHTML=v;
       else if(k==='style'&&v&&typeof v==='object') Object.assign(n.style,v);
+      else if(k.slice(0,2)==='on'&&typeof v==='function') n.addEventListener(k.slice(2),v);
+      else if(k==='className'||k==='class') n.setAttribute('class',v);
       else n.setAttribute(k,v);
     });
     for(var i=2;i<arguments.length;i++){var c=arguments[i];
@@ -85,13 +88,13 @@
   function appendToView(node){
     var v=viewEl(); if(!v) return null;
     v.appendChild(node);
-    moveThreadToEnd(); // nur scrollen
+    moveThreadToEnd();
     return node;
   }
   function bubble(side,html){
     var wrap=el('div',{class:'ppx-ai-bwrap'});
     var b=el('div',{class:'ppx-ai-bubble',style:{
-      display:'inline-block', /* wichtig: damit text-align:right im Wrapper greift */
+      display:'inline-block',
       margin:'8px 0',padding:'10px 12px',borderRadius:'12px',
       border:'1px solid var(--ppx-bot-chip-border, rgba(255,255,255,.18))',
       background: side==='user' ? 'rgba(255,255,255,.10)' : 'var(--ppx-bot-chip, rgba(255,255,255,.06))',
@@ -99,7 +102,6 @@
     }}); if(side==='user') wrap.style.textAlign='right';
     b.innerHTML=html; wrap.appendChild(b); return wrap;
   }
-  // User-Echo: jetzt ebenfalls als Bubble
   function userEcho(text){
     var wrap = bubble('user', esc(text));
     return appendToView(wrap);
@@ -125,21 +127,22 @@
       padding:'8px 10px',marginTop:'8px'}},txt);
     appendToView(n);
   }
+
   // ---------- Dock (Input/Send) ---------------------------------------------
-  var $dock,$inp,$send,$consent;
+  var $dock,$inp,$send,$consentInline;
   function ensureDock(){
     var panel=document.getElementById('ppx-panel');
     if(!panel) return false;
 
     var exist=panel.querySelector('.ppx-ai-dock');
     if(exist){
-      $dock=exist; $inp=$dock.querySelector('.ai-inp'); $send=$dock.querySelector('.ai-send'); $consent=$dock.querySelector('.ai-consent');
+      $dock=exist; $inp=$dock.querySelector('.ai-inp'); $send=$dock.querySelector('.ai-send'); $consentInline=$dock.querySelector('.ai-consent');
       return true;
     }
 
     if(!document.getElementById('ppx-ai-inside-style')){
       var css=("#ppx-panel .ppx-ai-dock{display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--ppx-bot-header,#0f3a2f);border-top:1px solid rgba(0,0,0,.25)}\
-#ppx-panel .ppx-ai-dock .ai-consent{font-size:13px;line-height:1.4;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:8px 10px}\
+#ppx-panel .ppx-ai-dock .ai-consent{font-size:13px;line-height:1.4;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:8px 10px;display:none}\
 #ppx-panel .ppx-ai-dock .ai-consent a{color:#fff;text-decoration:underline}\
 #ppx-panel .ppx-ai-dock .ai-row{display:flex;gap:10px;align-items:center}\
 #ppx-panel .ppx-ai-dock .ai-inp{flex:1;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#f7faf8;font-size:16px;outline:none}\
@@ -150,55 +153,90 @@
     }
 
     var cfgAI=aiCfg();
-    $consent=el('div',{class:'ai-consent',role:'note',style:{display:'none'}});
+    $consentInline=el('div',{class:'ai-consent',role:'note'});
     var txt=esc(cfgAI.compliance && cfgAI.compliance.consentText || 'Deine Frage wird an unseren KI-Dienst gesendet.');
     txt+=' <a href="'+esc((cfgAI.compliance&&cfgAI.compliance.privacyUrl)||'/datenschutz')+'" target="_blank" rel="noopener">Datenschutz</a> · ';
     txt+='<a href="'+esc((cfgAI.compliance&&cfgAI.compliance.imprintUrl)||'/impressum')+'" target="_blank" rel="noopener">Impressum</a> · ';
     txt+=esc((cfgAI.compliance&&cfgAI.compliance.disclaimer)||'Keine Rechts- oder Medizinberatung.');
-    $consent.innerHTML=txt;
+    $consentInline.innerHTML=txt;
 
     $inp=el('input',{type:'text',class:'ai-inp',placeholder:'Frag unseren KI-Assistenten :)','aria-label':'KI-Frage eingeben'});
     $send=el('button',{type:'button',class:'ai-send'},'Senden');
     var row=el('div',{class:'ai-row'},$inp,$send);
-    $dock=el('div',{class:'ppx-ai-dock'},$consent,row);
+    $dock=el('div',{class:'ppx-ai-dock'},$consentInline,row);
 
-    // ▼▼ Footer-aware Platzierung:
-    // 1) Wenn Footer existiert (ppx-brandbar oder bekannter Elements-Footer), Dock direkt DAVOR einfügen.
-    // 2) Sonst: Dock direkt NACH #ppx-v einfügen, wenn möglich.
-    // 3) Fallback: ans Panel-Ende appenden.
     var v = viewEl();
     var footer = panel.querySelector('.ppx-brandbar, .ppx-elements-footer, .ai-elements-footer, .ppx-footer, footer');
     try{
-      if(footer){
-        panel.insertBefore($dock, footer);
-      }else if(v && v.parentNode===panel && v.nextSibling){
-        panel.insertBefore($dock, v.nextSibling);
-      }else if(v && v.parentNode===panel){
-        // v ist das letzte – dann hinterher
-        panel.appendChild($dock);
-      }else{
-        panel.appendChild($dock);
-      }
+      if(footer){ panel.insertBefore($dock, footer); }
+      else if(v && v.parentNode===panel && v.nextSibling){ panel.insertBefore($dock, v.nextSibling); }
+      else if(v && v.parentNode===panel){ panel.appendChild($dock); }
+      else{ panel.appendChild($dock); }
     }catch(e){ panel.appendChild($dock); }
 
     $inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); }});
     $send.addEventListener('click',send);
     return true;
   }
-  // ---------- Consent & Worker ----------------------------------------------
-  var _consented=false;
-  function ensureConsent(){
-    var cfg=aiCfg(); if(_consented){ if($consent) $consent.style.display='none'; return true; }
-    if($consent){ $consent.style.display='block'; } return false;
+  // ---------- Consent (persist) ---------------------------------------------
+  var _consented=false, _pendingQ=null;
+  function loadConsent(){
+    try{ _consented = (localStorage.getItem('ppx_ai_consent')==='true'); }catch(e){ _consented=false; }
+    return _consented;
   }
-  function askWorker(question,cfg){
-    var meta={provider:cfg.provider,model:cfg.model,maxTokens:(cfg.limits&&cfg.limits.maxTokens)||300,timeoutMs:(cfg.limits&&cfg.limits.timeoutMs)||8000,
-              systemPrompt:cfg.systemPrompt,allowlist:cfg.allowlist,forbid:cfg.forbid,
-              behaviors:cfg.behaviors,intentMap:cfg.intentMap};
-    meta.brand=(PPX.data&&PPX.data.cfg&&PPX.data.cfg().brand)||''; meta.langs=cfg.languages||['de','en'];
-    var url=(cfg.workerUrl||'').replace(/\/+$/,''); if(!/\/ask-ai$/.test(url)) url+='/ask-ai';
-    return fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
-      body:JSON.stringify({question:String(question||'').slice(0,2000),meta:meta})}).then(function(r){return r.json();});
+  function saveConsent(v){
+    _consented=!!v;
+    try{
+      if(v) localStorage.setItem('ppx_ai_consent','true');
+      else localStorage.removeItem('ppx_ai_consent');
+    }catch(e){}
+  }
+  // Consent-Block im Chat (Flow-Optik), keine Styles verändert
+  function renderConsentBlock(originalQ){
+    var I=PPX.i18n||{}, t=(I&&I.t)?I.t:function(k,fb){return fb||k;};
+    var pick=(I&&I.pick)?I.pick:function(v){return (v&&typeof v==='object')?(v.de||v.en||''):v;};
+    var A=aiCfg()||{}, C=A.compliance||{};
+    _pendingQ = String(originalQ||'').slice(0,2000);
+
+    var block = (PPX.ui && PPX.ui.block) ? PPX.ui.block('KI-Einwilligung',{blockKey:'ai-consent',maxWidth:'640px'}) : el('div',{'class':'ppx-bot'},'KI-Einwilligung');
+    if(!block.parentNode) appendToView(block);
+
+    var msg = esc(C.consentText||'Deine Frage wird an unseren KI-Dienst gesendet. Keine sensiblen Daten eingeben.');
+    var links = ' <a class="ppx-link" href="'+esc(C.privacyUrl||'/datenschutz')+'" target="_blank" rel="noopener">Datenschutz</a> · '
+              + '<a class="ppx-link" href="'+esc(C.imprintUrl||'/impressum')+'" target="_blank" rel="noopener">Impressum</a> · '
+              + esc(C.disclaimer||'Keine Rechts- oder Medizinberatung.');
+    var p = el('div',{'class':'ppx-m', 'html': msg + ' ' + links});
+    block.appendChild(p);
+
+    var row = (PPX.ui && PPX.ui.row) ? PPX.ui.row() : el('div',{'class':'ppx-row'});
+    var agreeLbl = {de:'Zustimmen & fortfahren', en:'Agree & continue'};
+    var declineLbl= {de:'Ablehnen',              en:'Decline'};
+    var agreeBtn = (PPX.ui&&PPX.ui.btn)? PPX.ui.btn(agreeLbl, onAgree, 'ppx-cta','✅') : el('button',{class:'ppX-b ppx-cta',onclick:onAgree}, pick(agreeLbl));
+    var noBtn    = (PPX.ui&&PPX.ui.btn)? PPX.ui.btn(declineLbl,onDecline,'ppx-secondary','✖️') : el('button',{class:'ppx-b ppx-secondary',onclick:onDecline}, pick(declineLbl));
+
+    row.appendChild(agreeBtn); row.appendChild(noBtn);
+    block.appendChild(row);
+    PPX.ui && PPX.ui.keepBottom && PPX.ui.keepBottom();
+
+    function removeConsentBlockOnly(){
+      try{
+        var v=viewEl(); if(!v) return;
+        var last = v.querySelector('[data-block="ai-consent"]');
+        if(last && last.parentNode && v.contains(last)) last.parentNode.removeChild(last);
+      }catch(e){}
+    }
+
+    function onAgree(){
+      saveConsent(true);
+      var q=_pendingQ; _pendingQ=null;
+      removeConsentBlockOnly();
+      if(q){ doWorker(q); }
+    }
+    function onDecline(){
+      saveConsent(false);
+      showNote('Ohne Einwilligung können wir hier keine KI-Antwort senden.');
+      PPX.ui && PPX.ui.keepBottom && PPX.ui.keepBottom();
+    }
   }
 
   // ---------- Flow Helpers ---------------------------------------------------
@@ -268,36 +306,94 @@
     return null;
   }
 
-  // ---------- Fallback → Kontaktformular ------------------------------------
-  function fallbackToContactForm(botBubble){
-    try{
-      var A=aiCfg()||{}, L=nowLang();
-      var msg=(A.fallback && A.fallback.message && (A.fallback.message[L]||A.fallback.message.de)) ||
-              'Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?';
-      if(botBubble){ botBubble.innerHTML=esc(msg); }
-      else { appendToView(bubble('bot',esc(msg))); }
-      if(st().activeFlowId && !toolMatchesActive('contactForm')){ pauseActiveFlow('ai-fallback'); }
-      var step=(A.fallback && A.fallback.step)||'email';
-      var skip=(A.fallback && A.fallback.skipHeader)!==false; // default true
-      openFlow('contactForm',{ startAt: step, skipHeader: skip });
-      moveThreadToEnd();
-    }catch(e){}
+  // ---------- Worker + Unknown-Fallback -------------------------------------
+  function askWorker(question,cfg){
+    var meta={provider:cfg.provider,model:cfg.model,maxTokens:(cfg.limits&&cfg.limits.maxTokens)||300,timeoutMs:(cfg.limits&&cfg.limits.timeoutMs)||8000,
+              systemPrompt:cfg.systemPrompt,allowlist:cfg.allowlist,forbid:cfg.forbid,
+              behaviors:cfg.behaviors,intentMap:cfg.intentMap};
+    meta.brand=(PPX.data&&PPX.data.cfg&&PPX.data.cfg().brand)||''; meta.langs=cfg.languages||['de','en'];
+    var url=(cfg.workerUrl||'').replace(/\/+$/,''); if(!/\/ask-ai$/.test(url)) url+='/ask-ai';
+    return fetch(url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({question:String(question||'').slice(0,2000),meta:meta})}).then(function(r){return r.json();});
   }
 
-  // ---------- send() ---------------------------------------------------------
+  function offerContactChoice(baseBubble){
+    var L=nowLang();
+    var msg = (L==='en')
+      ? "I don't have info on that here. Should I open our contact form for you?"
+      : "Dazu habe ich hier keine Infos. Soll ich dir unser Kontaktformular öffnen?";
+    if(baseBubble){ baseBubble.innerHTML=esc(msg); }
+
+    var row = (PPX.ui&&PPX.ui.row)? PPX.ui.row() : el('div',{'class':'ppx-row'});
+    var yesLbl={de:'Ja, Kontaktformular öffnen', en:'Open contact form'};
+    var noLbl ={de:'Nein, danke',           en:'No, thanks'};
+
+    function onYes(){ openFlow('contactForm',{ startAt:'email', skipHeader:true }); }
+    function onNo (){
+      var text = (L==='en')
+        ? "Alright! Feel free to ask me something else.<br><a href='#' class='ppx-link' onclick='PPX.ui.goHome();return false;'>Or click here to return to the main menu!</a>"
+        : "Alles klar! Frag mich gern etwas anderes.<br><a href='#' class='ppx-link' onclick='PPX.ui.goHome();return false;'>Oder klick hier um ins Hauptmenü zu kommen!</a>";
+      appendToView(bubble('bot', text));
+      PPX.ui && PPX.ui.keepBottom && PPX.ui.keepBottom();
+    }
+
+    var y=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(yesLbl,onYes,'ppx-secondary','✉️') : el('button',{class:'ppx-b ppx-secondary',onclick:onYes},(L==='en'?yesLbl.en:yesLbl.de));
+    var n=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(noLbl ,onNo ,'ppx-secondary','❌') : el('button',{class:'ppx-b ppx-secondary',onclick:onNo},(L==='en'?noLbl.en:noLbl.de));
+
+    var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{blockKey:'unknown-choice'}) : el('div',{'class':'ppx-bot'});
+    row.appendChild(y); row.appendChild(n); blk.appendChild(row); appendToView(blk);
+  }
+  // ---------- doWorker(): Routing mit „Text-ohne-Tool“ ----------------------
+  async function doWorker(q){
+    var cfg=aiCfg();
+    var bWrap=appendToView(bubble('bot','⏳ …'));
+    var bBot=bWrap && bWrap.querySelector('.ppx-ai-bubble');
+    var res=null;
+    try{ res=await askWorker(q,cfg); }catch(e){ res=null; }
+
+    // Provider-/Netzfehler → echter Fallback (mit Text + Formular)
+    if(!res || res.error){ fallbackToContactForm(bBot); return; }
+
+    // Öffnungszeiten one-liner ggf. local zusammenfassen
+    if(res.tool==='öffnungszeiten' && res.behavior==='one_liner'){
+      var h=hoursOneLiner(); if(h) res.text=h;
+    }
+    // FAQ Kategorie aus strengem Map ergänzen
+    if(res.tool==='faq' && (!res.detail || !res.detail.category)){
+      var m=faqMatchFromTextStrict(q); if(m) res.detail={category:m};
+    }
+
+    var allow=(cfg.allowlist||['reservieren','kontakt','öffnungszeiten','speisen','faq']).map(function(s){return String(s).toLowerCase();});
+    var tool=(res.tool||'').toLowerCase();
+
+    // 1) KI liefert NUR Text → Text anzeigen, fertig (kein Kontakt)
+    if(res.text && !tool){
+      if(bBot){ bBot.innerHTML=linkify(esc(res.text)); }
+      moveThreadToEnd(); return;
+    }
+
+    // 2) Tool unzulässig/leer ODER „kontakt“ (vom Modell fälschlich geraten) → Unknown-Frage
+    if(!tool || allow.indexOf(tool)===-1 || tool==='kontakt'){
+      offerContactChoice(bBot);
+      return;
+    }
+
+    // 3) Normale Bot-Antwort + ggf. Flow öffnen
+    if(res.text && bBot){ bBot.innerHTML=linkify(esc(res.text)); }
+    if(st().activeFlowId && !toolMatchesActive(tool)){ pauseActiveFlow('ai-redirect'); }
+    openFlow(tool, res.detail||{});
+    moveThreadToEnd();
+  }
+  // ---------- send(): Prematches → ggf. Consent → Worker --------------------
   async function send(){
     ensureDock(); if(!$inp) return;
     var q=String($inp.value||'').trim(); if(!q) return;
-
-    if(!_consented){ if(!ensureConsent()){ _consented=true; if($consent) $consent.style.display='none'; } }
     if(!allowHit()){ showNote('Bitte kurz warten ⏳'); return; }
 
     $inp.value='';
     userEcho(q);
 
-    var cfg=aiCfg();
-
-    // 1) Prematch: SPEISEN
+    // 1) Prematch: SPEISEN (Kategorie/Item)
     try{
       var DSH=dishes(), cats=Object.keys(DSH||{});
       for(var i=0;i<cats.length;i++){
@@ -325,7 +421,7 @@
       }
     }catch(e){}
 
-    // 3) Statische Intents
+    // 3) Statische Intents (reservieren/kontakt/öffnungszeiten)
     var intents={reservieren:['reservieren','tisch','buchen','booking','reserve'],
                  kontakt:['kontakt','email','mail','anrufen','telefon','call'],
                  'öffnungszeiten':['öffnungszeiten','zeiten','hours','open','geöffnet']};
@@ -336,34 +432,16 @@
       }
     }
 
-    // 4) Worker als Fallback – mit Routing
-    var bWrap=appendToView(bubble('bot','⏳ …'));
-    var bBot=bWrap && bWrap.querySelector('.ppx-ai-bubble');
-    var res=null;
-    try{ res=await askWorker(q,cfg); }catch(e){ res=null; }
-
-    if(!res || res.error){ fallbackToContactForm(bBot); return; }
-
-    if(res.tool==='öffnungszeiten' && res.behavior==='one_liner'){
-      var h=hoursOneLiner(); if(h) res.text=h;
+    // 4) Erster echter KI-Call → Consent-Gate
+    if(!_consented && !loadConsent()){
+      renderConsentBlock(q);
+      return;
     }
 
-    if(res.tool==='faq' && (!res.detail || !res.detail.category)){
-      var m=faqMatchFromTextStrict(q); if(m) res.detail={category:m};
-    }
-
-    var allow=(cfg.allowlist||['reservieren','kontakt','öffnungszeiten','speisen','faq']).map(function(s){return String(s).toLowerCase();});
-    var tool=(res.tool||'').toLowerCase();
-
-    if(!tool || allow.indexOf(tool)===-1 || tool==='kontakt'){
-      fallbackToContactForm(bBot); return;
-    }
-
-    if(res.text && bBot){ bBot.innerHTML=linkify(esc(res.text)); }
-    if(st().activeFlowId && !toolMatchesActive(tool)){ pauseActiveFlow('ai-redirect'); }
-    openFlow(tool, res.detail||{});
-    moveThreadToEnd();
+    // 5) KI-Worker
+    doWorker(q);
   }
+
   // ---------- readAI + boot + export ---------------------------------------
   function _catMap(n){var o={},c=n&&n.categories;if(!c) return o;
     Object.keys(c).forEach(function(k){
@@ -417,7 +495,7 @@
       languages:Array.isArray(A.languages)?A.languages:['de','en'],
       behaviors:behaviors,intentMap:intentMap,
       allowlist:["reservieren","kontakt","öffnungszeiten","speisen","faq"],
-      forbid:Array.isArray(H.forbid)?H.forbid:["andere_restaurants","wetter","news","preise_erfinden","medizin","recht","smalltalk"],
+      forbid:Array.isArray(H.forbid)?H.forbid:["andere_restaurants","wetter","news","preise_erfinden","medizin","recht"],
       knowledge:{prioritize:Array.isArray(H.prioritize)?H.prioritize:["hours","menu","faq"],contextShort:H.contextShort||""},
       compliance:{consentText:(CMP.consentText||"Deine Frage wird an unseren KI-Dienst gesendet. Keine sensiblen Daten eingeben."),
                   privacyUrl:CMP.privacyUrl||"/datenschutz",imprintUrl:CMP.imprintUrl||"/impressum",
@@ -428,6 +506,7 @@
   }
 
   function boot(){
+    loadConsent();
     ensureDock();
     if(document.readyState==='loading'){
       document.addEventListener('DOMContentLoaded', function(){ ensureDock(); }, {once:true});
