@@ -47,6 +47,7 @@
   },
   "cfg": {
     "brand": "Asmali Konak",
+    "tagline": "Authentische türkische Küche in Köln-Kalk – Pide, Kebap & Meze.",
     "phone": "XXXX / XXXXXXXX",
     "email": "muciyil@gmail.com",
     "address": "Ostheimer Str. 20, 51103 Köln",
@@ -61,11 +62,11 @@
     ],
     "OPEN": { "0": ["16:00","20:59"], "1": ["12:00","22:59"], "2": ["12:00","22:59"], "3": ["12:00","22:59"], "4": ["12:00","22:59"], "5": ["12:00","22:59"], "6": ["12:00","00:59"] },
     "BUCKETS": { "mittag": ["12:00","17:00"], "frueh": ["17:30","20:30"], "spaet": ["20:30","23:59"] },
-    "menuOrder": ["meze","pide","kebap","guevec","vegetarisch","beilagen","getraenke","desserts"],
-    "menuPdf": "./pdf/speisekarte_test.pdf",
-    "faqPdf": "./pdf/pizza_papa_faq.pdf",
     "orderUrl": "",
     "i18n": { "enabled": ["de","en"], "default": "de" },
+    "menuPdf": "./pdf/speisekarte_test.pdf",
+    "faqPdf": "./pdf/pizza_papa_faq.pdf",
+    "menuOrder": ["meze","pide","kebap","guevec","vegetarisch","beilagen","getraenke","desserts"],
     "menuTitles": {
       "meze": { "de": "Meze", "en": "Meze (Starters)" },
       "pide": { "de": "Pide", "en": "Pide" },
@@ -105,14 +106,8 @@
       "de": "Alles klar! Frag mich gern etwas anderes. Oder klick hier, um ins Hauptmenü zu kommen!",
       "en": "All right! Feel free to ask something else. Or click here to return to the main menu!"
     },
-    "smalltalkThanks": {
-      "de": "Sehr gern! Willst du noch etwas wissen?",
-      "en": "You’re welcome! Anything else I can help with?"
-    },
-    "smalltalkBye": {
-      "de": "Bis bald 👋 Komm gern wieder vorbei!",
-      "en": "See you soon 👋 Come back anytime!"
-    },
+    "smalltalkThanks": { "de": "Sehr gern! Willst du noch etwas wissen?", "en": "You’re welcome! Anything else I can help with?" },
+    "smalltalkBye": { "de": "Bis bald 👋 Komm gern wieder vorbei!", "en": "See you soon 👋 Come back anytime!" },
     "capability": {
       "de": "Ich helfe dir rund um unser Restaurant – z. B. mit Speisekarte, Öffnungszeiten oder Reservierungen.",
       "en": "I can help with everything about our restaurant — menu, opening hours, or reservations."
@@ -145,7 +140,7 @@
       { "id": "adana", "name": "Adana Kebap (pikant)", "name_en": "Adana Kebab (spicy)", "price": "15,90 €", "info": "Gegrilltes Lamm-Rinderhack, Bulgur, Salat, Cacık.", "info_en": "Grilled lamb–beef mince, bulgur, salad, cacık." },
       { "id": "urfa", "name": "Urfa Kebap (mild)", "name_en": "Urfa Kebab (mild)", "price": "15,90 €", "info": "Mild gewürzt, Bulgur, Grillgemüse.", "info_en": "Mild seasoning, bulgur, grilled vegetables." },
       { "id": "sis_tavuk", "name": "Tavuk Şiş", "name_en": "Chicken Şiş", "price": "14,90 €", "info": "Hähnchenspieß, Reis, Salat.", "info_en": "Chicken skewer, rice, salad." },
-      { "id": "sis_kuzu", "name": "Kuzu Şiş", "name_en": "Lamb Şiş", "price": "18,90 €", "info": "Lammspieß, Bulgur, gegrillte Tomate.", "info_en": "Lamb skewer, bulgur, grilled tomato." },
+      { "id": "sis_kuzu", "name": "Kuzu Şiş", "price": "18,90 €", "name_en": "Lamb Şiş", "info": "Lammspieß, Bulgur, gegrillte Tomate.", "info_en": "Lamb skewer, bulgur, grilled tomato." },
       { "id": "iskender", "name": "İskender", "name_en": "İskender", "price": "16,90 €", "info": "Döner auf Brot, Tomatensauce, Joghurt, Butter.", "info_en": "Doner on bread, tomato sauce, yogurt, butter." }
     ],
     "guevec": [
@@ -189,19 +184,8 @@
         "title_en": "Reservations",
         "icon": "📞",
         "items": [
-          {
-            "q": "Wie reserviere ich am schnellsten?",
-            "q_en": "What’s the fastest way to reserve?",
-            "a": "Am einfachsten über den Bot (Reservieren) oder telefonisch. Für Gruppen ab 8 Personen bitten wir um kurze telefonische Bestätigung.",
-            "a_en": "Easiest via the bot (Reserve) or by phone. For groups of 8+ please call briefly to confirm.",
-            "special": "contactForm"
-          },
-          {
-            "q": "Bis wann kann ich kostenfrei stornieren?",
-            "q_en": "Until when can I cancel for free?",
-            "a": "Bis 2 Stunden vor Termin – danach bitte kurz durchrufen.",
-            "a_en": "Up to 2 hours before your time slot — after that please give us a quick call."
-          }
+          { "q": "Wie reserviere ich am schnellsten?", "q_en": "What’s the fastest way to reserve?", "a": "Am einfachsten über den Bot (Reservieren) oder telefonisch. Für Gruppen ab 8 Personen bitten wir um kurze telefonische Bestätigung.", "a_en": "Easiest via the bot (Reserve) or by phone. For groups of 8+ please call briefly to confirm.", "special": "contactForm" },
+          { "q": "Bis wann kann ich kostenfrei stornieren?", "q_en": "Until when can I cancel for free?", "a": "Bis 2 Stunden vor Termin – danach bitte kurz durchrufen.", "a_en": "Up to 2 hours before your time slot — after that please give us a quick call." }
         ]
       },
       {
@@ -210,19 +194,8 @@
         "title_en": "Opening Hours",
         "icon": "⏰",
         "items": [
-          {
-            "q": "Habt ihr heute geöffnet?",
-            "q_en": "Are you open today?",
-            "a": "Die aktuellen Zeiten zeigt dir der Bot live an.",
-            "a_en": "The bot shows today’s opening times live.",
-            "special": "openHours"
-          },
-          {
-            "q": "Feiertage?",
-            "q_en": "Public holidays?",
-            "a": "An Heiligabend geschlossen. Am 25. & 26.12. 20:00–23:59 geöffnet.",
-            "a_en": "Closed on Christmas Eve. Open on Dec 25 & 26 from 20:00–23:59."
-          }
+          { "q": "Habt ihr heute geöffnet?", "q_en": "Are you open today?", "a": "Die aktuellen Zeiten zeigt dir der Bot live an.", "a_en": "The bot shows today’s opening times live.", "special": "openHours" },
+          { "q": "Feiertage?", "q_en": "Public holidays?", "a": "An Heiligabend geschlossen. Am 25. & 26.12. 20:00–23:59 geöffnet.", "a_en": "Closed on Christmas Eve. Open on Dec 25 & 26 from 20:00–23:59." }
         ]
       },
       {
@@ -231,18 +204,8 @@
         "title_en": "Kitchen & Allergens",
         "icon": "🫓",
         "items": [
-          {
-            "q": "Gibt es vegetarische/vegane Optionen?",
-            "q_en": "Do you offer vegetarian/vegan options?",
-            "a": "Ja – u. a. İmam Bayıldı, Falafel-Teller, Pide Ispanaklı; vegan auf Wunsch ohne Joghurt/Butter.",
-            "a_en": "Yes — e.g., İmam Bayıldı, Falafel Plate, Pide with spinach; vegan on request (no yogurt/butter)."
-          },
-          {
-            "q": "Glutenfrei möglich?",
-            "q_en": "Is gluten-free possible?",
-            "a": "Wir arbeiten mit Brot/Teig – Spuren können nicht ausgeschlossen werden.",
-            "a_en": "We work with bread/dough — traces of gluten cannot be excluded."
-          }
+          { "q": "Gibt es vegetarische/vegane Optionen?", "q_en": "Do you offer vegetarian/vegan options?", "a": "Ja – u. a. İmam Bayıldı, Falafel-Teller, Pide Ispanaklı; vegan auf Wunsch ohne Joghurt/Butter.", "a_en": "Yes — e.g., İmam Bayıldı, Falafel Plate, Pide with spinach; vegan on request (no yogurt/butter)." },
+          { "q": "Glutenfrei möglich?", "q_en": "Is gluten-free possible?", "a": "Wir arbeiten mit Brot/Teig – Spuren können nicht ausgeschlossen werden.", "a_en": "We work with bread/dough — traces of gluten cannot be excluded." }
         ]
       },
       {
@@ -251,18 +214,8 @@
         "title_en": "Pickup & Delivery",
         "icon": "🚗",
         "items": [
-          {
-            "q": "Bietet ihr Abholung an?",
-            "q_en": "Do you offer pickup?",
-            "a": "Ja, ab Bestellung i. d. R. 15–25 Min. Abholzeit.",
-            "a_en": "Yes, usually ready for pickup 15–25 minutes after ordering."
-          },
-          {
-            "q": "Lieferung?",
-            "q_en": "Delivery?",
-            "a": "Aktuell keine eigene Lieferung. Bei Bedarf bitte anrufen – wir beraten gern.",
-            "a_en": "No in-house delivery at the moment. Call us if needed — we’re happy to advise."
-          }
+          { "q": "Bietet ihr Abholung an?", "q_en": "Do you offer pickup?", "a": "Ja, ab Bestellung i. d. R. 15–25 Min. Abholzeit.", "a_en": "Yes, usually ready for pickup 15–25 minutes after ordering." },
+          { "q": "Lieferung?", "q_en": "Delivery?", "a": "Aktuell keine eigene Lieferung. Bei Bedarf bitte anrufen – wir beraten gern.", "a_en": "No in-house delivery at the moment. Call us if needed — we’re happy to advise." }
         ]
       },
       {
@@ -271,18 +224,8 @@
         "title_en": "Payment",
         "icon": "💳",
         "items": [
-          {
-            "q": "Welche Zahlarten gibt es?",
-            "q_en": "Which payment methods do you accept?",
-            "a": "Bar, EC/Kreditkarte. Mobile Pay (Apple/Google) in Vorbereitung.",
-            "a_en": "Cash, debit/credit cards. Mobile Pay (Apple/Google) coming soon."
-          },
-          {
-            "q": "Gibt es Gruppen-/Firmenrechnung?",
-            "q_en": "Group/company invoices available?",
-            "a": "Ja, bitte beim Service Bescheid geben.",
-            "a_en": "Yes, please inform our staff."
-          }
+          { "q": "Welche Zahlarten gibt es?", "q_en": "Which payment methods do you accept?", "a": "Bar, EC/Kreditkarte. Mobile Pay (Apple/Google) in Vorbereitung.", "a_en": "Cash, debit/credit cards. Mobile Pay (Apple/Google) coming soon." },
+          { "q": "Gibt es Gruppen-/Firmenrechnung?", "q_en": "Group/company invoices available?", "a": "Ja, bitte beim Service Bescheid geben.", "a_en": "Yes, please inform our staff." }
         ]
       },
       {
@@ -291,18 +234,8 @@
         "title_en": "Menu",
         "icon": "📜",
         "items": [
-          {
-            "q": "Wo finde ich eure Karte?",
-            "q_en": "Where can I find your menu?",
-            "a": "Im Bot unter „Speisen“ sowie als PDF verlinkt.",
-            "a_en": "In the bot under “Dishes” and also linked as PDF."
-          },
-          {
-            "q": "Kinderfreundliche Gerichte?",
-            "q_en": "Kid-friendly dishes?",
-            "a": "Ja – kleine Pide, Döner-Teller klein, Reis & Hähnchen.",
-            "a_en": "Yes — small pide, small döner plate, rice & chicken."
-          }
+          { "q": "Wo finde ich eure Karte?", "q_en": "Where can I find your menu?", "a": "Im Bot unter „Speisen“ sowie als PDF verlinkt.", "a_en": "In the bot under “Dishes” and also linked as PDF." },
+          { "q": "Kinderfreundliche Gerichte?", "q_en": "Kid-friendly dishes?", "a": "Ja – kleine Pide, Döner-Teller klein, Reis & Hähnchen.", "a_en": "Yes — small pide, small döner plate, rice & chicken." }
         ]
       },
       {
@@ -311,19 +244,8 @@
         "title_en": "Contact",
         "icon": "✉️",
         "items": [
-          {
-            "q": "Wie kontaktiere ich euch?",
-            "q_en": "How can I contact you?",
-            "a": "Über das Kontaktformular oder telefonisch.",
-            "a_en": "Via the contact form or by phone.",
-            "special": "contactForm"
-          },
-          {
-            "q": "Adresse & Route?",
-            "q_en": "Address & directions?",
-            "a": "Ostheimer Str. 20, 51103 Köln – Klick auf die Adresse öffnet Google Maps.",
-            "a_en": "Ostheimer Str. 20, 51103 Cologne — click the address to open Google Maps."
-          }
+          { "q": "Wie kontaktiere ich euch?", "q_en": "How can I contact you?", "a": "Über das Kontaktformular oder telefonisch.", "a_en": "Via the contact form or by phone.", "special": "contactForm" },
+          { "q": "Adresse & Route?", "q_en": "Address & directions?", "a": "Ostheimer Str. 20, 51103 Köln – Klick auf die Adresse öffnet Google Maps.", "a_en": "Ostheimer Str. 20, 51103 Cologne — click the address to open Google Maps." }
         ]
       },
       {
@@ -332,13 +254,7 @@
         "title_en": "Quick Order",
         "icon": "⚡",
         "items": [
-          {
-            "q": "Kann ich schnell vorbestellen?",
-            "q_en": "Can I place a quick pre-order?",
-            "a": "Kurze Nachricht im Bot mit Uhrzeit & Personenanzahl – wir bestätigen umgehend.",
-            "a_en": "Send a short message in the bot with time & party size — we’ll confirm promptly.",
-            "special": "orderQuick"
-          }
+          { "q": "Kann ich schnell vorbestellen?", "q_en": "Can I place a quick pre-order?", "a": "Kurze Nachricht im Bot mit Uhrzeit & Personenanzahl – wir bestätigen umgehend.", "a_en": "Send a short message in the bot with time & party size — we’ll confirm promptly.", "special": "orderQuick" }
         ]
       }
     ]
@@ -349,17 +265,38 @@
     "model": "gpt-4o-mini",
     "workerUrl": "https://ppx-ai.muciyil.workers.dev",
     "limits": { "ratePerMin": 15, "dailyCapEur": 5, "maxTokens": 300, "timeoutMs": 8000 },
-    "tone": { "voice": "freundlich, direkt, sachlich", "length": "kurz", "emojis": 0, "exclamationsMax": 1, "address": "du" },
+
+    "tone": {
+      "voice": "freundlich, direkt, sachlich",
+      "length": "kurz",
+      "emojis": 0,
+      "exclamationsMax": 1,
+      "address": "du",
+      "mode": "warm"
+    },
+
     "languages": ["de","en"],
     "settings": {
       "minConfidence": 0.62,
-      "suggestionBand": [0.55,0.62],
+      "suggestionBand": [0.55, 0.62],
       "unknownConsecutiveForFallback": 2,
       "smalltalkEnabled": true,
       "notOfferedPolicy": "answer_with_categories",
       "speisenAutoKeywords": true,
-      "respectKnowledgeHints": true
+      "respectKnowledgeHints": true,
+      "freeLineBeforeFlow": true,
+      "whitelistWh": ["wer","was","who","what"]
     },
+
+    "alias": {
+      "laden": ["restaurant","bude","lokal","imbiss"],
+      "karte": ["speisekarte","menu","menü","menue","essen","gerichte"],
+      "öffnungszeiten": ["auf","offen","geöffnet","geoeffnet","open","hours","zeiten"],
+      "reservieren": ["tisch reservieren","table booking","book a table","booking","reserve"],
+      "kontakt": ["kontaktformular","email","mail","telefon","anrufen","call","telefonnummer","adresse"],
+      "heute": ["today","heute offen","are you open today"]
+    },
+
     "TEXTS_REF": {
       "greeting": "TEXTS.greeting",
       "notOffered": "TEXTS.notOffered",
@@ -372,6 +309,7 @@
       "identity": "TEXTS.identity",
       "isReal": "TEXTS.isReal"
     },
+
     "fallback": {
       "message": {
         "de": "Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?",
@@ -381,13 +319,14 @@
       "step": "email",
       "skipHeader": true
     },
+
     "intents": {
       "reservieren": { "keywords": ["reservieren","tisch","buchen","booking","reserve"], "behavior": "silent" },
-      "kontakt": { "keywords": ["kontakt","email","mail","anrufen","telefon","call"], "behavior": "silent" },
-      "öffnungszeiten": { "keywords": ["öffnungszeiten","zeiten","hours","open","geöffnet"], "behavior": "one_liner" },
+      "kontakt": { "keywords": ["kontakt","email","mail","anrufen","telefon","call","kontaktformular","adresse","telefonnummer"], "behavior": "silent" },
+      "öffnungszeiten": { "keywords": ["öffnungszeiten","zeiten","hours","open","geöffnet","geoeffnet","offen","open today","are you open today"], "behavior": "one_liner" },
       "speisen": {
         "behavior": "two_liners",
-        "keywords": ["speisen","essen","menu","menü","karte","speisekarte","food","gerichte"],
+        "keywords": ["speisen","essen","menu","menü","menue","karte","speisekarte","food","gerichte"],
         "items": [],
         "categories": {}
       },
@@ -408,21 +347,70 @@
         "greetings": { "phrases": ["hallo","hey","hi","servus","moin","guten morgen","guten abend","na"], "replyRef": "TEXTS.greeting" },
         "thanks": { "phrases": ["danke","dankeschön","merci","thx","super","perfekt"], "replyRef": "TEXTS.smalltalkThanks" },
         "bye": { "phrases": ["tschüss","ciao","tschau","auf wiedersehen","bis bald"], "replyRef": "TEXTS.smalltalkBye" },
-        "capabilities": { "phrases": ["was kannst du","wofür bist du da","was machst du","wozu der bot","wozu bist du da"], "replyRef": "TEXTS.capability" },
-        "identity": { "phrases": ["wer bist du","wer hat dich gemacht","bist du echt","bist du ein mensch"], "replyRef": "TEXTS.isReal" }
+        "capabilities": {
+          "phrases": [
+            "was kannst du","wofür bist du da","was machst du","wozu der bot","wozu bist du da",
+            "was bietet ihr an","was gibt es bei euch","was macht ihr so"
+          ],
+          "replyRef": "TEXTS.capability"
+        },
+        "identity": {
+          "phrases": [
+            "wer seid ihr","was seid ihr","was seid ihr für ein laden","wer seid ihr eigentlich",
+            "wer bist du","wer hat euch gemacht","bist du echt","seid ihr echt"
+          ],
+          "replyRef": "TEXTS.isReal"
+        }
       }
     },
+
     "knowledgeHints": {
       "prioritize": ["hours","menu","faq"],
       "forbid": ["andere_restaurants","wetter","news","preise_erfinden","medizin","recht"],
       "contextShort": "Türkisches Restaurant in Köln. Antworten nur aus Bot/Website-Daten."
     },
+
     "compliance": {
       "consentText": "Deine Frage wird an unseren KI-Dienst gesendet, um dir zu antworten. Keine sensiblen Daten eingeben.",
       "privacyUrl": "/datenschutz",
       "imprintUrl": "/impressum",
       "disclaimer": "Keine Rechts- oder Medizinberatung."
     },
-    "systemPrompt": "Sprich ultrakurz (1 Satz; FAQ/Speisen max. 2 Sätze). Sprich nur über Inhalte aus bot.json/aktiven Flows/Website. Keine Infos über andere Anbieter/Branchen. Keine Preise/Allergene erfinden. Reservieren & Kontakt: silent (Flows übernehmen). Öffnungszeiten: one_liner mit Live-Daten. FAQ/Speisen: two_liners, ggf. passenden Flow öffnen. Sprache spiegeln (DE/EN). Kurze Grüße sind ok; keine langen Smalltalk-Dialoge. Bei fehlender Info: 1 Satz Unknown + optional Kontakt anbieten. Nutze TEXTS für feste Antworten (z. B. Begrüßung, Smalltalk, Identität). Wenn Nutzer nach nicht vorhandener Speise fragt, nutze TEXTS.notOffered + Kategorienchips. Bei Smalltalk niemals Kontakt-Flow öffnen."
+
+    "systemPrompt": "Sprich ultrakurz (1 Satz; FAQ/Speisen max. 2 Sätze). Sprich nur über Inhalte aus bot.json/aktiven Flows/Website. Keine Infos über andere Anbieter/Branchen. Keine Preise/Allergene erfinden. Reservieren & Kontakt: silent (Flows übernehmen). Öffnungszeiten: one_liner mit Live-Daten. FAQ/Speisen: two_liners, ggf. passenden Flow öffnen. Sprache spiegeln (DE/EN). Kurze Grüße sind ok; keine langen Smalltalk-Dialoge. Bei fehlender Info: 1 Satz Unknown + optional Kontakt anbieten. Nutze TEXTS für feste Antworten (z. B. Begrüßung, Smalltalk, Identität). Wenn Nutzer nach nicht vorhandener Speise fragt, nutze TEXTS.notOffered + Kategorienchips. Bei Smalltalk niemals Kontakt-Flow öffnen.",
+
+    "hybridSmalltalk": true,
+    "prompts": {
+      "empathy": {
+        "de": "Rolle: Warmherziger Restaurant-Assistent. Ziele: 1) Bei persönlichen/kontextarmen Nachrichten (z. B. Langeweile, Trennung, stressiger Tag) kurz empathisch reagieren (1 Satz), 2) sanft zum Restaurantkontext überleiten (Vorschlag: Speisekarte zeigen oder Tisch reservieren), 3) niemals Preise/Allergene/Versprechen erfinden, 4) keine Auskünfte über andere Restaurants, 5) maximal 1 Emoji, 6) Sprache des Nutzers spiegeln (DE/EN). Falls keine sichere Info vorhanden: kurz Unknown (1 Satz) und optional Kontakt anbieten.",
+        "en": "Role: Warm, concise restaurant assistant. Goals: (1) For personal/low-context messages (e.g., boredom, breakup, long day) reply empathetically in one short sentence, (2) gently steer back to restaurant goals (suggest showing the menu or making a reservation), (3) never invent prices/allergens or external facts, (4) no info about other venues, (5) at most one emoji, (6) mirror the user’s language (DE/EN). If unsure: brief unknown line and optionally offer contact."
+      }
+    },
+
+    "blocklistShort": ["kr","res","ok","?","yo","hm","uh","k","lol"],
+    "allowlist": ["reservieren","kontakt","öffnungszeiten","speisen","faq"],
+
+    "tests": [
+      { "q": "wer seid ihr?", "expect": "identity" },
+      { "q": "was seid ihr für ein laden", "expect": "identity" },
+      { "q": "was bietet ihr an", "expect": "capability" },
+      { "q": "habt ihr heute auf", "expect": "hours" },
+      { "q": "are you open today", "expect": "hours" },
+      { "q": "mir ist langweilig", "expect": "empathy" },
+      { "q": "ich habe keine freunde", "expect": "empathy" },
+      { "q": "mein freund ist wütend", "expect": "empathy" },
+      { "q": "habt ihr sushi", "expect": "not_offered" },
+      { "q": "gibt’s chinesisch", "expect": "not_offered" },
+      { "q": "speisekarte", "expect": "speisen" },
+      { "q": "pide sucuk", "expect": "speisen_item" },
+      { "q": "reservieren", "expect": "reservieren" },
+      { "q": "adresse", "expect": "faq_kontakt" },
+      { "q": "feiertage", "expect": "faq_oeffnungszeiten" },
+      { "q": "kr", "expect": "unknown_manual" },
+      { "q": "res", "expect": "unknown_manual" },
+      { "q": "?", "expect": "unknown_manual" },
+      { "q": "bitcoin kurs", "expect": "unknown_once" },
+      { "q": "irgendwas komisches 2x", "expect": "fallback_contactform" }
+    ]
   }
 }
