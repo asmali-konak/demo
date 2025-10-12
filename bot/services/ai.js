@@ -1,8 +1,12 @@
 /* ============================================================================
-   PPX AI Service – v2.9.3 (DockFix)
-   - Bringt das KI-Eingabedock (Input + Senden) zurück
-   - Beibehaltung aller Fixes (Smart-Reply Öffnungszeiten, FAQ-strikt, OOS, Consent)
-   - Keine Globals außer window.PPX; liest aus window.PPX_DATA
+   PPX AI Service – v2.9.5
+   - Dock stabil
+   - Smart-Reply Öffnungszeiten, FAQ-strikt, OOS, Consent
+   - NEU:
+     • Sehr kurze Eingaben (≤3 Zeichen) → Unknown-/Fallback-Logik (kein Reservieren)
+     • „kr“/„res“ lösen NICHT mehr Reservieren aus
+     • Fallback ohne Sanduhr: KI-Fehler entfernt die ⏳-Bubble vor der Antwort
+     • NotOffered robust (Sushi/ital./Fisch/…)
 ============================================================================ */
 (function () {
   'use strict';
@@ -28,6 +32,7 @@
   function viewEl(){ return D.getElementById('ppx-v'); }
   function now(){ return Date.now(); }
   function st(){ PPX.state=PPX.state||{activeFlowId:null,expecting:null,unknownCount:0,lastUnknownAt:0,oosCount:0,lastOosAt:0}; return PPX.state; }
+  function isVeryShort(q){ return String(q||'').trim().length<=3; }
 
   // ---------- normalizer -----------------------------------------------------
   function _norm(s){
@@ -102,14 +107,64 @@
     }catch(e){}
   }
   function respondNotOffered(query){
-    var label=(function(q){ var m=String(q||'').match(/\b(italienisch|italy|italiano|pizza|pasta|chinesisch|chinese|sushi|indisch|thai|mexikanisch|mexico|ramen|pho|koreanisch|burger|tacos|currywurst)\b/i); return m?m[0]:''; })(query)||'das';
+    var label=(function(q){ var m=String(q||'').match(/\b(italienisch|italy|italiano|pizza|pasta|chinesisch|chinese|sushi|indisch|thai|mexikanisch|mexico|ramen|pho|koreanisch|burger|tacos|currywurst|fisch|sea\s*food|seafood)\b/i); return m?m[0]:''; })(query)||'das';
     var nice=label; var n=_norm(label);
-    if(/ital/.test(n)) nice='italienische Küche'; else if(/chines/.test(n)) nice='chinesische Küche'; else if(/indisch/.test(n)) nice='indische Küche';
+    if(/ital/.test(n)||/pizza|pasta/.test(n)) nice='italienische Küche';
+    else if(/chines/.test(n)) nice='chinesische Küche';
+    else if(/indisch/.test(n)) nice='indische Küche';
+    else if(/thai/.test(n)) nice='thailändische Küche';
+    else if(/korean/.test(n)) nice='koreanische Küche';
+    else if(/sushi|ramen|pho/.test(n)) nice='Sushi/Asia';
+    else if(/mexi|tacos/.test(n)) nice='mexikanische Küche';
+    else if(/fisch|sea\s*food|seafood/.test(n)) nice='Fisch/Seafood';
     var txt=textOf('notOffered')||"Aktuell haben wir keine {{query}}. Schau gern in unsere Kategorien:";
     var html=esc(txt.replace('{{query}}', nice));
     var wrap=bubble('bot', html); appendToView(wrap);
     var blk=(PPX.ui&&PPX.ui.block)?PPX.ui.block('',{blockKey:'not-offered'}):el('div',{'class':'ppx-bot'});
     renderCategoryChips(blk); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
+  }
+
+  function maybeNotOffered(q){
+    var n=_norm(q);
+    var kws=['italienisch','italy','italiano','pizza','pasta','sushi','ramen','pho','fisch','seafood','sea food',
+             'chinesisch','chinese','indisch','thai','mexikanisch','mexico','koreanisch','burger','tacos','currywurst'];
+    for(var i=0;i<kws.length;i++){ if(wbRegex(kws[i]).test(n)){ respondNotOffered(q); return true; } }
+    return false;
+  }
+
+  // ---------- Unknown (ohne KI) ---------------------------------------------
+  function respondUnknownManual(){
+    var L=nowLang(); var cnt=bumpUnknown();
+    if(cnt===1){
+      var msg=(L==='en')
+        ? 'I don’t have info on that here — I can help with our menu, opening hours or reservations.'
+        : 'Dazu habe ich hier keine Infos – ich helfe dir gern mit Speisekarte, Öffnungszeiten oder Reservierungen.';
+      appendToView(bubble('bot', esc(msg)));
+    }else{
+      var txt=textOf('unknownOnce')||(L==='en'
+        ? 'I don’t have info on that here. Should I open our contact options for you?'
+        : 'Dazu habe ich hier keine Infos. Soll ich dir unser Kontaktformular öffnen?');
+      appendToView(bubble('bot', esc(txt)));
+      // Buttons
+      var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
+      var yes=(PPX.ui&&PPX.ui.btn)
+        ? PPX.ui.btn((L==='en'?'Open contact form':'Kontakt öffnen'),function(){ openFlow('kontakt',{}); },'ppx-cta','✉️')
+        : el('button',{class:'ppx-b ppx-cta',onclick:function(){ openFlow('kontakt',{}); }}, (L==='en'?'Open contact form':'Kontakt öffnen'));
+      var no =(PPX.ui&&PPX.ui.btn)
+        ? PPX.ui.btn((L==='en'?'No, thanks':'Nein, danke'),function(){
+            appendToView(bubble('bot', esc(textOf('closing')||(L==='en'
+              ? 'All right! Feel free to ask something else. Or click here to return to the main menu!'
+              : 'Alles klar! Frag mich gern etwas anderes. Oder klick hier, um ins Hauptmenü zu kommen!'))));
+            PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
+          },'ppx-secondary','🙌')
+        : el('button',{class:'ppx-b ppx-secondary',onclick:function(){
+            appendToView(bubble('bot', esc(textOf('closing')||'Alles klar! Frag mich gern etwas anderes. Oder klick hier, um ins Hauptmenü zu kommen!')));
+          }}, (L==='en'?'No, thanks':'Nein, danke'));
+      row.appendChild(yes); row.appendChild(no);
+      var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'unknown-choice'}) : el('div',{'class':'ppx-bot'});
+      blk.appendChild(row); appendToView(blk);
+    }
+    PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
 
   // ---------- Smalltalk detection -------------------------------------------
@@ -262,6 +317,7 @@
       offerContactChoice();
     }
   }
+
   // ---------- Dock (Input/Send) ---------------------------------------------
   var $dock,$inp,$send,$consentInline,_dockTimer=null,_dockTries=0;
 
@@ -269,14 +325,12 @@
     var panel=document.getElementById('ppx-panel');
     if(!panel) return false;
 
-    // Existiert bereits?
     var exist=panel.querySelector('.ppx-ai-dock');
     if(exist){
       $dock=exist; $inp=$dock.querySelector('.ai-inp'); $send=$dock.querySelector('.ai-send'); $consentInline=$dock.querySelector('.ai-consent');
       return true;
     }
 
-    // CSS einmalig injizieren
     if(!document.getElementById('ppx-ai-inside-style')){
       var css=("#ppx-panel .ppx-ai-dock{display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--ppx-bot-header,#0f3a2f);border-top:1px solid rgba(0,0,0,.25)}\
 #ppx-panel .ppx-ai-dock .ai-consent{font-size:13px;line-height:1.4;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:8px 10px;display:none}\
@@ -289,7 +343,6 @@
       var s=el('style',{id:'ppx-ai-inside-style'}); s.textContent=css; (document.head||document.documentElement).appendChild(s);
     }
 
-    // Consent-Text
     var cfgAI=aiCfg(); var comp=cfgAI.compliance||{};
     $consentInline=el('div',{class:'ai-consent',role:'note'});
     var txt=esc(comp.consentText||'Deine Frage wird an unseren KI-Dienst gesendet.');
@@ -298,13 +351,11 @@
     txt+=esc(comp.disclaimer||'Keine Rechts- oder Medizinberatung.');
     $consentInline.innerHTML=txt;
 
-    // Input + Button
     $inp=el('input',{type:'text',class:'ai-inp',placeholder:'Frag unseren KI-Assistenten :)','aria-label':'KI-Frage eingeben'});
     $send=el('button',{type:'button',class:'ai-send'},'Senden');
     var row=el('div',{class:'ai-row'},$inp,$send);
     $dock=el('div',{class:'ppx-ai-dock'},$consentInline,row);
 
-    // Platzierung: direkt über Brandbar/Footer oder ans Ende des Panels
     var v = viewEl();
     var panelFooter = (panel.querySelector('.ppx-brandbar, .ppx-elements-footer, .ai-elements-footer, .ppx-footer, footer')) || null;
     try{
@@ -313,11 +364,9 @@
       else panel.appendChild($dock);
     }catch(e){ panel.appendChild($dock); }
 
-    // Events
     $inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); }});
     $send.addEventListener('click',send);
 
-    // Consent-Inline anzeigen, wenn noch nicht zugestimmt
     try{ if(!(localStorage.getItem('ppx_ai_consent')==='true')){ $consentInline.style.display='block'; } }catch(e){}
     return true;
   }
@@ -331,6 +380,7 @@
       if(ok || _dockTries>60){ try{ clearInterval(_dockTimer); }catch(e){} _dockTimer=null; }
     },1000);
   }
+
   // ---------- Consent (persist) ---------------------------------------------
   var _consented=false, _pendingQ=null;
   function loadConsent(){ try{ _consented=(localStorage.getItem('ppx_ai_consent')==='true'); }catch(e){ _consented=false; } return _consented; }
@@ -353,7 +403,6 @@
     function onAgree(){ saveConsent(true); try{ if($consentInline) $consentInline.style.display='none'; }catch(e){} var q=_pendingQ; _pendingQ=null; if(q){ doWorker(q); } }
     function onDecline(){ saveConsent(false); appendToView(bubble('bot', esc(L==='en'?'Without consent I can’t send the question to our AI.':'Ohne Einwilligung können wir hier keine KI-Antwort senden.'))); }
   }
-
   // ---------- Worker wireup --------------------------------------------------
   function askWorker(question,cfg){
     var meta={provider:cfg.provider,model:cfg.model,maxTokens:(cfg.limits&&cfg.limits.maxTokens)||300,timeoutMs:(cfg.limits&&cfg.limits.timeoutMs)||8000,
@@ -379,7 +428,10 @@
     var cfg=aiCfg(), bWrap=appendToView(bubble('bot','⏳ …')), bBot=bWrap && bWrap.querySelector('.ppx-ai-bubble'), res=null;
     try{ res=await askWorker(q,cfg); }catch(e){ res=null; }
     if(!res || res.error){
-      var count=bumpUnknown(); if(count>=2){ fallbackToContactForm(bBot); } else { offerContactChoice(); }
+      var count=bumpUnknown();
+      // Sanduhr-Bubble entfernen, bevor wir fallbacken
+      try{ if(bWrap && bWrap.parentNode){ bWrap.parentNode.removeChild(bWrap); } }catch(_e){}
+      if(count>=2){ fallbackToContactForm(null); } else { offerContactChoice(); }
       return;
     }
     if(res.tool==='öffnungszeiten' && res.behavior==='one_liner'){ var h=hoursOneLiner(); if(h) res.text=h; }
@@ -390,7 +442,9 @@
 
     if(res.text && !tool){ if(bBot){ bBot.innerHTML=linkify(esc(res.text)); } resetUnknown(); moveThreadToEnd(); return; }
     if(!tool || allow.indexOf(tool)===-1 || tool==='kontakt'){
-      var c=bumpUnknown(); if(c>=2){ fallbackToContactForm(bBot); } else { offerContactChoice(); }
+      var c=bumpUnknown();
+      try{ if(bWrap && bWrap.parentNode){ bWrap.parentNode.removeChild(bWrap); } }catch(_e){}
+      if(c>=2){ fallbackToContactForm(null); } else { offerContactChoice(); }
       return;
     }
     if(res.text && bBot){ bBot.innerHTML=linkify(esc(res.text)); }
@@ -401,16 +455,37 @@
 
   // ---------- send(): Routing ------------------------------------------------
   async function send(){
-    ensureDock(); // falls DOM gerade neu gebaut wurde
-    if(!$inp) return;
+    ensureDock(); if(!$inp) return;
     var raw=String($inp.value||''); var q=raw.trim(); if(!q) return;
     if(!allowHit()){ showNote('Bitte kurz warten ⏳'); return; }
     $inp.value=''; userEcho(q);
 
+    // A) sehr kurze Eingaben → manuelles Unknown (kein KI-Call, keine ⏳)
+    if(isVeryShort(q)){ respondUnknownManual(); resetOos(); return; }
+
     // 0) Öffnungszeiten (Smart Reply)
     if(matchesOpenHours(q)){ replyOpenHoursSmart(); resetUnknown(); resetOos(); return; }
 
-    // 1) SPEISEN – Items vor Kategorien
+    // 1) Reservieren – Prematch (robust, excl. very short)
+    try{
+      var n=_norm(q), ql=q.toLowerCase().trim();
+      var hardShort = (ql==='kr' || /^kr[\s.!?]*$/.test(ql) || ql==='res' || /^res[\s.!?]*$/.test(ql));
+      if(!isVeryShort(q) && !hardShort){
+        var pat = /\b(reservier|reserviere|reservierung)\w*\b/;
+        var any = pat.test(n) ||
+                  wbRegex('tisch reservieren').test(n) ||
+                  wbRegex('book a table').test(n) ||
+                  (/\bbook\b/.test(n) && /\btable\b/.test(n)) ||
+                  /\btable\s+for\s+\d+/.test(n) ||
+                  wbRegex('booking').test(n) || wbRegex('reserve').test(n);
+        if(any){
+          if(st().activeFlowId && !toolMatchesActive('reservieren')){ pauseActiveFlow('ai-reserve'); }
+          openFlow('reservieren',{}); resetUnknown(); resetOos(); return;
+        }
+      }
+    }catch(e){ /* never block */ }
+
+    // 2) SPEISEN – Items vor Kategorien
     try{
       var DSH=dishes(), cats=Object.keys(DSH||{}), qn=_norm(q);
       for(var i=0;i<cats.length;i++){
@@ -435,16 +510,15 @@
       }
     }catch(e){}
 
-    // 2) FAQ (strikt)
+    // 3) FAQ (strikt)
     try{
       var fc=faqMatchFromTextStrict(q);
       if(fc){ if(st().activeFlowId && !toolMatchesActive('faq')){ pauseActiveFlow('ai-faq'); }
         openFlow('faq',{category:fc,behavior:'silent'}); resetUnknown(); resetOos(); return; }
     }catch(e){}
 
-    // 3) Statische Intents
+    // 4) Statische Intents (Rest)
     var intents={
-      reservieren:['reservieren','tisch','buchen','booking','reserve'],
       kontakt:['kontakt','email','mail','anrufen','telefon','call'],
       'öffnungszeiten':['öffnungszeiten','zeiten','hours','open','geöffnet','geoeffnet','offen','open today','are you open today'],
       speisen:['speisen','speise','gericht','gerichte','essen','menü','menu','karte','speisekarte','hunger','ich habe hunger','food']
@@ -456,17 +530,19 @@
       }
     }
 
-    // 4) Smalltalk
+    // 5) Smalltalk
     var sm=detectSmalltalk(q);
     if(sm){ appendToView(bubble('bot', esc(sm))); resetUnknown(); resetOos(); moveThreadToEnd(); return; }
 
-    // 5) Nicht im Angebot
-    if(maybeNotOffered(q)){ resetUnknown(); resetOos(); return; }
+    // 6) Nicht im Angebot
+    try{
+      if(maybeNotOffered(q)){ resetUnknown(); resetOos(); return; }
+    }catch(e){ /* niemals crashen */ }
 
-    // 6) Out-of-scope
+    // 7) Out-of-scope
     if(isOutOfScope(q)){ respondOutOfScope(q); resetUnknown(); return; }
 
-    // 7) Consent → KI
+    // 8) Consent → KI
     if(!_consented && !loadConsent()){ renderConsentBlock(q); return; }
     doWorker(q);
   }
@@ -474,11 +550,8 @@
   // ---------- Boot & Export --------------------------------------------------
   function boot(){
     try{ loadConsent(); }catch(e){}
-    ensureDockLoop(); // baue Dock nachträglich, falls Panel bereit
-    ensureDock();
-    // Falls Panel später geöffnet wird, erneut prüfen
+    ensureDockLoop(); ensureDock();
     window.addEventListener('ppx:panel:open', function(){ ensureDock(); ensureDockLoop(); });
-    // Safety: falls View neu gerendert wurde
     try{
       var mo=new MutationObserver(function(){
         var panel=document.getElementById('ppx-panel');

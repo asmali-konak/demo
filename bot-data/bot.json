@@ -163,21 +163,21 @@
       { "id": "reis", "name": "Reis", "name_en": "Rice", "price": "3,90 €", "info": "Butterreis.", "info_en": "Butter rice." },
       { "id": "salat", "name": "Beilagensalat", "name_en": "Side Salad", "price": "4,50 €", "info": "Joghurt- oder Zitronendressing.", "info_en": "Yogurt or lemon dressing." },
       { "id": "brot", "name": "Ofenbrot", "name_en": "Oven Bread", "price": "2,50 €", "info": "Frisch gebacken.", "info_en": "Freshly baked." }
+    ],
+    "getraenke": [
+      { "id": "ayran", "name": "Ayran", "name_en": "Ayran", "price": "2,50 €", "info": "Joghurtgetränk, 0,25 l.", "info_en": "Yogurt drink, 0.25 l." },
+      { "id": "salgam", "name": "Şalgam", "name_en": "Şalgam", "price": "3,20 €", "info": "Fermentiertes Rübchengetränk, 0,33 l.", "info_en": "Fermented turnip beverage, 0.33 l." },
+      { "id": "cay", "name": "Çay (türk. Tee)", "name_en": "Çay (Turkish tea)", "price": "1,90 €", "info": "Im ince belli Glas.", "info_en": "Served in ince-belli glass." },
+      { "id": "raki", "name": "Rakı (2 cl)", "name_en": "Rakı (2 cl)", "price": "4,90 €", "info": "Anisschnaps.", "info_en": "Anise spirit." },
+      { "id": "soft", "name": "Softdrinks", "name_en": "Soft Drinks", "price": "3,20 €", "info": "Cola, Fanta, Sprite – 0,33 l.", "info_en": "Cola, Fanta, Sprite – 0.33 l." },
+      { "id": "wasser", "name": "Mineralwasser", "name_en": "Mineral Water", "price": "2,90 € / 5,50 €", "info": "0,25 / 0,75 l.", "info_en": "0.25 / 0.75 l." }
+    ],
+    "desserts": [
+      { "id": "baklava", "name": "Baklava (3 Stk.)", "name_en": "Baklava (3 pcs)", "price": "5,90 €", "info": "Mit Pistazie, Sirup.", "info_en": "With pistachio, syrup." },
+      { "id": "sutlac", "name": "Sütlaç", "name_en": "Sütlaç (rice pudding)", "price": "5,50 €", "info": "Milchreis aus dem Ofen.", "info_en": "Baked rice pudding." },
+      { "id": "kunefe", "name": "Künefe", "name_en": "Künefe", "price": "7,90 €", "info": "Fadenteig, Käse, warm, Sirup.", "info_en": "Shredded pastry, cheese, warm, syrup." }
     ]
   },
-  "getraenke": [
-    { "id": "ayran", "name": "Ayran", "name_en": "Ayran", "price": "2,50 €", "info": "Joghurtgetränk, 0,25 l.", "info_en": "Yogurt drink, 0.25 l." },
-    { "id": "salgam", "name": "Şalgam", "name_en": "Şalgam", "price": "3,20 €", "info": "Fermentiertes Rübchengetränk, 0,33 l.", "info_en": "Fermented turnip beverage, 0.33 l." },
-    { "id": "cay", "name": "Çay (türk. Tee)", "name_en": "Çay (Turkish tea)", "price": "1,90 €", "info": "Im ince belli Glas.", "info_en": "Served in ince-belli glass." },
-    { "id": "raki", "name": "Rakı (2 cl)", "name_en": "Rakı (2 cl)", "price": "4,90 €", "info": "Anisschnaps.", "info_en": "Anise spirit." },
-    { "id": "soft", "name": "Softdrinks", "name_en": "Soft Drinks", "price": "3,20 €", "info": "Cola, Fanta, Sprite – 0,33 l.", "info_en": "Cola, Fanta, Sprite – 0.33 l." },
-    { "id": "wasser", "name": "Mineralwasser", "name_en": "Mineral Water", "price": "2,90 € / 5,50 €", "info": "0,25 / 0,75 l.", "info_en": "0.25 / 0.75 l." }
-  ],
-  "desserts": [
-    { "id": "baklava", "name": "Baklava (3 Stk.)", "name_en": "Baklava (3 pcs)", "price": "5,90 €", "info": "Mit Pistazie, Sirup.", "info_en": "With pistachio, syrup." },
-    { "id": "sutlac", "name": "Sütlaç", "name_en": "Sütlaç (rice pudding)", "price": "5,50 €", "info": "Milchreis aus dem Ofen.", "info_en": "Baked rice pudding." },
-    { "id": "kunefe", "name": "Künefe", "name_en": "Künefe", "price": "7,90 €", "info": "Fadenteig, Käse, warm, Sirup.", "info_en": "Shredded pastry, cheese, warm, syrup." }
-  ],
   "faqs": {
     "title": "Asmali Konak – FAQ",
     "title_en": "Asmali Konak – FAQ",
@@ -351,7 +351,6 @@
     "limits": { "ratePerMin": 15, "dailyCapEur": 5, "maxTokens": 300, "timeoutMs": 8000 },
     "tone": { "voice": "freundlich, direkt, sachlich", "length": "kurz", "emojis": 0, "exclamationsMax": 1, "address": "du" },
     "languages": ["de","en"],
-
     "settings": {
       "minConfidence": 0.62,
       "suggestionBand": [0.55,0.62],
@@ -361,7 +360,6 @@
       "speisenAutoKeywords": true,
       "respectKnowledgeHints": true
     },
-
     "TEXTS_REF": {
       "greeting": "TEXTS.greeting",
       "notOffered": "TEXTS.notOffered",
@@ -374,7 +372,6 @@
       "identity": "TEXTS.identity",
       "isReal": "TEXTS.isReal"
     },
-
     "fallback": {
       "message": {
         "de": "Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?",
@@ -384,7 +381,6 @@
       "step": "email",
       "skipHeader": true
     },
-
     "intents": {
       "reservieren": { "keywords": ["reservieren","tisch","buchen","booking","reserve"], "behavior": "silent" },
       "kontakt": { "keywords": ["kontakt","email","mail","anrufen","telefon","call"], "behavior": "silent" },
@@ -409,42 +405,24 @@
         }
       },
       "smalltalk": {
-        "greetings": {
-          "phrases": ["hallo","hey","hi","servus","moin","guten morgen","guten abend","na"],
-          "replyRef": "TEXTS.greeting"
-        },
-        "thanks": {
-          "phrases": ["danke","dankeschön","merci","thx","super","perfekt"],
-          "replyRef": "TEXTS.smalltalkThanks"
-        },
-        "bye": {
-          "phrases": ["tschüss","ciao","tschau","auf wiedersehen","bis bald"],
-          "replyRef": "TEXTS.smalltalkBye"
-        },
-        "capabilities": {
-          "phrases": ["was kannst du","wofür bist du da","was machst du","wozu der bot","wozu bist du da"],
-          "replyRef": "TEXTS.capability"
-        },
-        "identity": {
-          "phrases": ["wer bist du","wer hat dich gemacht","bist du echt","bist du ein mensch"],
-          "replyRef": "TEXTS.isReal"
-        }
+        "greetings": { "phrases": ["hallo","hey","hi","servus","moin","guten morgen","guten abend","na"], "replyRef": "TEXTS.greeting" },
+        "thanks": { "phrases": ["danke","dankeschön","merci","thx","super","perfekt"], "replyRef": "TEXTS.smalltalkThanks" },
+        "bye": { "phrases": ["tschüss","ciao","tschau","auf wiedersehen","bis bald"], "replyRef": "TEXTS.smalltalkBye" },
+        "capabilities": { "phrases": ["was kannst du","wofür bist du da","was machst du","wozu der bot","wozu bist du da"], "replyRef": "TEXTS.capability" },
+        "identity": { "phrases": ["wer bist du","wer hat dich gemacht","bist du echt","bist du ein mensch"], "replyRef": "TEXTS.isReal" }
       }
     },
-
     "knowledgeHints": {
       "prioritize": ["hours","menu","faq"],
       "forbid": ["andere_restaurants","wetter","news","preise_erfinden","medizin","recht"],
       "contextShort": "Türkisches Restaurant in Köln. Antworten nur aus Bot/Website-Daten."
     },
-
     "compliance": {
       "consentText": "Deine Frage wird an unseren KI-Dienst gesendet, um dir zu antworten. Keine sensiblen Daten eingeben.",
       "privacyUrl": "/datenschutz",
       "imprintUrl": "/impressum",
       "disclaimer": "Keine Rechts- oder Medizinberatung."
     },
-
     "systemPrompt": "Sprich ultrakurz (1 Satz; FAQ/Speisen max. 2 Sätze). Sprich nur über Inhalte aus bot.json/aktiven Flows/Website. Keine Infos über andere Anbieter/Branchen. Keine Preise/Allergene erfinden. Reservieren & Kontakt: silent (Flows übernehmen). Öffnungszeiten: one_liner mit Live-Daten. FAQ/Speisen: two_liners, ggf. passenden Flow öffnen. Sprache spiegeln (DE/EN). Kurze Grüße sind ok; keine langen Smalltalk-Dialoge. Bei fehlender Info: 1 Satz Unknown + optional Kontakt anbieten. Nutze TEXTS für feste Antworten (z. B. Begrüßung, Smalltalk, Identität). Wenn Nutzer nach nicht vorhandener Speise fragt, nutze TEXTS.notOffered + Kategorienchips. Bei Smalltalk niemals Kontakt-Flow öffnen."
   }
 }
