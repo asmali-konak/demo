@@ -170,7 +170,6 @@
     for(var i=0;i<kws.length;i++){ if(wbRegex(kws[i]).test(n)){ respondNotOffered(q); return true; } }
     return false;
   }
-
   // ---------- open contact (priorisiert Formular) ---------------------------
   function openContactEmail(extra){
     extra = extra || {};
@@ -283,6 +282,7 @@
     try{ window.dispatchEvent(new CustomEvent('ppx:tool',{detail:{tool:toolAlias(tool||''),detail:detail||{}}})); }catch(e){}
     return false;
   }
+
   // ---------- open hours matching -------------------------------------------
   function matchesOpenHours(q){
     var n=aliasExpand(q);
@@ -364,86 +364,7 @@
       offerContactChoice();
     }
   }
-  // ---------- open hours reply (DE default) ----------------------------------
-  function hoursOneLiner(){ try{ var svc=PPX.services&&PPX.services.openHours; if(!svc||typeof svc.describeToday!=='function') return ''; return svc.describeToday(); }catch(e){ return ''; } }
-  function replyOpenHoursSmart(){
-    try{
-      var L=nowLang(), svc=PPX.services&&PPX.services.openHours; if(!svc){ openFlow('öffnungszeiten',{}); return; }
-      var isOpen=(typeof svc.isOpenNow==='function')?!!svc.isOpenNow():false;
-      if(!isOpen){
-        appendToView(bubble('bot', esc(L==='en'
-          ? 'We’re currently closed, but here are our opening hours for you.'
-          : 'Wir haben gerade geschlossen, aber hier sind unsere Öffnungszeiten für dich.')));
-        openFlow('öffnungszeiten',{}); return;
-      }
-      var closeHM=(typeof svc.closeTimeToday==='function')?(svc.closeTimeToday()||''):'';
-      var msg=(L==='en')
-        ? ('Good news — we’re open today until '+(closeHM||'late')+'. Would you like to reserve or view hours?')
-        : ('Du hast Glück, heute sind wir noch bis '+(closeHM||'später')+' geöffnet. Möchtest du reservieren oder zu den Öffnungszeiten?');
-      appendToView(bubble('bot', esc(msg)));
-      var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
-      var btnReserve=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn((L==='en'?'Reserve':'Reservieren'), function(){ openFlow('reservieren',{}); }, 'ppx-cta','🗓️'):el('button',{class:'ppx-b ppx-cta',onclick:function(){ openFlow('reservieren',{}); }}, (L==='en'?'Reserve':'Reservieren'));
-      var btnHours=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn((L==='en'?'Opening Hours':'Öffnungszeiten'), function(){ openFlow('öffnungszeiten',{}); }, 'ppx-secondary','⏰'):el('button',{class:'ppx-b ppx-secondary',onclick:function(){ openFlow('öffnungszeiten',{}); }}, (L==='en'?'Opening Hours':'Öffnungszeiten'));
-      row.appendChild(btnReserve); row.appendChild(btnHours);
-      var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'openhours-choice'}) : el('div',{'class':'ppx-bot'}); blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
-    }catch(e){ openFlow('öffnungszeiten',{}); }
-  }
 
-  // ---------- out-of-scope & unknown choices --------------------------------
-  function isOutOfScope(q){
-    return /\b(wetter|news|nachrichten|politik|aktien|kurs|bitcoin|technik|programmiere|programmierung|heutiges wetter|vorhersage)\b/i
-      .test(_norm(q));
-  }
-  function offerMainMenuButton(){
-    var L=nowLang();
-    var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
-    var backLbl=(L==='en'?'Back to main menu':'Zurück ins Hauptmenü');
-    var backBtn=(PPX.ui&&PPX.ui.btn)
-      ? PPX.ui.btn(backLbl,function(){ openFlow('home',{}); },'ppx-secondary','🏠')
-      : el('button',{class:'ppX-b ppx-secondary',onclick:function(){ openFlow('home',{}); }}, backLbl);
-    row.appendChild(backBtn);
-    var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'back-home'}) : el('div',{'class':'ppx-bot'});
-    blk.appendChild(row); appendToView(blk);
-  }
-  function offerContactChoice(){
-    var L=nowLang();
-    var txt=textOf('unknownOnce')||(L==='en'
-      ? 'I don’t have info on that here. Should I open our contact form for you?'
-      : 'Dazu habe ich hier keine Infos. Soll ich dir unser Kontaktformular öffnen?');
-    appendToView(bubble('bot', esc(txt)));
-    var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
-    var yesLbl=(L==='en'?'Open contact form':'Kontaktformular öffnen');
-    var yes=(PPX.ui&&PPX.ui.btn)
-      ? PPX.ui.btn(yesLbl,function(){ openContactEmail(); },'ppx-cta','✉️')
-      : el('button',{class:'ppx-b ppx-cta',onclick:function(){ openContactEmail(); }}, yesLbl);
-    var noLbl=(L==='en'?'No, thanks':'Nein, danke');
-    var no=(PPX.ui&&PPX.ui.btn)
-      ? PPX.ui.btn(noLbl,function(){
-          appendToView(bubble('bot', esc(textOf('closing')||(L==='en'
-            ? 'All right! Feel free to ask something else. Or click here to return to the main menu!'
-            : 'Alles klar! Frag mich gern etwas anderes. Oder klick hier, um ins Hauptmenü zu kommen!'))));
-          offerMainMenuButton(); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
-        },'ppx-secondary','🙌')
-      : el('button',{class:'ppx-b ppx-secondary',onclick:function(){
-          appendToView(bubble('bot', esc(textOf('closing')||'Alles klar! Frag mich gern etwas anderes. Oder klick hier, um ins Hauptmenü zu kommen!')));
-          offerMainMenuButton();
-        }}, noLbl);
-    row.appendChild(yes); row.appendChild(no);
-    var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'unknown-choice'}) : el('div',{'class':'ppx-bot'});
-    blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
-  }
-  function respondOutOfScope(q){
-    var cnt=bumpOos();
-    if(cnt===1){
-      var L=nowLang();
-      var msg=(L==='en')
-        ? 'I don’t have info on that here — I can help with our menu, opening hours or reservations.'
-        : 'Dazu habe ich hier keine Infos – ich helfe dir gern mit Speisekarte, Öffnungszeiten oder Reservierungen.';
-      appendToView(bubble('bot', esc(msg)));
-    }else{
-      offerContactChoice();
-    }
-  }
   // ---------- helpers: leads & dessert detection -----------------------------
   function say(text){ if(!text) return; appendToView(bubble('bot', esc(text))); }
   function leadForCategory(catKey){
@@ -507,12 +428,13 @@
         if(any){ openFlow('reservieren',{}); resetUnknown(); resetOos(); dbgPush({type:'reserve',q:q}); return; }
       }
     }catch(e){}
-    // Desserts (Süßes?) – kurzer Satz + Kategorie öffnen
+
+    // Desserts (Süßes?)
     try{
       if(dessertAsk(q)){ say(textOf('sweetsLead')||'Klar – hier findest du unsere Desserts:'); openFlow('speisen',{category:'desserts'}); resetUnknown(); resetOos(); dbgPush({type:'desserts',q:q}); return; }
     }catch(e){}
 
-    // Speisen – Items vor Kategorien (mit Vor-Nachrichten)
+    // Speisen – Items vor Kategorien
     try{
       var DSH=dishes(), cats=Object.keys(DSH||{}), qn2=_norm(q);
 
@@ -531,7 +453,7 @@
         }
       }
 
-      // Kategorie-Treffer: Vor-Nachricht + öffnen
+      // Kategorie-Treffer
       for(var i2=0;i2<cats.length;i2++){
         var ck2=cats[i2], lab=(function(){var C=cfg(), L=nowLang(), obj=(C.menuTitles && C.menuTitles[ck2])||null; return obj?(L==='en'?obj.en:(obj.de||ck2)):ck2; })();
         var ckN2=_norm(ck2), labN=_norm(lab), qn3=_norm(q);
@@ -561,7 +483,6 @@
     if(!_consented && !loadConsent()){ renderConsentBlock(q); dbgPush({type:'consent_needed',q:q}); return; }
     doWorkerHybrid(q);
   }
-
   // ---------- fallback to contact (after consecutive unknowns) ---------------
   function fallbackToContactForm(baseBubble){
     var cfgA=aiCfg()||{}, fb=(cfgA.fallback||{}), L=nowLang();
@@ -569,28 +490,51 @@
     if(baseBubble){ baseBubble.innerHTML=esc(m); } else { appendToView(bubble('bot', esc(m))); }
     openContactEmail({ startAt:(fb.step||'email'), skipHeader:!!fb.skipHeader });
   }
+
   // ---------- worker + consent wiring (typing-aware) -------------------------
   var _consented=false, _pendingQ=null;
   function loadConsent(){ try{ _consented=(localStorage.getItem('ppx_ai_consent')==='true'); }catch(e){ _consented=false; } return _consented; }
   function saveConsent(v){ _consented=!!v; try{ v?localStorage.setItem('ppx_ai_consent','true'):localStorage.removeItem('ppx_ai_consent'); }catch(e){} }
 
+  // >>> FIXES: (1) block anhängen, (2) HTML für Links, (3) doWorkerHybrid nach Zustimmung
   function renderConsentBlock(originalQ){
     var A=aiCfg()||{}, C=A.compliance||{}, L=nowLang();
     _pendingQ=String(originalQ||'').slice(0,2000);
-    var block=(PPX.ui&&PPX.ui.block)?PPX.ui.block('KI-Einwilligung',{blockKey:'ai-consent',maxWidth:'640px'}):appendToView(bubble('bot','KI-Einwilligung'));
+
+    var block=(PPX.ui&&PPX.ui.block)
+      ? PPX.ui.block('KI-Einwilligung',{blockKey:'ai-consent',maxWidth:'640px'})
+      : appendToView(bubble('bot','KI-Einwilligung'));
+
+    // (1) sicher an die View anhängen, falls PPX.ui.block einen losen Node liefert
+    if(block && !block.parentNode){ appendToView(block); }
+
+    // (2) Beschreibung mit klickbaren Links als HTML setzen
     var msg=esc(C.consentText||'Deine Frage wird an unseren KI-Dienst gesendet. Keine sensiblen Daten eingeben.');
     var links=' <a class="ppx-link" href="'+esc(C.privacyUrl||'/datenschutz')+'" target="_blank" rel="noopener">Datenschutz</a> · '
              + '<a class="ppx-link" href="'+esc(C.imprintUrl||'/impressum')+'" target="_blank" rel="noopener">Impressum</a> · '
              + esc(C.disclaimer||'Keine Rechts- oder Medizinberatung.');
-    block.appendChild((PPX.ui&&PPX.ui.line)?PPX.ui.line(msg+' '+links):document.createTextNode(msg));
+    var desc=document.createElement('div'); desc.className='ai-consent-desc'; desc.innerHTML=msg+' '+links;
+    block.appendChild(desc);
+
+    // Buttons
     var r=(PPX.ui&&PPX.ui.row)?PPX.ui.row():document.createElement('div');
     var yesLbl=(L==='en')?'Agree & continue':'Zustimmen & fortfahren';
     var noLbl =(L==='en')?'Decline':'Ablehnen';
     var yes=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn(yesLbl,onAgree,'ppx-cta','✅'):el('button',{class:'ppx-b ppx-cta',onclick:onAgree},yesLbl);
     var no =(PPX.ui&&PPX.ui.btn)?PPX.ui.btn(noLbl,onDecline,'ppx-secondary','✖️'):el('button',{class:'ppx-b ppx-secondary',onclick:onDecline},noLbl);
-    r.appendChild(yes); r.appendChild(no); block.appendChild(r); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
-    function onAgree(){ saveConsent(true); try{ if($consentInline) $consentInline.style.display='none'; }catch(e){} var q=_pendingQ; _pendingQ=null; if(q){ doWorker(q); } }
-    function onDecline(){ saveConsent(false); appendToView(bubble('bot', esc(L==='en'?'Without consent I can’t send the question to our AI.':'Ohne Einwilligung können wir hier keine KI-Antwort senden.'))); }
+    r.appendChild(yes); r.appendChild(no); block.appendChild(r);
+    PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
+
+    function onAgree(){
+      saveConsent(true);
+      try{ if($consentInline) $consentInline.style.display='none'; }catch(e){}
+      var q=_pendingQ; _pendingQ=null;
+      if(q){ doWorkerHybrid(q); } // (3) konsistent hybrid
+    }
+    function onDecline(){
+      saveConsent(false);
+      appendToView(bubble('bot', esc(L==='en'?'Without consent I can’t send the question to our AI.':'Ohne Einwilligung können wir hier keine KI-Antwort senden.')));
+    }
   }
 
   function buildSystemPrompt(empathy){
@@ -626,38 +570,41 @@
       dbgPush({type:'worker_error',q:q}); return;
     }
 
-    // Post-process (Hours one-liner / FAQ category fallback)
+    // Postprocess: one-liner & FAQ-Fallback
     if(res.tool==='öffnungszeiten' && res.behavior==='one_liner'){ var h=hoursOneLiner(); if(h) res.text=h; }
     if(res.tool==='faq' && (!res.detail || !res.detail.category)){ var m=faqMatchFromTextStrict(q); if(m) res.detail={category:m}; }
 
     var allow=(A.allowlist||['reservieren','kontakt','hours','öffnungszeiten','speisen','faq']).map(function(s){return String(s).toLowerCase();});
     var tool=(res.tool||'').toLowerCase();
 
-    // Show free line (with delay) if allowed
+    // freie Zeile mit „Typing“-Delay
     if(res.text && (!tool || allow.indexOf(tool)!==-1) && bBot){
       try{
         var html=linkify(esc(res.text));
-        var ms=_calcDelay(html); await sleep(ms);
+        var ms=(function(){ try{ var t=typingCfg(); if(!t.enabled) return 0; var len=(html||'').replace(/<[^>]+>/g,'').length; var ms=t.baseMs+len*t.perCharMs; if(ms<t.minMs) ms=t.minMs; if(ms>t.maxMs) ms=t.maxMs; return ms|0; }catch(_e){ return 0; }})();
+        await sleep(ms);
         bBot.innerHTML=html;
       }catch(_e){}
     } else {
       try{ if(waitWrap && waitWrap.parentNode){ waitWrap.parentNode.removeChild(waitWrap); } }catch(_e){}
     }
 
-    // Flow open?
+    // Flow öffnen?
     if(!tool || allow.indexOf(tool)===-1 || tool==='kontakt'){
       if(!res.text){ var c=bumpUnknown(); if(c>=2){ fallbackToContactForm(null); } else { offerContactChoice(); } }
       dbgPush({type:'worker_answer_only',q:q,tool:tool}); return;
     }
 
-    if(freeBefore && res.text){
-      // kleine Pause vor Flow, damit die Zeile gelesen werden kann
-      var t=typingCfg(); await sleep(t.afterLeadToFlowMs);
-    }
+    if(freeBefore && res.text){ var t=typingCfg(); await sleep(t.afterLeadToFlowMs); }
     openFlow(tool, res.detail||{}); resetUnknown(); moveThreadToEnd(); dbgPush({type:'worker_open',q:q,tool:tool});
   }
 
-  function doWorkerHybrid(q){ var A=aiCfg()||{}; if(!A.hybridSmalltalk){ return doWorker(q); } var sys=buildSystemPrompt(true); return doWorker(q, sys); }
+  function doWorkerHybrid(q){
+    var A=aiCfg()||{};
+    if(!A.hybridSmalltalk){ return doWorker(q); }
+    var sys=buildSystemPrompt(true);
+    return doWorker(q, sys);
+  }
 
   // ---------- dock (input/send) ---------------------------------------------
   var $dock,$inp,$send,$consentInline,_dockTimer=null,_dockTries=0;
@@ -691,7 +638,7 @@
     var row=el('div',{class:'ai-row'},$inp,$send);
     $dock=el('div',{class:'ppx-ai-dock'},$consentInline,row);
 
-    var v = viewEl(); var panelFooter = (panel.querySelector('.ppx-brandbar, .ppx-elements-footer, .ai-elements-footer, .ppx-footer, footer')) || null;
+    var v=viewEl(); var panelFooter=(panel.querySelector('.ppx-brandbar, .ppx-elements-footer, .ai-elements-footer, .ppx-footer, footer'))||null;
     try{
       if(panelFooter){ panel.insertBefore($dock, panelFooter); }
       else if(v && v.parentNode===panel && v.nextSibling){ panel.insertBefore($dock, v.nextSibling); }
@@ -703,16 +650,13 @@
     try{ if(!(localStorage.getItem('ppx_ai_consent')==='true')){ $consentInline.style.display='block'; } }catch(e){}
     return true;
   }
-
   function ensureDockLoop(){
     if(_dockTimer) return;
     _dockTries=0;
     _dockTimer=setInterval(function(){ _dockTries++; var ok=ensureDock(); if(ok || _dockTries>60){ try{ clearInterval(_dockTimer); }catch(e){} _dockTimer=null; } },1000);
   }
 
-  // ---------- override: say() mit Typing-Delay (stellt sicher, dass aktiv) ---
-  // (Falls zuvor eine simple say()-Version definiert wurde, überschreiben wir
-  //  sie hier am Ende absichtlich, damit die Delays garantiert aktiv sind.)
+  // ---------- override: say() mit Typing-Delay (aktiv sicherstellen) --------
   (function(){
     var _oldSay = say;
     say = function(text){
