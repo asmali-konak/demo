@@ -265,7 +265,6 @@
     "model": "gpt-4o-mini",
     "workerUrl": "https://ppx-ai.muciyil.workers.dev",
     "limits": { "ratePerMin": 15, "dailyCapEur": 5, "maxTokens": 300, "timeoutMs": 8000 },
-
     "tone": {
       "voice": "freundlich, direkt, sachlich",
       "length": "kurz",
@@ -274,7 +273,6 @@
       "address": "du",
       "mode": "warm"
     },
-
     "languages": ["de","en"],
     "settings": {
       "minConfidence": 0.62,
@@ -287,7 +285,6 @@
       "freeLineBeforeFlow": true,
       "whitelistWh": ["wer","was","who","what"]
     },
-
     "alias": {
       "laden": ["restaurant","bude","lokal","imbiss"],
       "karte": ["speisekarte","menu","menü","menue","essen","gerichte"],
@@ -296,7 +293,6 @@
       "kontakt": ["kontaktformular","email","mail","telefon","anrufen","call","telefonnummer","adresse"],
       "heute": ["today","heute offen","are you open today"]
     },
-
     "TEXTS_REF": {
       "greeting": "TEXTS.greeting",
       "notOffered": "TEXTS.notOffered",
@@ -309,7 +305,6 @@
       "identity": "TEXTS.identity",
       "isReal": "TEXTS.isReal"
     },
-
     "fallback": {
       "message": {
         "de": "Das übertrifft mein Können. Magst du uns eine Nachricht da lassen?",
@@ -319,7 +314,6 @@
       "step": "email",
       "skipHeader": true
     },
-
     "intents": {
       "reservieren": { "keywords": ["reservieren","tisch","buchen","booking","reserve"], "behavior": "silent" },
       "kontakt": { "keywords": ["kontakt","email","mail","anrufen","telefon","call","kontaktformular","adresse","telefonnummer"], "behavior": "silent" },
@@ -363,22 +357,18 @@
         }
       }
     },
-
     "knowledgeHints": {
       "prioritize": ["hours","menu","faq"],
       "forbid": ["andere_restaurants","wetter","news","preise_erfinden","medizin","recht"],
       "contextShort": "Türkisches Restaurant in Köln. Antworten nur aus Bot/Website-Daten."
     },
-
     "compliance": {
       "consentText": "Deine Frage wird an unseren KI-Dienst gesendet, um dir zu antworten. Keine sensiblen Daten eingeben.",
       "privacyUrl": "/datenschutz",
       "imprintUrl": "/impressum",
       "disclaimer": "Keine Rechts- oder Medizinberatung."
     },
-
     "systemPrompt": "Sprich ultrakurz (1 Satz; FAQ/Speisen max. 2 Sätze). Sprich nur über Inhalte aus bot.json/aktiven Flows/Website. Keine Infos über andere Anbieter/Branchen. Keine Preise/Allergene erfinden. Reservieren & Kontakt: silent (Flows übernehmen). Öffnungszeiten: one_liner mit Live-Daten. FAQ/Speisen: two_liners, ggf. passenden Flow öffnen. Sprache spiegeln (DE/EN). Kurze Grüße sind ok; keine langen Smalltalk-Dialoge. Bei fehlender Info: 1 Satz Unknown + optional Kontakt anbieten. Nutze TEXTS für feste Antworten (z. B. Begrüßung, Smalltalk, Identität). Wenn Nutzer nach nicht vorhandener Speise fragt, nutze TEXTS.notOffered + Kategorienchips. Bei Smalltalk niemals Kontakt-Flow öffnen.",
-
     "hybridSmalltalk": true,
     "prompts": {
       "empathy": {
@@ -386,10 +376,8 @@
         "en": "Role: Warm, concise restaurant assistant. Goals: (1) For personal/low-context messages (e.g., boredom, breakup, long day) reply empathetically in one short sentence, (2) gently steer back to restaurant goals (suggest showing the menu or making a reservation), (3) never invent prices/allergens or external facts, (4) no info about other venues, (5) at most one emoji, (6) mirror the user’s language (DE/EN). If unsure: brief unknown line and optionally offer contact."
       }
     },
-
     "blocklistShort": ["kr","res","ok","?","yo","hm","uh","k","lol"],
     "allowlist": ["reservieren","kontakt","öffnungszeiten","speisen","faq"],
-
     "tests": [
       { "q": "wer seid ihr?", "expect": "identity" },
       { "q": "was seid ihr für ein laden", "expect": "identity" },
@@ -412,5 +400,62 @@
       { "q": "bitcoin kurs", "expect": "unknown_once" },
       { "q": "irgendwas komisches 2x", "expect": "fallback_contactform" }
     ]
-  }
+  },
+  "AI_TEXTS": {
+    "OFFER_INTRO": {
+      "de": "Wir haben einige leckere Gerichte in unserem Sortiment! Hier die Auswahl:",
+      "en": "We’ve got some delicious dishes for you! Here’s our selection:"
+    },
+    "ABOUT_SELF": {
+      "de": "Ich bin ein Chatbot von Asmali Konak. Ich bin da, um dir bei Fragen weiterzuhelfen. Was möchtest du wissen?",
+      "en": "I’m a chatbot for Asmali Konak. I’m here to help you — what would you like to know?"
+    },
+    "CAT_LEAD": {
+      "de": "Hast du Lust auf {{category}}? Dann schau mal hier rein!",
+      "en": "Craving some {{category}}? Check this out!"
+    },
+    "ITEM_LEAD": {
+      "de": "Gute Wahl. Hier habe ich alle Informationen dazu:",
+      "en": "Excellent choice! Here’s everything about it:"
+    },
+    "DESSERTS_INTRO": {
+      "de": "Klar – hier findest du unsere Desserts:",
+      "en": "Sure — here are our desserts:"
+    },
+    "EMPATHY_POSITIVE": {
+      "de": "Wie schön! Soll ich dir etwas empfehlen oder die Speisekarte zeigen?",
+      "en": "That’s lovely! Would you like me to suggest something or show you the menu?"
+    },
+    "ENGLISH_TOGGLE_HINT": {
+      "de": "You can switch the site language via the toggle on top.",
+      "en": "You can switch the site language via the toggle on top."
+    }
+  },
+  "AI_ENGLISH_KEYWORDS": [
+    "are you open",
+    "open today",
+    "opening hours",
+    "open now",
+    "menu",
+    "food",
+    "drinks",
+    "dessert",
+    "sweet",
+    "vegetarian",
+    "vegan",
+    "kebab",
+    "pide",
+    "address",
+    "phone",
+    "whatsapp",
+    "contact",
+    "email",
+    "reservation",
+    "reserve",
+    "book a table",
+    "table for",
+    "book",
+    "where is",
+    "how much"
+  ]
 }
