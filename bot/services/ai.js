@@ -1,9 +1,7 @@
 /* ============================================================================
-   PPX AI Service – v2.13.1 (Consent im Block; Inline-Hinweis entfernt)
-   Änderungen (explizit):
-   • Consent nur bei erster KI-Nutzung – als hübscher Block (renderConsentBlock).
-   • Der frühere Inline-Hinweis über dem Eingabefeld wurde komplett entfernt.
-   • Keine sonstigen Styles/Funktionen/Layout-Änderungen.
+   PPX AI Service – v2.13.2
+   Änderung: Consent-Block ergänzt um Nav-Leiste (← Zurück | Zurück ins Hauptmenü)
+   - Keine sonstigen Layout-/Style-/Logik-Änderungen.
 ============================================================================ */
 (function () {
   'use strict';
@@ -75,6 +73,7 @@
     }catch(e){ return 0; }
   }
   function sleep(ms){ return new Promise(function(r){ setTimeout(r, Math.max(0,ms|0)); }); }
+
   // ---------- UI helpers -----------------------------------------------------
   function appendToView(node){ var v=viewEl(); if(!v) return null; v.appendChild(node); moveThreadToEnd(); return node; }
   function moveThreadToEnd(){ var v=viewEl(); if(!v) return; try{ v.scrollTop=v.scrollHeight; requestAnimationFrame(function(){ v.scrollTop=v.scrollHeight; }); }catch(e){} }
@@ -89,6 +88,7 @@
     b.innerHTML=html; wrap.appendChild(b); return wrap;
   }
   function userEcho(text){ return appendToView(bubble('user', esc(text))); }
+
   // ---------- Typing-Queue (Bot) --------------------------------------------
   var Q=[], Qbusy=false;
   async function _runQ(){
@@ -117,7 +117,6 @@
     Q.push(async function(){ await sleep(t.afterLeadToFlowMs); openFlow(tool, detail||{}); moveThreadToEnd(); });
     _runQ();
   }
-
   // ---------- Rate / Unknown / Out-of-scope ---------------------------------
   var rl={hits:[],max:15};
   function allowHit(){ var t=now(); rl.hits=rl.hits.filter(function(h){return t-h<60000;}); if(rl.hits.length>=rl.max) return false; rl.hits.push(t); return true; }
@@ -193,6 +192,7 @@
     }
     PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
+
   // ---------- alias / synonyms (offline) ------------------------------------
   function aliasMap(){ try{ var A=aiCfg()||{}; return (A.alias||{}); }catch(e){ return {}; } }
   function aliasExpand(q){
@@ -267,7 +267,6 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'empathy-positive'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
-
   // ---------- FAQ Strict Map -------------------------------------------------
   function faqCategoryMapStrict(){
     var out=Object.create(null);
@@ -294,6 +293,7 @@
     return out;
   }
   function faqMatchFromTextStrict(txt){ var map=faqCategoryMapStrict(); var n=_norm(txt); if(!n) return null; return map[n]||null; }
+
   // ---------- tool alias & openFlow -----------------------------------------
   function toolAlias(n){ n=String(n||'').toLowerCase();
     if(n==='öffnungszeiten'||n==='oeffnungszeiten'||n==='hours') return 'hours';
@@ -382,6 +382,7 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'unknown-choice'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
+
   // ---------- Regeln/Flows (true = handled) ----------------------------------
   function dessertAsk(q){
     var n=_norm(q);
@@ -507,7 +508,6 @@
     offerMainMenuButton();
     PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
-
   // ---------- Consent + Sende-Pipeline --------------------------------------
   var _consented=false, _pendingQ=null, _consentBlockEl=null, $dock=null, $inp=null, $send=null;
 
@@ -545,12 +545,26 @@
 
   function renderConsentBlock(){
     var A=aiCfg()||{}, C=A.compliance||{}, L=nowLang();
-    var title = (L==='en') ? 'AI consent' : 'KI-Einwilligung';
+
+    // SSoT Labels (optional aus bot.json → AI.compliance.labels.*)
+    var lbls=((A.compliance&&A.compliance.labels)||{});
+    var LAB={
+      title: (L==='en'?'AI consent':'KI-Einwilligung'),
+      agree: (L==='en'?'Agree & continue':'Zustimmen & fortfahren'),
+      decline: (L==='en'?'Decline':'Ablehnen')
+    };
+    try{
+      if(lbls.title){ LAB.title = (L==='en'&&lbls.title.en)?lbls.title.en:(lbls.title.de||LAB.title); }
+      if(lbls.agree){ LAB.agree = (L==='en'&&lbls.agree.en)?lbls.agree.en:(lbls.agree.de||LAB.agree); }
+      if(lbls.decline){ LAB.decline = (L==='en'&&lbls.decline.en)?lbls.decline.en:(lbls.decline.de||LAB.decline); }
+    }catch(e){}
+
+    var title = LAB.title;
     var msg   = C.consentText || (L==='en'
       ? 'Your message will be sent to our AI service. Please avoid sensitive data.'
       : 'Deine Frage wird an unseren KI-Dienst gesendet. Bitte keine sensiblen Daten eingeben.');
 
-    // 🔁 Geändert: In-Page-Anker statt externer Pfade/Neuer Tab
+    // In-Page-Anker (#datenschutz/#impressum), unverändert
     var privacyHref = (C.privacyUrl && String(C.privacyUrl).charAt(0)==='#') ? C.privacyUrl : '#datenschutz';
     var imprintHref = (C.imprintUrl && String(C.imprintUrl).charAt(0)==='#') ? C.imprintUrl : '#impressum';
 
@@ -560,13 +574,15 @@
       esc(C.disclaimer || (L==='en'?'No legal or medical advice.':'Keine Rechts- oder Medizinberatung.'))
     ].join(' · ');
 
+    // Block erstellen
+    var scopeIdx = (PPX.ui&&PPX.ui.getScopeIndex)? PPX.ui.getScopeIndex() : 0;
     var blk=(PPX.ui&&PPX.ui.block) ? PPX.ui.block(title,{blockKey:'ai-consent',maxWidth:'640px'})
                                    : appendToView(bubble('bot', esc(title)));
     var content = el('div', {'class':'ppx-block-content'});
     content.innerHTML = esc(msg)+' '+links;
     blk.appendChild(content);
 
-    // Smooth scroll für #datenschutz / #impressum (ohne neue Tabs)
+    // Smooth scroll für #datenschutz / #impressum
     try{
       var anchors = content.querySelectorAll('a.ppx-link[href^="#"]');
       anchors.forEach(function(a){
@@ -581,17 +597,21 @@
       });
     }catch(e){}
 
+    // Primary Buttons (Agree / Decline)
     var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
-    var yesLbl=(L==='en')?'Agree & continue':'Zustimmen & fortfahren';
-    var noLbl =(L==='en')?'Decline':'Ablehnen';
-
-    var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(yesLbl, agreeConsent, 'ppx-cta','✅')
-                                : el('button',{class:'ppx-b ppx-cta',onclick:agreeConsent}, yesLbl);
-    var no =(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(noLbl,  declineConsent, 'ppx-secondary','✖️')
-                                : el('button',{class:'ppx-b ppx-secondary',onclick:declineConsent}, noLbl);
-
+    var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.agree, agreeConsent, 'ppx-cta','✅')
+                                : el('button',{class:'ppx-b ppx-cta',onclick:agreeConsent}, LAB.agree);
+    var no =(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.decline,  declineConsent, 'ppx-secondary','✖️')
+                                : el('button',{class:'ppx-b ppx-secondary',onclick:declineConsent}, LAB.decline);
     row.appendChild(yes); row.appendChild(no);
     blk.appendChild(row);
+
+    // ▼▼ NEU: Nav-Leiste exakt wie in den Flows (Back | Home) ▼▼
+    if (PPX.ui && typeof PPX.ui.navBottom === 'function') {
+      var nav = PPX.ui.navBottom(scopeIdx);
+      blk.appendChild(nav);
+    }
+
     appendToView(blk);
     _consentBlockEl = blk;
     PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
@@ -614,7 +634,6 @@
       ? 'Okay! You can still use the site without the AI assistant.'
       : 'Alles klar! Du kannst die Seite auch ohne KI-Assistent nutzen.')));
   }
-
   // ---------- Dock (Input/Send) ---------------------------------------------
   function ensureDock(){
     var panel=document.getElementById('ppx-panel'); if(!panel) return false;
@@ -684,3 +703,4 @@
 
   try{ boot(); }catch(e){}
 })();
+// (EOF)

@@ -293,6 +293,15 @@
       "kontakt": ["kontaktformular","email","mail","telefon","anrufen","call","telefonnummer","adresse"],
       "heute": ["today","heute offen","are you open today"]
     },
+    "TEXTS": {
+      "consent": {
+        "title":   { "de": "KI-Einwilligung",         "en": "AI consent" },
+        "agree":   { "de": "Zustimmen & fortfahren",  "en": "Agree & continue" },
+        "decline": { "de": "Ablehnen",                "en": "Decline" },
+        "back":    { "de": "Zurück",                  "en": "Back" },
+        "home":    { "de": "Zurück ins Hauptmenü",    "en": "Back to main menu" }
+      }
+    },
     "TEXTS_REF": {
       "greeting": "TEXTS.greeting",
       "notOffered": "TEXTS.notOffered",
