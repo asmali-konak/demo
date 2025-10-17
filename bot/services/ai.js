@@ -1,12 +1,8 @@
 /* ============================================================================
-   PPX AI Service – v2.13.0 (Consent fix + Trigger/Flows vollständig)
-   Änderungen NUR (explizit gewünscht):
-   • Consent nur bei erster KI-Nutzung, hübsch mit HTML im Block.
-   • Vor Zustimmung: nur letzte Eingabe merken (kein Echo, kein weiterer Consent).
-   • Nach Zustimmung: _pendingQ -> $inp.value -> setTimeout(send,0) -> volle Pipeline
-     (erst Regeln/Flows, dann ggf. KI).
-   • Flows via Buttons jederzeit (ohne Consent) möglich.
-   • ensureDock() wieder robust: Dock bauen, .ai-inp/.ai-send finden, Events setzen.
+   PPX AI Service – v2.13.1 (Consent im Block; Inline-Hinweis entfernt)
+   Änderungen (explizit):
+   • Consent nur bei erster KI-Nutzung – als hübscher Block (renderConsentBlock).
+   • Der frühere Inline-Hinweis über dem Eingabefeld wurde komplett entfernt.
    • Keine sonstigen Styles/Funktionen/Layout-Änderungen.
 ============================================================================ */
 (function () {
@@ -130,7 +126,6 @@
   function resetUnknown(){ var S=st(); S.unknownCount=0; S.lastUnknownAt=0; }
   function bumpOos(){ var S=st(), t=now(); if((t-(S.lastOosAt||0))>45000){ S.oosCount=0; } S.oosCount=(S.oosCount||0)+1; S.lastOosAt=t; return S.oosCount; }
   function resetOos(){ var S=st(); S.oosCount=0; S.lastOosAt=0; }
-
   // ---------- labels & categories -------------------------------------------
   function catLabelFromKey(catKey){ var C=cfg(), L=nowLang(); var obj=(C.menuTitles && C.menuTitles[catKey]) || null; return obj?(L==='en'&&obj.en?obj.en:(obj.de||catKey)):catKey; }
 
@@ -181,6 +176,7 @@
     try{ window.dispatchEvent(new CustomEvent('ppx:tool',{detail:{tool:'contactform', detail:Object.assign({ startAt:'email', skipHeader:true }, extra)}})); return true; }catch(e){}
     return false;
   }
+
   // ---------- unknown/manual -------------------------------------------------
   function respondUnknownManual(){
     var L=nowLang(); var cnt=bumpUnknown();
@@ -272,23 +268,33 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'empathy-positive'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
-
   // ---------- FAQ Strict Map -------------------------------------------------
   function faqCategoryMapStrict(){
     var out=Object.create(null);
     try{
-      var F=faqs(), cats=[]; 
-      if(F && Array.isArray(F.cats)) cats=F.cats; 
+      var F=faqs(), cats=[];
+      if(F && Array.isArray(F.cats)) cats=F.cats;
       else if(F && Array.isArray(F.items)) cats=[{key:'all',title:F.title||'FAQ',title_en:F.title_en||'FAQ'}];
-      cats.forEach(function(c){ var k=(c&&c.key)?String(c.key):'', t=(c&&c.title)?String(c.title):'', te=(c&&c.title_en)?String(c.title_en):''; 
-        if(k){ out[_norm(k)]=k; } if(t){ out[_norm(t)]=k||_norm(t); } if(te){ out[_norm(te)]=k||_norm(te); }});
+      cats.forEach(function(c){
+        var k=(c&&c.key)?String(c.key):'';
+        var t=(c&&c.title)?String(c.title):'';
+        var te=(c&&c.title_en)?String(c.title_en):'';
+        if(k){ out[_norm(k)]=k; }
+        if(t){ out[_norm(t)]=k||_norm(t); }
+        if(te){ out[_norm(te)]=k||_norm(te); }
+      });
       var A=aiCfg()||{}, intents=(A.intents||{}), faq=(intents.faq||{}), catsCfg=(faq.categories||{});
-      Object.keys(catsCfg).forEach(function(catKey){ var entry=catsCfg[catKey], arr=Array.isArray(entry)?entry:(Array.isArray(entry.keywords)?entry.keywords:[]); 
-        (arr||[]).forEach(function(s){ var n=_norm(s); if(!n) return; out[n]=catKey; });});
+      Object.keys(catsCfg).forEach(function(catKey){
+        var entry=catsCfg[catKey], arr=Array.isArray(entry)?entry:(Array.isArray(entry.keywords)?entry.keywords:[]);
+        (arr||[]).forEach(function(s){
+          var n=_norm(s); if(!n) return; out[n]=catKey;
+        });
+      });
     }catch(e){}
     return out;
   }
   function faqMatchFromTextStrict(txt){ var map=faqCategoryMapStrict(); var n=_norm(txt); if(!n) return null; return map[n]||null; }
+
   // ---------- tool alias & openFlow -----------------------------------------
   function toolAlias(n){ n=String(n||'').toLowerCase();
     if(n==='öffnungszeiten'||n==='oeffnungszeiten'||n==='hours') return 'hours';
@@ -315,7 +321,7 @@
     for(var i=0;i<base.length;i++){ if(wbRegex(base[i]).test(n)) return true; }
     var patterns=['habt ihr auf','habt ihr heute auf','seid ihr offen','seid ihr heute offen','seid ihr da','seid ihr heute da','seid ihr geoeffnet','seid ihr geoffnet','kann ich heute vorbeikommen','open now','are you open now','are you open today','open today','opening hours','hast du heute auf','hast du auf','hast du offen','habt ihr offen'];
     for(var j=0;j<patterns.length;j++){ if(wbRegex(patterns[j]).test(n)) return true; }
-    if(/\bheute\b/.test(n) && /\b(auf|offen|geoeffnet|geoffnet|geöffnet|open)\b/.test(n)) return true; 
+    if(/\bheute\b/.test(n) && /\b(auf|offen|geoeffnet|geoffnet|geöffnet|open)\b/.test(n)) return true;
     return false;
   }
   function replyOpenHoursSmart(){
@@ -491,9 +497,20 @@
 
     return false;
   }
+  // ---------- Out-of-scope response -----------------------------------------
+  function respondOutOfScope(){
+    var L=nowLang();
+    appendToView(bubble('bot', esc(
+      L==='en'
+        ? 'That’s outside my scope here. I can help with our menu, opening hours or a reservation.'
+        : 'Das liegt außerhalb meines Rahmens hier. Ich helfe dir gern mit Speisekarte, Öffnungszeiten oder Reservierung.'
+    )));
+    offerMainMenuButton();
+    PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
+  }
 
   // ---------- Consent + Sende-Pipeline --------------------------------------
-  var _consented=false, _pendingQ=null, _consentBlockEl=null, $dock=null, $inp=null, $send=null, $consentInline=null;
+  var _consented=false, _pendingQ=null, _consentBlockEl=null, $dock=null, $inp=null, $send=null;
 
   async function send(){
     ensureDock(); if(!$inp) return;
@@ -515,6 +532,7 @@
     userEcho(q);
     processOnlyAi(q);
   }
+
   // ---------- Nur-AI Verarbeitung (nach Regeln) ------------------------------
   function processOnlyAi(q){
     try{
@@ -529,7 +547,7 @@
     offerContactChoice();
   }
 
-  // ---------- Consent --------------------------------------------------------
+  // ---------- Consent helpers ------------------------------------------------
   function loadConsent(){ try{ return localStorage.getItem('ppx_ai_consent')==='true'; }catch(e){ return false; } }
   function saveConsent(v){ try{ v?localStorage.setItem('ppx_ai_consent','true'):localStorage.removeItem('ppx_ai_consent'); }catch(e){} }
 
@@ -547,7 +565,6 @@
 
     var blk=(PPX.ui&&PPX.ui.block) ? PPX.ui.block(title,{blockKey:'ai-consent',maxWidth:'640px'})
                                    : appendToView(bubble('bot', esc(title)));
-    // Inhalt hübsch, ohne Styles zu ändern (PPX-Block übernimmt Look)
     var content = el('div', {'class':'ppx-block-content'});
     content.innerHTML = esc(msg)+' '+links;
     blk.appendChild(content);
@@ -572,7 +589,6 @@
     saveConsent(true);
     _consented = true;
     if(_consentBlockEl && _consentBlockEl.parentNode) _consentBlockEl.parentNode.removeChild(_consentBlockEl);
-    try{ if($consentInline) $consentInline.style.display='none'; }catch(e){}
     // Nur die letzte gemerkte Nachricht absenden (wie echte Eingabe → Regeln/Flows greifen zuerst)
     if(_pendingQ){
       var msg=_pendingQ; _pendingQ=null;
@@ -588,20 +604,19 @@
       : 'Alles klar! Du kannst die Seite auch ohne KI-Assistent nutzen.')));
   }
 
-  // ---------- Dock (Input/Send) – robuste Originalvariante -------------------
+  // ---------- Dock (Input/Send) – ohne Inline-Consent -----------------------
   function ensureDock(){
     var panel=document.getElementById('ppx-panel'); if(!panel) return false;
     var exist = panel.querySelector('.ppx-ai-dock');
     if(exist){
-      $dock=exist; $inp=$dock.querySelector('.ai-inp'); $send=$dock.querySelector('.ai-send'); $consentInline=$dock.querySelector('.ai-consent');
+      $dock=exist; $inp=$dock.querySelector('.ai-inp'); $send=$dock.querySelector('.ai-send');
       return true;
     }
 
-    // Styles einmalig hinzufügen (unverändert)
+    // Styles einmalig hinzufügen (unverändert; .ai-consent wird nicht genutzt)
     if(!document.getElementById('ppx-ai-inside-style')){
       var css=("#ppx-panel .ppx-ai-dock{display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--ppx-bot-header,#0f3a2f);border-top:1px solid rgba(0,0,0,.25)}\
-#ppx-panel .ppx-ai-dock .ai-consent{font-size:13px;line-height:1.4;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);border-radius:10px;padding:8px 10px;display:none}\
-#ppx-panel .ppx-ai-dock .ai-consent a{color:#fff;text-decoration:underline}\
+#ppx-panel .ppx-ai-dock .ai-consent{display:none}\
 #ppx-panel .ppx-ai-dock .ai-row{display:flex;gap:10px;align-items:center}\
 #ppx-panel .ppx-ai-dock .ai-inp{flex:1;padding:10px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#f7faf8;font-size:16px;outline:none}\
 #ppx-panel .ppx-ai-dock .ai-inp::placeholder{color:rgba(255,255,255,.75)}\
@@ -610,18 +625,10 @@
       var s=el('style',{id:'ppx-ai-inside-style'}); s.textContent=css; (document.head||document.documentElement).appendChild(s);
     }
 
-    var cfgAI=aiCfg(); var comp=(cfgAI&&cfgAI.compliance)||{};
-    $consentInline=el('div',{class:'ai-consent',role:'note'});
-    var txt=esc(comp.consentText||'Deine Frage wird an unseren KI-Dienst gesendet.');
-    txt+=' <a href="'+esc(comp.privacyUrl||'/datenschutz')+'" target="_blank" rel="noopener">Datenschutz</a> · ';
-    txt+='<a href="'+esc(comp.imprintUrl||'/impressum')+'" target="_blank" rel="noopener">Impressum</a> · ';
-    txt+=esc(comp.disclaimer||'Keine Rechts- oder Medizinberatung.');
-    $consentInline.innerHTML=txt;
-
     $inp = el('input',{type:'text',class:'ai-inp',placeholder:'Frag unseren KI-Assistenten :)','aria-label':'KI-Frage eingeben'});
     $send= el('button',{type:'button',class:'ai-send'},'Senden');
     var row = el('div',{class:'ai-row'}, $inp, $send);
-    $dock  = el('div',{class:'ppx-ai-dock'}, $consentInline, row);
+    $dock  = el('div',{class:'ppx-ai-dock'}, row);
 
     var v = viewEl(); var panelFooter = (panel.querySelector('.ppx-brandbar, .ppx-elements-footer, .ai-elements-footer, .ppx-footer, footer')) || null;
     try{
@@ -632,7 +639,6 @@
 
     $inp.addEventListener('keydown', function(e){ if(e.key==='Enter'){ e.preventDefault(); send(); }});
     $send.addEventListener('click', send);
-    try{ if(!(localStorage.getItem('ppx_ai_consent')==='true')){ $consentInline.style.display='block'; } }catch(e){}
     return true;
   }
 
@@ -640,7 +646,12 @@
   function ensureDockLoop(){
     if(_dockTimer) return;
     _dockTries=0;
-    _dockTimer=setInterval(function(){ _dockTries++; var ok=ensureDock(); if(ok || _dockTries>60){ try{ clearInterval(_dockTimer); }catch(e){} _dockTimer=null; } },1000);
+    _dockTimer=setInterval(function(){
+      _dockTries++; var ok=ensureDock(); if(ok || _dockTries>60){
+        try{ clearInterval(_dockTimer); }catch(e){}
+        _dockTimer=null;
+      }
+    },1000);
   }
 
   // ---------- Boot & Export --------------------------------------------------
