@@ -15,6 +15,10 @@
   --font-heading:Cinzel,serif;
 }
 
+/* --- Smooth Scroll + Anchor Offset ---------------------------------------- */
+html { scroll-behavior: smooth; }
+#datenschutz, #impressum { scroll-margin-top: var(--header-h, 80px); }
+
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 
@@ -98,7 +102,6 @@ ul.menu-list li.dish{
   .price{min-width:80px}
   ul.menu-list li.dish{gap:8px}
 }
-
 /* --- Galerie --------------------------------------------------------------- */
 #galerie .frame{padding-bottom:30px}
 .gallery{display:grid;gap:14px;grid-template-columns:repeat(auto-fit, minmax(220px,1fr));margin-bottom:6px}

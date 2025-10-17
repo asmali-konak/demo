@@ -89,7 +89,6 @@
     b.innerHTML=html; wrap.appendChild(b); return wrap;
   }
   function userEcho(text){ return appendToView(bubble('user', esc(text))); }
-
   // ---------- Typing-Queue (Bot) --------------------------------------------
   var Q=[], Qbusy=false;
   async function _runQ(){
@@ -126,6 +125,7 @@
   function resetUnknown(){ var S=st(); S.unknownCount=0; S.lastUnknownAt=0; }
   function bumpOos(){ var S=st(), t=now(); if((t-(S.lastOosAt||0))>45000){ S.oosCount=0; } S.oosCount=(S.oosCount||0)+1; S.lastOosAt=t; return S.oosCount; }
   function resetOos(){ var S=st(); S.oosCount=0; S.lastOosAt=0; }
+
   // ---------- labels & categories -------------------------------------------
   function catLabelFromKey(catKey){ var C=cfg(), L=nowLang(); var obj=(C.menuTitles && C.menuTitles[catKey]) || null; return obj?(L==='en'&&obj.en?obj.en:(obj.de||catKey)):catKey; }
 
@@ -193,7 +193,6 @@
     }
     PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
-
   // ---------- alias / synonyms (offline) ------------------------------------
   function aliasMap(){ try{ var A=aiCfg()||{}; return (A.alias||{}); }catch(e){ return {}; } }
   function aliasExpand(q){
@@ -268,6 +267,7 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'empathy-positive'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
+
   // ---------- FAQ Strict Map -------------------------------------------------
   function faqCategoryMapStrict(){
     var out=Object.create(null);
@@ -294,7 +294,6 @@
     return out;
   }
   function faqMatchFromTextStrict(txt){ var map=faqCategoryMapStrict(); var n=_norm(txt); if(!n) return null; return map[n]||null; }
-
   // ---------- tool alias & openFlow -----------------------------------------
   function toolAlias(n){ n=String(n||'').toLowerCase();
     if(n==='öffnungszeiten'||n==='oeffnungszeiten'||n==='hours') return 'hours';
@@ -383,7 +382,6 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'unknown-choice'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
-
   // ---------- Regeln/Flows (true = handled) ----------------------------------
   function dessertAsk(q){
     var n=_norm(q);
@@ -497,6 +495,7 @@
 
     return false;
   }
+
   // ---------- Out-of-scope response -----------------------------------------
   function respondOutOfScope(){
     var L=nowLang();
@@ -515,20 +514,14 @@
   async function send(){
     ensureDock(); if(!$inp) return;
     var raw=String($inp.value||''); var q=raw.trim(); if(!q) return;
-    $inp.value=''; // sofort leeren
-
-    // Consent nur bei erster KI-Nutzung
+    $inp.value='';
     _consented = (_consented===true) || loadConsent();
     if(!_consented){
-      _pendingQ = q; // nur letzte Eingabe merken
+      _pendingQ = q;
       if(!_consentBlockEl || !_consentBlockEl.isConnected){ renderConsentBlock(); }
       return;
     }
-
-    // Volle Pipeline: erst Regeln/Flows, dann ggf. KI
     if(processRulesMaybeFlow(q)) return;
-
-    // nichts gegriffen → KI
     userEcho(q);
     processOnlyAi(q);
   }
@@ -540,7 +533,6 @@
       var svc = PPX.services && PPX.services.aiWorker;
       if(svc && typeof svc.process==='function'){ return svc.process(q); }
     }catch(e){}
-    // Fallback: höflicher Hinweis + Kontaktwahl
     appendToView(bubble('bot', esc(nowLang()==='en'
       ? "I can't answer that here. Would you like to contact us?"
       : "Das kann ich hier nicht beantworten. Möchtest du uns eine Nachricht senden?")));
@@ -557,9 +549,14 @@
     var msg   = C.consentText || (L==='en'
       ? 'Your message will be sent to our AI service. Please avoid sensitive data.'
       : 'Deine Frage wird an unseren KI-Dienst gesendet. Bitte keine sensiblen Daten eingeben.');
+
+    // 🔁 Geändert: In-Page-Anker statt externer Pfade/Neuer Tab
+    var privacyHref = (C.privacyUrl && String(C.privacyUrl).charAt(0)==='#') ? C.privacyUrl : '#datenschutz';
+    var imprintHref = (C.imprintUrl && String(C.imprintUrl).charAt(0)==='#') ? C.imprintUrl : '#impressum';
+
     var links = [
-      '<a class="ppx-link" href="'+esc(C.privacyUrl||'/datenschutz')+'" target="_blank" rel="noopener">Datenschutz</a>',
-      '<a class="ppx-link" href="'+esc(C.imprintUrl||'/impressum')+'" target="_blank" rel="noopener">Impressum</a>',
+      '<a class="ppx-link" href="'+esc(privacyHref)+'">Datenschutz</a>',
+      '<a class="ppx-link" href="'+esc(imprintHref)+'">Impressum</a>',
       esc(C.disclaimer || (L==='en'?'No legal or medical advice.':'Keine Rechts- oder Medizinberatung.'))
     ].join(' · ');
 
@@ -568,6 +565,21 @@
     var content = el('div', {'class':'ppx-block-content'});
     content.innerHTML = esc(msg)+' '+links;
     blk.appendChild(content);
+
+    // Smooth scroll für #datenschutz / #impressum (ohne neue Tabs)
+    try{
+      var anchors = content.querySelectorAll('a.ppx-link[href^="#"]');
+      anchors.forEach(function(a){
+        a.addEventListener('click', function(e){
+          var id=a.getAttribute('href')||''; if(!id||id.charAt(0)!=='#') return;
+          var target=document.querySelector(id);
+          if(target){
+            e.preventDefault();
+            try{ target.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){ location.hash=id; }
+          }
+        });
+      });
+    }catch(e){}
 
     var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
     var yesLbl=(L==='en')?'Agree & continue':'Zustimmen & fortfahren';
@@ -589,7 +601,6 @@
     saveConsent(true);
     _consented = true;
     if(_consentBlockEl && _consentBlockEl.parentNode) _consentBlockEl.parentNode.removeChild(_consentBlockEl);
-    // Nur die letzte gemerkte Nachricht absenden (wie echte Eingabe → Regeln/Flows greifen zuerst)
     if(_pendingQ){
       var msg=_pendingQ; _pendingQ=null;
       if($inp){ $inp.value = msg; setTimeout(send,0); }
@@ -604,7 +615,7 @@
       : 'Alles klar! Du kannst die Seite auch ohne KI-Assistent nutzen.')));
   }
 
-  // ---------- Dock (Input/Send) – ohne Inline-Consent -----------------------
+  // ---------- Dock (Input/Send) ---------------------------------------------
   function ensureDock(){
     var panel=document.getElementById('ppx-panel'); if(!panel) return false;
     var exist = panel.querySelector('.ppx-ai-dock');
@@ -612,8 +623,6 @@
       $dock=exist; $inp=$dock.querySelector('.ai-inp'); $send=$dock.querySelector('.ai-send');
       return true;
     }
-
-    // Styles einmalig hinzufügen (unverändert; .ai-consent wird nicht genutzt)
     if(!document.getElementById('ppx-ai-inside-style')){
       var css=("#ppx-panel .ppx-ai-dock{display:flex;flex-direction:column;gap:8px;padding:10px 12px;background:var(--ppx-bot-header,#0f3a2f);border-top:1px solid rgba(0,0,0,.25)}\
 #ppx-panel .ppx-ai-dock .ai-consent{display:none}\
@@ -624,7 +633,6 @@
 #ppx-panel .ppx-ai-dock.busy .ai-send{opacity:.65;pointer-events:none}");
       var s=el('style',{id:'ppx-ai-inside-style'}); s.textContent=css; (document.head||document.documentElement).appendChild(s);
     }
-
     $inp = el('input',{type:'text',class:'ai-inp',placeholder:'Frag unseren KI-Assistenten :)','aria-label':'KI-Frage eingeben'});
     $send= el('button',{type:'button',class:'ai-send'},'Senden');
     var row = el('div',{class:'ai-row'}, $inp, $send);
