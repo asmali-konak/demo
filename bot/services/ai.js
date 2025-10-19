@@ -1,7 +1,7 @@
 /* ============================================================================
    PPX AI Service – v2.13.2
    Änderung: Consent-Block ergänzt um Nav-Leiste (← Zurück | Zurück ins Hauptmenü)
-   - Keine sonstigen Layout-/Style-/Logik-Änderungen.
+   + Deine Wünsche: KI-Vornachrichten vor Speisen-/Kategorie-/Item-Flow
 ============================================================================ */
 (function () {
   'use strict';
@@ -58,7 +58,7 @@
       perCharMs: (isFinite(T.perCharMs)?T.perCharMs:18),
       minMs: (isFinite(T.minMs)?T.minMs:300),
       maxMs: (isFinite(T.maxMs)?T.maxMs:2000),
-      afterLeadToFlowMs: (isFinite(T.afterLeadToFlowMs)?T.afterLeadToFlowMs:500),
+      afterLeadToFlowMs: (isFinite(T.afterLeadToFlowMs)?T.afterLeadToFlowMs:1200),
       betweenQueuedMs: (isFinite(T.betweenQueuedMs)?T.betweenQueuedMs:220)
     };
   }
@@ -204,7 +204,6 @@
       }); return n;
     }catch(e){ return _norm(q); }
   }
-
   // ---------- smalltalk & identity ------------------------------------------
   function detectSmalltalk(q){
     var n=_norm(q);
@@ -213,7 +212,7 @@
         ? "I'm fine, thanks! How can I help — menu, opening hours or a reservation?"
         : "Mir geht’s gut, danke! Wobei kann ich helfen – Speisekarte, Öffnungszeiten oder Reservierung?";
     }
-    var A=aiCfg()||{}, ST=(A.intents&&A.intents.smalltalk)||{}, hit=function(list){ return (list||[]).some(function(p){ return wbRegex(p).test(q); }); };
+    var A=aiCfg()||{}, ST=(A.intents.smalltalk)||{}, hit=function(list){ return (list||[]).some(function(p){ return wbRegex(p).test(q); }); };
     if(hit(ST.greetings && ST.greetings.phrases)) return textOf('greeting') || "Hi! Wie kann ich dir helfen?";
     if(hit(ST.thanks && ST.thanks.phrases)) return textOf('smalltalkThanks') || "Sehr gern! Willst du noch etwas wissen?";
     if(hit(ST.bye && ST.bye.phrases)) return textOf('smalltalkBye') || "Bis bald 👋";
@@ -224,7 +223,7 @@
 
   function identityReply(){
     var C=cfg(), L=nowLang();
-    var brand=C.brand||'Unser Restaurant', tag=C.tagline||'Authentische Küche in deiner Nähe.', lab1=catLabelFromKey((C.menuOrder||[])[0]||'Speisen');
+    var brand=C.brand||'Unser Restaurant', tag=C.tagline||'Authentische Küche in deiner Nähe.';
     return (L==='en')
       ? ('We are '+brand+' — '+tag+' I can show the menu or help you reserve.')
       : ('Wir sind '+brand+' – '+tag+' Ich kann dir die Speisekarte zeigen oder eine Reservierung starten.');
@@ -267,6 +266,7 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'empathy-positive'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
+
   // ---------- FAQ Strict Map -------------------------------------------------
   function faqCategoryMapStrict(){
     var out=Object.create(null);
@@ -293,7 +293,6 @@
     return out;
   }
   function faqMatchFromTextStrict(txt){ var map=faqCategoryMapStrict(); var n=_norm(txt); if(!n) return null; return map[n]||null; }
-
   // ---------- tool alias & openFlow -----------------------------------------
   function toolAlias(n){ n=String(n||'').toLowerCase();
     if(n==='öffnungszeiten'||n==='oeffnungszeiten'||n==='hours') return 'hours';
@@ -382,7 +381,6 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'unknown-choice'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
-
   // ---------- Regeln/Flows (true = handled) ----------------------------------
   function dessertAsk(q){
     var n=_norm(q);
@@ -393,7 +391,11 @@
     var tpl=textOf('categoryLead')||'Hast du Lust auf {{category}}? Dann schau mal hier rein!';
     say(tpl.replace('{{category}}', lab));
   }
-  function leadForItem(){ say(textOf('itemLead')||'Gute Wahl. Hier habe ich alle Informationen dazu:'); }
+  function leadForItem(itemName){
+    var tpl=textOf('itemLead')||'Gute Wahl. Hier habe ich alle Informationen dazu:';
+    if(/\{\{\s*item\s*\}\}/.test(tpl)){ say(tpl.replace('{{item}}', itemName||'')); }
+    else { say(tpl); }
+  }
 
   function processRulesMaybeFlow(q){
     if(!allowHit()){ appendToView(bubble('bot','Bitte kurz warten ⏳')); return true; }
@@ -454,7 +456,10 @@
         for(var j=0;j<arr.length;j++){
           var nm=(arr[j].name||''), ne=(arr[j].name_en||''), nmN=_norm(nm), neN=_norm(ne), ckN=_norm(ck);
           if((nm&&(wbRegex(nm).test(q)||wbNormHit(nmN,qn2)))||(ne&&(wbRegex(ne).test(q)||wbNormHit(neN,qn2)))||(ckN&&nmN&&qn2.indexOf(ckN)>=0&&qn2.indexOf(nmN)>=0)){
-            userEcho(q); leadForItem(); queueFlowOpen('speisen',{category:ck,itemId:arr[j].id}); resetUnknown(); resetOos(); dbgPush({type:'dish_item',q:q}); return true;
+            userEcho(q);
+            var disp=(nowLang()==='en' && ne)? ne : nm;
+            leadForItem(disp);
+            queueFlowOpen('speisen',{category:ck,itemId:arr[j].id}); resetUnknown(); resetOos(); dbgPush({type:'dish_item',q:q}); return true;
           }
         }
       }
@@ -476,7 +481,6 @@
       }
       if(fc){ userEcho(q); openFlow('faq',{category:fc,behavior:'silent'}); resetUnknown(); resetOos(); dbgPush({type:'faq',q:q}); return true; }
     }catch(e){}
-
     // Statische Intents
     var intents={ kontakt:['kontakt','email','mail','anrufen','telefon','call'],
       'öffnungszeiten':['öffnungszeiten','zeiten','hours','open','geöffnet','geoeffnet','offen','open today','are you open today'],
@@ -485,7 +489,17 @@
     for(var tool in intents){
       var arr=intents[tool]||[]; var hit=false;
       for(var k=0;k<arr.length;k++){ if(wbRegex(arr[k]).test(qRaw) || wbNormHit(_norm(arr[k]), qNorm)){ hit=true; break; } }
-      if(hit){ userEcho(q); queueFlowOpen(tool,{}); resetUnknown(); resetOos(); dbgPush({type:'intent',q:q,tool:tool}); return true; }
+      if(hit){
+        userEcho(q);
+        if(tool==='speisen'){
+          var fallbackLead = (nowLang()==='en') ? 'Want to see our dishes? Take a look:' : 'Du möchtest mehr über unsere Speisen wissen? Schau hier:';
+          say(textOf('speisenLead') || fallbackLead);
+          queueFlowOpen(tool,{});
+        }else{
+          queueFlowOpen(tool,{});
+        }
+        resetUnknown(); resetOos(); dbgPush({type:'intent',q:q,tool:tool}); return true;
+      }
     }
 
     // Nicht im Angebot
@@ -546,7 +560,6 @@
   function renderConsentBlock(){
     var A=aiCfg()||{}, C=A.compliance||{}, L=nowLang();
 
-    // SSoT Labels (optional aus bot.json → AI.compliance.labels.*)
     var lbls=((A.compliance&&A.compliance.labels)||{});
     var LAB={
       title: (L==='en'?'AI consent':'KI-Einwilligung'),
@@ -564,7 +577,6 @@
       ? 'Your message will be sent to our AI service. Please avoid sensitive data.'
       : 'Deine Frage wird an unseren KI-Dienst gesendet. Bitte keine sensiblen Daten eingeben.');
 
-    // In-Page-Anker (#datenschutz/#impressum), unverändert
     var privacyHref = (C.privacyUrl && String(C.privacyUrl).charAt(0)==='#') ? C.privacyUrl : '#datenschutz';
     var imprintHref = (C.imprintUrl && String(C.imprintUrl).charAt(0)==='#') ? C.imprintUrl : '#impressum';
 
@@ -574,7 +586,6 @@
       esc(C.disclaimer || (L==='en'?'No legal or medical advice.':'Keine Rechts- oder Medizinberatung.'))
     ].join(' · ');
 
-    // Block erstellen
     var scopeIdx = (PPX.ui&&PPX.ui.getScopeIndex)? PPX.ui.getScopeIndex() : 0;
     var blk=(PPX.ui&&PPX.ui.block) ? PPX.ui.block(title,{blockKey:'ai-consent',maxWidth:'640px'})
                                    : appendToView(bubble('bot', esc(title)));
@@ -582,7 +593,6 @@
     content.innerHTML = esc(msg)+' '+links;
     blk.appendChild(content);
 
-    // Smooth scroll für #datenschutz / #impressum
     try{
       var anchors = content.querySelectorAll('a.ppx-link[href^="#"]');
       anchors.forEach(function(a){
@@ -597,7 +607,6 @@
       });
     }catch(e){}
 
-    // Primary Buttons (Agree / Decline)
     var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
     var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.agree, agreeConsent, 'ppx-cta','✅')
                                 : el('button',{class:'ppx-b ppx-cta',onclick:agreeConsent}, LAB.agree);
@@ -606,7 +615,6 @@
     row.appendChild(yes); row.appendChild(no);
     blk.appendChild(row);
 
-    // ▼▼ NEU: Nav-Leiste exakt wie in den Flows (Back | Home) ▼▼
     if (PPX.ui && typeof PPX.ui.navBottom === 'function') {
       var nav = PPX.ui.navBottom(scopeIdx);
       blk.appendChild(nav);
@@ -703,4 +711,3 @@
 
   try{ boot(); }catch(e){}
 })();
-// (EOF)

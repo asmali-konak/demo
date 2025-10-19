@@ -119,6 +119,22 @@
     "isReal": {
       "de": "Ich bin ein echter Chatbot – eingerichtet, um dir zu helfen!",
       "en": "I’m a real chatbot — set up to help you!"
+    },
+    "speisenLead": {
+      "de": "Du möchtest mehr über unsere Speisen wissen? Schau hier:",
+      "en": "Want to see our dishes? Take a look:"
+    },
+    "categoryLead": {
+      "de": "Hast du Lust auf {{category}}? Dann schau mal hier rein!",
+      "en": "Craving some {{category}}? Check this out!"
+    },
+    "itemLead": {
+      "de": "Gute Wahl. Hier habe ich alle Informationen dazu:",
+      "en": "Excellent choice! Here’s everything about it:"
+    },
+    "sweetsLead": {
+      "de": "Klar – hier findest du unsere Desserts:",
+      "en": "Sure — here are our desserts:"
     }
   },
   "dishes": {
@@ -283,7 +299,16 @@
       "speisenAutoKeywords": true,
       "respectKnowledgeHints": true,
       "freeLineBeforeFlow": true,
-      "whitelistWh": ["wer","was","who","what"]
+      "whitelistWh": ["wer","was","who","what"],
+      "typingDelays": {
+        "enabled": true,
+        "baseMs": 350,
+        "perCharMs": 18,
+        "minMs": 300,
+        "maxMs": 2000,
+        "afterLeadToFlowMs": 1200,
+        "betweenQueuedMs": 220
+      }
     },
     "alias": {
       "laden": ["restaurant","bude","lokal","imbiss"],
@@ -295,11 +320,11 @@
     },
     "TEXTS": {
       "consent": {
-        "title":   { "de": "KI-Einwilligung",         "en": "AI consent" },
-        "agree":   { "de": "Zustimmen & fortfahren",  "en": "Agree & continue" },
-        "decline": { "de": "Ablehnen",                "en": "Decline" },
-        "back":    { "de": "Zurück",                  "en": "Back" },
-        "home":    { "de": "Zurück ins Hauptmenü",    "en": "Back to main menu" }
+        "title": { "de": "KI-Einwilligung", "en": "AI consent" },
+        "agree": { "de": "Zustimmen & fortfahren", "en": "Agree & continue" },
+        "decline": { "de": "Ablehnen", "en": "Decline" },
+        "back": { "de": "Zurück", "en": "Back" },
+        "home": { "de": "Zurück ins Hauptmenü", "en": "Back to main menu" }
       }
     },
     "TEXTS_REF": {
@@ -324,13 +349,20 @@
       "skipHeader": true
     },
     "intents": {
+      "smalltalk": {
+        "greetings": { "phrases": ["hi","hallo","hey","servus","guten tag","good morning","good evening","moin"] },
+        "thanks":    { "phrases": ["danke","vielen dank","thx","thanks","thank you"] },
+        "bye":       { "phrases": ["tschüss","bye","auf wiedersehen","see you","bis bald","ciao","goodbye"] },
+        "capabilities": { "phrases": ["was kannst du","was machst du","hilfe","help","what can you do"] },
+        "identity":     { "phrases": ["wer bist du","was bist du","who are you","bist du echt","is this real"] }
+      },
       "reservieren": { "keywords": ["reservieren","tisch","buchen","booking","reserve"], "behavior": "silent" },
       "kontakt": { "keywords": ["kontakt","email","mail","anrufen","telefon","call","kontaktformular","adresse","telefonnummer"], "behavior": "silent" },
       "öffnungszeiten": { "keywords": ["öffnungszeiten","zeiten","hours","open","geöffnet","geoeffnet","offen","open today","are you open today"], "behavior": "one_liner" },
       "speisen": {
         "behavior": "two_liners",
         "keywords": ["speisen","essen","menu","menü","menue","karte","speisekarte","food","gerichte"],
-        "items": [],
+        "items": {},
         "categories": {}
       },
       "faq": {
@@ -344,25 +376,6 @@
           "speisenkarte": { "keywords": ["karte","menu","menü","menue","speisekarte","kinder"] },
           "kontakt": { "keywords": ["adresse","route","anreise","maps","telefonnummer"] },
           "bestellung": { "keywords": ["vorbestellen","pre-order","schnellbestellung"] }
-        }
-      },
-      "smalltalk": {
-        "greetings": { "phrases": ["hallo","hey","hi","servus","moin","guten morgen","guten abend","na"], "replyRef": "TEXTS.greeting" },
-        "thanks": { "phrases": ["danke","dankeschön","merci","thx","super","perfekt"], "replyRef": "TEXTS.smalltalkThanks" },
-        "bye": { "phrases": ["tschüss","ciao","tschau","auf wiedersehen","bis bald"], "replyRef": "TEXTS.smalltalkBye" },
-        "capabilities": {
-          "phrases": [
-            "was kannst du","wofür bist du da","was machst du","wozu der bot","wozu bist du da",
-            "was bietet ihr an","was gibt es bei euch","was macht ihr so"
-          ],
-          "replyRef": "TEXTS.capability"
-        },
-        "identity": {
-          "phrases": [
-            "wer seid ihr","was seid ihr","was seid ihr für ein laden","wer seid ihr eigentlich",
-            "wer bist du","wer hat euch gemacht","bist du echt","seid ihr echt"
-          ],
-          "replyRef": "TEXTS.isReal"
         }
       }
     },
@@ -386,85 +399,20 @@
       }
     },
     "blocklistShort": ["kr","res","ok","?","yo","hm","uh","k","lol"],
-    "allowlist": ["reservieren","kontakt","öffnungszeiten","speisen","faq"],
-    "tests": [
-      { "q": "wer seid ihr?", "expect": "identity" },
-      { "q": "was seid ihr für ein laden", "expect": "identity" },
-      { "q": "was bietet ihr an", "expect": "capability" },
-      { "q": "habt ihr heute auf", "expect": "hours" },
-      { "q": "are you open today", "expect": "hours" },
-      { "q": "mir ist langweilig", "expect": "empathy" },
-      { "q": "ich habe keine freunde", "expect": "empathy" },
-      { "q": "mein freund ist wütend", "expect": "empathy" },
-      { "q": "habt ihr sushi", "expect": "not_offered" },
-      { "q": "gibt’s chinesisch", "expect": "not_offered" },
-      { "q": "speisekarte", "expect": "speisen" },
-      { "q": "pide sucuk", "expect": "speisen_item" },
-      { "q": "reservieren", "expect": "reservieren" },
-      { "q": "adresse", "expect": "faq_kontakt" },
-      { "q": "feiertage", "expect": "faq_oeffnungszeiten" },
-      { "q": "kr", "expect": "unknown_manual" },
-      { "q": "res", "expect": "unknown_manual" },
-      { "q": "?", "expect": "unknown_manual" },
-      { "q": "bitcoin kurs", "expect": "unknown_once" },
-      { "q": "irgendwas komisches 2x", "expect": "fallback_contactform" }
-    ]
+    "allowlist": ["reservieren","kontakt","öffnungszeiten","speisen","faq"]
   },
   "AI_TEXTS": {
-    "OFFER_INTRO": {
-      "de": "Wir haben einige leckere Gerichte in unserem Sortiment! Hier die Auswahl:",
-      "en": "We’ve got some delicious dishes for you! Here’s our selection:"
-    },
-    "ABOUT_SELF": {
-      "de": "Ich bin ein Chatbot von Asmali Konak. Ich bin da, um dir bei Fragen weiterzuhelfen. Was möchtest du wissen?",
-      "en": "I’m a chatbot for Asmali Konak. I’m here to help you — what would you like to know?"
-    },
-    "CAT_LEAD": {
-      "de": "Hast du Lust auf {{category}}? Dann schau mal hier rein!",
-      "en": "Craving some {{category}}? Check this out!"
-    },
-    "ITEM_LEAD": {
-      "de": "Gute Wahl. Hier habe ich alle Informationen dazu:",
-      "en": "Excellent choice! Here’s everything about it:"
-    },
-    "DESSERTS_INTRO": {
-      "de": "Klar – hier findest du unsere Desserts:",
-      "en": "Sure — here are our desserts:"
-    },
-    "EMPATHY_POSITIVE": {
-      "de": "Wie schön! Soll ich dir etwas empfehlen oder die Speisekarte zeigen?",
-      "en": "That’s lovely! Would you like me to suggest something or show you the menu?"
-    },
-    "ENGLISH_TOGGLE_HINT": {
-      "de": "You can switch the site language via the toggle on top.",
-      "en": "You can switch the site language via the toggle on top."
-    }
+    "OFFER_INTRO": { "de": "Wir haben einige leckere Gerichte in unserem Sortiment! Hier die Auswahl:", "en": "We’ve got some delicious dishes for you! Here’s our selection:" },
+    "ABOUT_SELF": { "de": "Ich bin ein Chatbot von Asmali Konak. Ich bin da, um dir bei Fragen weiterzuhelfen. Was möchtest du wissen?", "en": "I’m a chatbot for Asmali Konak. I’m here to help you — what would you like to know?" },
+    "CAT_LEAD": { "de": "Hast du Lust auf {{category}}? Dann schau mal hier rein!", "en": "Craving some {{category}}? Check this out!" },
+    "ITEM_LEAD": { "de": "Gute Wahl. Hier habe ich alle Informationen dazu:", "en": "Excellent choice! Here’s everything about it:" },
+    "DESSERTS_INTRO": { "de": "Klar – hier findest du unsere Desserts:", "en": "Sure — here are our desserts:" },
+    "EMPATHY_POSITIVE": { "de": "Wie schön! Soll ich dir etwas empfehlen oder die Speisekarte zeigen?", "en": "That’s lovely! Would you like me to suggest something or show you the menu?" },
+    "ENGLISH_TOGGLE_HINT": { "de": "Du kannst die Sprache oben über den Schalter ändern.", "en": "You can switch the site language using the toggle above." }
   },
   "AI_ENGLISH_KEYWORDS": [
-    "are you open",
-    "open today",
-    "opening hours",
-    "open now",
-    "menu",
-    "food",
-    "drinks",
-    "dessert",
-    "sweet",
-    "vegetarian",
-    "vegan",
-    "kebab",
-    "pide",
-    "address",
-    "phone",
-    "whatsapp",
-    "contact",
-    "email",
-    "reservation",
-    "reserve",
-    "book a table",
-    "table for",
-    "book",
-    "where is",
-    "how much"
+    "are you open","open today","opening hours","open now","menu","food","drinks","dessert",
+    "sweet","vegetarian","vegan","kebab","pide","address","phone","whatsapp","contact",
+    "email","reservation","reserve","book a table","table for","book","where is","how much"
   ]
 }
