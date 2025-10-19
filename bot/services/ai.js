@@ -1,7 +1,8 @@
 /* ============================================================================
-   PPX AI Service – v2.13.2
-   Änderung: Consent-Block ergänzt um Nav-Leiste (← Zurück | Zurück ins Hauptmenü)
-   + Deine Wünsche: KI-Vornachrichten vor Speisen-/Kategorie-/Item-Flow
+   PPX AI Service – v2.13.3 (minimal)
+   Änderung (einzig & allein):
+   • FAQ via KI: Vor dem Öffnen der passenden FAQ-Kategorie eine Lead-Nachricht.
+   Alles andere unverändert (Styles, Layout, Funktionen, Delays).
 ============================================================================ */
 (function () {
   'use strict';
@@ -204,6 +205,7 @@
       }); return n;
     }catch(e){ return _norm(q); }
   }
+
   // ---------- smalltalk & identity ------------------------------------------
   function detectSmalltalk(q){
     var n=_norm(q);
@@ -381,6 +383,30 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'unknown-choice'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
+
+  // ---------- FAQ Lead (nur KI) ---------------------------------------------
+  function faqLabelFromKey(catKey){
+    try{
+      var F=faqs(), L=nowLang(), cats = (F && Array.isArray(F.cats)) ? F.cats : [];
+      for(var i=0;i<cats.length;i++){
+        var c=cats[i]; if(!c) continue;
+        if(c.key===catKey){
+          if(L==='en' && c.title_en) return c.title_en;
+          return c.title || c.title_en || catKey || '';
+        }
+      }
+      return catKey || '';
+    }catch(e){ return String(catKey||''); }
+  }
+  function leadForFaq(catKey){
+    var lab = faqLabelFromKey(catKey)||catKey;
+    var L = nowLang();
+    var tpl = textOf('faqLead') || (L==='en'
+      ? 'Here are the Q&As for {{category}}. Hope that helps.'
+      : 'Hier findest du die Q&As zu „{{category}}“. Ich hoffe, das hilft dir weiter.');
+    say(tpl.replace('{{category}}', lab));
+  }
+
   // ---------- Regeln/Flows (true = handled) ----------------------------------
   function dessertAsk(q){
     var n=_norm(q);
@@ -472,15 +498,22 @@
       }
     }catch(e){}
 
-    // FAQ strikt (+ contains fallback)
+    // FAQ strikt (+ contains fallback) — NUR via KI mit Lead & Delay (dein Wunsch)
     try{
       var fc=faqMatchFromTextStrict(q);
       if(!fc){
         var map=faqCategoryMapStrict(), qN=_norm(q);
         if(qN && map){ for(var k in map){ if(qN.indexOf(k)>=0){ fc=map[k]; break; } } }
       }
-      if(fc){ userEcho(q); openFlow('faq',{category:fc,behavior:'silent'}); resetUnknown(); resetOos(); dbgPush({type:'faq',q:q}); return true; }
+      if(fc){ 
+        userEcho(q);
+        // >> Lead-Vornachricht NUR bei KI-Öffnung <<
+        leadForFaq(fc);
+        queueFlowOpen('faq',{category:fc,behavior:'silent'}); // Flow erst nach Delay
+        resetUnknown(); resetOos(); dbgPush({type:'faq',q:q}); return true; 
+      }
     }catch(e){}
+
     // Statische Intents
     var intents={ kontakt:['kontakt','email','mail','anrufen','telefon','call'],
       'öffnungszeiten':['öffnungszeiten','zeiten','hours','open','geöffnet','geoeffnet','offen','open today','are you open today'],
@@ -488,7 +521,7 @@
     var qRaw=String(q||''), qNorm=_norm(q);
     for(var tool in intents){
       var arr=intents[tool]||[]; var hit=false;
-      for(var k=0;k<arr.length;k++){ if(wbRegex(arr[k]).test(qRaw) || wbNormHit(_norm(arr[k]), qNorm)){ hit=true; break; } }
+      for(var kk=0;kk<arr.length;kk++){ if(wbRegex(arr[kk]).test(qRaw) || wbNormHit(_norm(arr[kk]), qNorm)){ hit=true; break; } }
       if(hit){
         userEcho(q);
         if(tool==='speisen'){

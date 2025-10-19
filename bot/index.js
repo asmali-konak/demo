@@ -1,11 +1,10 @@
 /* ============================================================================
-   PPX Widget Orchestrator (index.js) – v8.5.1
+   PPX Widget Orchestrator (index.js) – v8.5.1-AF
    Lädt die Modul-Dateien sequentiell und startet den Bot (1:1 Verhalten).
-   Änderungen:
-   - Initialisiert window.PPX Namespace früh (ohne Globals außer window.PPX)
-   - Immer DE als Startsprache (KEIN localStorage-Read mehr)
-   - Setzt data-ppx-lang am <html> früh, damit Styles/Module es nutzen können
-   - NEU: telemetry.js wird vor ai.js geladen
+   Änderungen (minimal & gezielt):
+   - AI vor E-Mail laden (robuster gegen fehlendes/kaputtes E-Mail-SDK).
+   - Fallback: Falls AI nach der Sequenz nicht existiert, lade services/ai.js
+     einmalig nach und boote sie. Keine weiteren Verhaltensänderungen.
 ============================================================================ */
 (function () {
   'use strict';
@@ -33,19 +32,19 @@
       return base + path + sep + cacheParam;
     }
 
-    // --- Orchestrierte Lade-Reihenfolge (wichtig) ----------------------------
+    // --- Orchestrierte Lade-Reihenfolge -------------------------------------
+    // Hinweis: AI VOR E-Mail, damit ein optionales/fehlendes E-Mail-SDK die KI nicht blockiert.
     var files = [
       'core.js',
       'ui/styles-inject.js',
       'ui/panel.js',
       'ui/components/buttons.js',
       'ui/components/forms.js',
-      'services/email.js',
+      'services/telemetry.js',   // Telemetry vor AI
+      'services/ai.js',          // << KI jetzt VOR E-Mail
       'services/openHours.js',
-      // NEU: Telemetry vor AI
-      'services/telemetry.js',
-      // NEU: AI-Service (Dock + Logik) – bewusst NACH UI, aber VOR Flows ok
-      'services/ai.js',
+      'services/email.js',       // E-Mail bewusst NACH AI
+      // Flows
       'flows/home.js',
       'flows/speisen.js',
       'flows/reservieren.js',
@@ -56,14 +55,13 @@
       // 'compat/compat_v794.js' // optional
     ];
 
-    // Kleines Ready-Queue-Utility, falls Module Hooks registrieren wollen
+    // Ready-Queue-Utility
     PPX._readyQ = PPX._readyQ || [];
     PPX.onReady = function (fn) { if (typeof fn === 'function') PPX._readyQ.push(fn); };
-
     function drainReadyQueue() {
       var q = PPX._readyQ || [];
       for (var i = 0; i < q.length; i++) {
-        try { q[i](); } catch (e) { /* noop */ }
+        try { q[i](); } catch (e) {}
       }
       PPX._readyQ = [];
     }
@@ -77,7 +75,7 @@
       s.onload = function () { loadOne(i + 1); };
       s.onerror = function () {
         console.error('[PPX index] Failed to load:', files[i]);
-        // Weiterladen, damit möglichst viel funktioniert
+        // Non-blocking: weiterladen, damit KI/Rest weiter funktionieren
         loadOne(i + 1);
       };
       (d.head || d.documentElement).appendChild(s);
@@ -93,7 +91,41 @@
       } catch (e) {
         console.error('[PPX index] Boot failed:', e);
       } finally {
-        try { drainReadyQueue(); } catch (e) {}
+        try {
+          // --- AI-Fallback: wenn AI-Service fehlt, einmalig nachladen & booten
+          var hasAI = !!(w.PPX && w.PPX.services && w.PPX.services.ai);
+          if (!hasAI) {
+            var s = d.createElement('script');
+            s.src = toUrl('services/ai.js');
+            s.async = true;
+            s.onload = function () {
+              try {
+                if (w.PPX && w.PPX.services && w.PPX.services.ai && typeof w.PPX.services.ai.boot === 'function') {
+                  w.PPX.services.ai.boot();
+                }
+              } catch (e) {
+                console.error('[PPX index] AI boot (fallback) failed:', e);
+              } finally {
+                try { drainReadyQueue(); } catch (e) {}
+              }
+            };
+            s.onerror = function () {
+              console.error('[PPX index] AI fallback load failed');
+              try { drainReadyQueue(); } catch (e) {}
+            };
+            (d.head || d.documentElement).appendChild(s);
+            return; // drainReadyQueue wird in onload/onerror aufgerufen
+          } else {
+            // Falls AI schon da ist, sicherheitshalber booten (idempotent)
+            try {
+              var ai = w.PPX.services.ai;
+              if (ai && typeof ai.boot === 'function') ai.boot();
+            } catch (e) {}
+            drainReadyQueue();
+          }
+        } catch (e) {
+          try { drainReadyQueue(); } catch (e2) {}
+        }
       }
     }
 
