@@ -1,8 +1,8 @@
 /* ============================================================================
-   PPX AI Service – v2.14.1 (fix)
-   Änderungen ggü. v2.14.0:
-   - Consent: "Zustimmen & fortfahren" nutzt jetzt ppx-secondary
-     (gleicher Stil wie "Ablehnen")
+   PPX AI Service – v2.14.2 (fix)
+   Änderungen ggü. v2.14.1:
+   - 2. Fallback („Nein, danke“): Text erweitert (DE & EN) mit Hinweis auf Hauptmenü.
+   - Back-Home (inline): engerer Abstand via Inline-Style (marginTop).
 ============================================================================ */
 (function () {
   'use strict';
@@ -118,6 +118,7 @@
     Q.push(async function(){ await sleep(t.afterLeadToFlowMs); openFlow(tool, detail||{}); moveThreadToEnd(); });
     _runQ();
   }
+
   // ---------- Rate / Unknown / Out-of-scope ---------------------------------
   var rl={hits:[],max:15};
   function allowHit(){ var t=now(); rl.hits=rl.hits.filter(function(h){return t-h<60000;}); if(rl.hits.length>=rl.max) return false; rl.hits.push(t); return true; }
@@ -186,7 +187,7 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'back-home'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk);
   }
-  // NEU: inline-Variante direkt unter letzter Nachricht
+  // Inline-Variante: Button direkt unter letzter Nachricht (engerer Abstand)
   function offerMainMenuInline(){
     var L=nowLang();
     var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
@@ -194,6 +195,7 @@
     var backBtn=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(backLbl,function(){ openFlow('home',{}); },'ppx-secondary','🏠') : el('button',{class:'ppx-b ppx-secondary',onclick:function(){ openFlow('home',{}); }}, backLbl);
     row.appendChild(backBtn);
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'back-home-inline'}) : el('div',{'class':'ppx-bot'});
+    try{ blk.style.marginTop = '6px'; }catch(e){}
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
 
@@ -209,16 +211,22 @@
     var yesLbl=(L==='en'?'Open contact form':'Kontaktformular öffnen');
     var noLbl =(L==='en'?'No, thanks':'Nein, danke');
 
-    // BEIDE secondary, damit gleiches Styling
+    // Beide secondary, damit gleiches Styling
     var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(yesLbl,function(){ openContactEmail(); },'ppx-secondary','✉️')
                                 : el('button',{class:'ppx-b ppx-secondary',onclick:function(){ openContactEmail(); }}, yesLbl);
 
     var no =(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(noLbl,function(){
-                  appendToView(bubble('bot', esc(L==='en' ? 'No problem — feel free to ask something else.' : 'Alles klar — frag mich einfach etwas anderes.')));
+                  var msg = (L==='en'
+                    ? 'All right — feel free to ask something else or click below to return to the main menu.'
+                    : 'Alles klar — frag mich einfach etwas anderes oder klick unten, um zurück ins Hauptmenü zu gelangen.');
+                  appendToView(bubble('bot', esc(msg)));
                   offerMainMenuInline();
                 },'ppx-secondary','🙌')
                                 : el('button',{class:'ppx-b ppx-secondary',onclick:function(){
-                  appendToView(bubble('bot', esc(L==='en' ? 'No problem — feel free to ask something else.' : 'Alles klar — frag mich einfach etwas anderes.')));
+                  var msg = (L==='en'
+                    ? 'All right — feel free to ask something else or click below to return to the main menu.'
+                    : 'Alles klar — frag mich einfach etwas anderes oder klick unten, um zurück ins Hauptmenü zu gelangen.');
+                  appendToView(bubble('bot', esc(msg)));
                   offerMainMenuInline();
                 }}, noLbl);
 
@@ -276,7 +284,6 @@
       ? ('We are '+brand+' — '+tag+' I can show the menu or help you reserve.')
       : ('Wir sind '+brand+' – '+tag+' Ich kann dir die Speisekarte zeigen oder eine Reservierung starten.');
   }
-
   // ---------- empathy --------------------------------------------------------
   function isPersonalEmotion(q){
     var n=_norm(q);
@@ -312,6 +319,7 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'empathy-positive'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
+
   // ---------- FAQ Strict Map + Lead -----------------------------------------
   function faqCategoryMapStrict(){
     var out=Object.create(null);
@@ -372,7 +380,7 @@
   function openFlow(tool,detail){
     try{
       var tname=toolAlias(tool||'');
-      // ---- Sonderfälle, weil die Step-Namen nicht 1:1 aus cap() folgen
+      // Sonderfälle: Step-Namen
       if(tname==='contactform' && PPX.flows && typeof PPX.flows.stepContactForm==='function'){
         PPX.flows.stepContactForm(detail||{}); moveThreadToEnd(); st().activeFlowId='contactform'; return true;
       }
@@ -414,13 +422,12 @@
       appendToView(bubble('bot', esc(msg)));
       var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
       var btnReserve=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn((L==='en'?'Reserve':'Reservieren'), function(){ openFlow('reservieren',{}); }, 'ppx-cta','🗓️'):el('button',{class:'ppx-b ppx-cta',onclick:function(){ openFlow('reservieren',{}); }}, (L==='en'?'Reserve':'Reservieren'));
-      var btnHours=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn((L==='en'?'Opening Hours':'Öffnungszeiten'), function(){ openFlow('öffnungszeiten',{}); }, 'ppx-secondary','⏰'):el('button',{class:'ppX-b ppx-secondary',onclick:function(){ openFlow('öffnungszeiten',{}); }}, (L==='en'?'Opening Hours':'Öffnungszeiten'));
+      var btnHours=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn((L==='en'?'Opening Hours':'Öffnungszeiten'), function(){ openFlow('öffnungszeiten',{}); }, 'ppx-secondary','⏰'):el('button',{class:'ppx-b ppx-secondary',onclick:function(){ openFlow('öffnungszeiten',{}); }}, (L==='en'?'Opening Hours':'Öffnungszeiten'));
       row.appendChild(btnReserve); row.appendChild(btnHours);
       var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'openhours-choice'}) : el('div',{'class':'ppx-bot'});
       blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
     }catch(e){ openFlow('öffnungszeiten',{}); }
   }
-
   // ---------- Out-of-scope ---------------------------------------------------
   function isOutOfScope(q){
     return /\b(wetter|news|nachrichten|politik|aktien|kurs|bitcoin|technik|programmiere|programmierung|heutiges wetter|vorhersage)\b/i.test(_norm(q));
@@ -522,7 +529,7 @@
     }catch(e){}
 
     var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
-    // WICHTIGER FIX: Beide Buttons als ppx-secondary (kein CTA-Farbunterschied)
+    // Beide Buttons bewusst als ppx-secondary (gleiches Styling)
     var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.agree, agreeConsent, 'ppx-secondary','✅')
                                 : el('button',{class:'ppx-b ppx-secondary',onclick:agreeConsent}, LAB.agree);
     var no =(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.decline, declineConsent, 'ppx-secondary','✖️')
@@ -556,7 +563,6 @@
       ? 'Okay! You can still use the site without the AI assistant.'
       : 'Alles klar! Du kannst die Seite auch ohne KI-Assistent nutzen.')));
   }
-
   // ---------- Regeln/Flows (true = handled) ----------------------------------
   function dessertAsk(q){
     var n=_norm(q);
