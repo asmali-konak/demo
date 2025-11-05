@@ -1,11 +1,8 @@
 /* ============================================================================
-   PPX AI Service – v2.14.0 (fix)
-   Änderungen ggü. v2.13.3:
-   1) Zweiter Fallback: Beide Buttons im selben Stil (ppx-secondary).
-   2) Flow-Fix: contactform → garantiert PPX.flows.stepContactForm().
-      (und safety: faq → stepQAs())
-   3) „Nein, danke“-Text freundlicher + „Zurück ins Hauptmenü“ direkt
-      unter der Antwort (inline) statt weit unten.
+   PPX AI Service – v2.14.1 (fix)
+   Änderungen ggü. v2.14.0:
+   - Consent: "Zustimmen & fortfahren" nutzt jetzt ppx-secondary
+     (gleicher Stil wie "Ablehnen")
 ============================================================================ */
 (function () {
   'use strict';
@@ -170,7 +167,6 @@
     for(var i=0;i<kws.length;i++){ if(wbRegex(kws[i]).test(n)){ respondNotOffered(q); return true; } }
     return false;
   }
-
   // ---------- open contact (priorisiert Formular) ---------------------------
   function openContactEmail(extra){
     extra = extra || {};
@@ -244,6 +240,7 @@
     }
     PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
+
   // ---------- alias / synonyms (offline) ------------------------------------
   function aliasMap(){ try{ var A=aiCfg()||{}; return (A.alias||{}); }catch(e){ return {}; } }
   function aliasExpand(q){
@@ -315,7 +312,6 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'empathy-positive'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
-
   // ---------- FAQ Strict Map + Lead -----------------------------------------
   function faqCategoryMapStrict(){
     var out=Object.create(null);
@@ -390,6 +386,7 @@
     try{ window.dispatchEvent(new CustomEvent('ppx:tool',{detail:{tool:toolAlias(tool||''),detail:detail||{}}})); }catch(e){}
     return false;
   }
+
   // ---------- open hours matching -------------------------------------------
   function matchesOpenHours(q){
     var n=aliasExpand(q);
@@ -525,9 +522,10 @@
     }catch(e){}
 
     var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
-    var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.agree, agreeConsent, 'ppx-cta','✅')
-                                : el('button',{class:'ppx-b ppx-cta',onclick:agreeConsent}, LAB.agree);
-    var no =(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.decline,  declineConsent, 'ppx-secondary','✖️')
+    // WICHTIGER FIX: Beide Buttons als ppx-secondary (kein CTA-Farbunterschied)
+    var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.agree, agreeConsent, 'ppx-secondary','✅')
+                                : el('button',{class:'ppx-b ppx-secondary',onclick:agreeConsent}, LAB.agree);
+    var no =(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.decline, declineConsent, 'ppx-secondary','✖️')
                                 : el('button',{class:'ppx-b ppx-secondary',onclick:declineConsent}, LAB.decline);
     row.appendChild(yes); row.appendChild(no);
     blk.appendChild(row);
@@ -650,7 +648,7 @@
       }
     }catch(e){}
 
-    // FAQ strikt (+ contains fallback) — mit Lead & Delay
+    // FAQ strikt (+ contains fallback)
     try{
       var fc=faqMatchFromTextStrict(q);
       if(!fc){
