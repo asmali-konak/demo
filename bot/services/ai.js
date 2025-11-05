@@ -1,8 +1,11 @@
 /* ============================================================================
-   PPX AI Service – v2.13.3 (minimal)
-   Änderung (einzig & allein):
-   • FAQ via KI: Vor dem Öffnen der passenden FAQ-Kategorie eine Lead-Nachricht.
-   Alles andere unverändert (Styles, Layout, Funktionen, Delays).
+   PPX AI Service – v2.14.0 (fix)
+   Änderungen ggü. v2.13.3:
+   1) Zweiter Fallback: Beide Buttons im selben Stil (ppx-secondary).
+   2) Flow-Fix: contactform → garantiert PPX.flows.stepContactForm().
+      (und safety: faq → stepQAs())
+   3) „Nein, danke“-Text freundlicher + „Zurück ins Hauptmenü“ direkt
+      unter der Antwort (inline) statt weit unten.
 ============================================================================ */
 (function () {
   'use strict';
@@ -177,7 +180,58 @@
     return false;
   }
 
-  // ---------- unknown/manual -------------------------------------------------
+  // ---------- Back-to-home (inline & block) ---------------------------------
+  function offerMainMenuButton(){
+    var L=nowLang();
+    var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
+    var backLbl=(L==='en'?'Back to main menu':'Zurück ins Hauptmenü');
+    var backBtn=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(backLbl,function(){ openFlow('home',{}); },'ppx-secondary','🏠') : el('button',{class:'ppx-b ppx-secondary',onclick:function(){ openFlow('home',{}); }}, backLbl);
+    row.appendChild(backBtn);
+    var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'back-home'}) : el('div',{'class':'ppx-bot'});
+    blk.appendChild(row); appendToView(blk);
+  }
+  // NEU: inline-Variante direkt unter letzter Nachricht
+  function offerMainMenuInline(){
+    var L=nowLang();
+    var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
+    var backLbl=(L==='en'?'Back to main menu':'Zurück ins Hauptmenü');
+    var backBtn=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(backLbl,function(){ openFlow('home',{}); },'ppx-secondary','🏠') : el('button',{class:'ppx-b ppx-secondary',onclick:function(){ openFlow('home',{}); }}, backLbl);
+    row.appendChild(backBtn);
+    var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'back-home-inline'}) : el('div',{'class':'ppx-bot'});
+    blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
+  }
+
+  // ---------- Second-Fallback Choice (Fix: beide Buttons secondary) ----------
+  function offerContactChoiceSecond(){
+    var L=nowLang();
+    var txt = (L==='en')
+      ? 'I can’t help with that, unfortunately. Should I open our contact form?'
+      : 'Da kann ich dir leider nicht weiterhelfen. Soll ich dir unser Kontaktformular öffnen?';
+    appendToView(bubble('bot', esc(txt)));
+
+    var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
+    var yesLbl=(L==='en'?'Open contact form':'Kontaktformular öffnen');
+    var noLbl =(L==='en'?'No, thanks':'Nein, danke');
+
+    // BEIDE secondary, damit gleiches Styling
+    var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(yesLbl,function(){ openContactEmail(); },'ppx-secondary','✉️')
+                                : el('button',{class:'ppx-b ppx-secondary',onclick:function(){ openContactEmail(); }}, yesLbl);
+
+    var no =(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(noLbl,function(){
+                  appendToView(bubble('bot', esc(L==='en' ? 'No problem — feel free to ask something else.' : 'Alles klar — frag mich einfach etwas anderes.')));
+                  offerMainMenuInline();
+                },'ppx-secondary','🙌')
+                                : el('button',{class:'ppx-b ppx-secondary',onclick:function(){
+                  appendToView(bubble('bot', esc(L==='en' ? 'No problem — feel free to ask something else.' : 'Alles klar — frag mich einfach etwas anderes.')));
+                  offerMainMenuInline();
+                }}, noLbl);
+
+    row.appendChild(yes); row.appendChild(no);
+    var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'unknown-choice-2'}) : el('div',{'class':'ppx-bot'});
+    blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
+  }
+
+  // ---------- Unknown (Fallback 1 & 2) --------------------------------------
   function respondUnknownManual(){
     var L=nowLang(); var cnt=bumpUnknown();
     if(cnt===1){
@@ -186,14 +240,10 @@
         : 'Dazu habe ich hier keine Infos – ich helfe dir gern mit Speisekarte, Öffnungszeiten oder Reservierungen.';
       appendToView(bubble('bot', esc(msg)));
     }else{
-      var again=(L==='en'
-        ? (textOf('unknownAgain')||'I’ll open our contact form so we can assist you.')
-        : (textOf('unknownAgain')||'Ich öffne dir unser Kontaktformular, damit wir dir helfen können.'));
-      appendToView(bubble('bot', esc(again))); openContactEmail();
+      offerContactChoiceSecond();
     }
     PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
-
   // ---------- alias / synonyms (offline) ------------------------------------
   function aliasMap(){ try{ var A=aiCfg()||{}; return (A.alias||{}); }catch(e){ return {}; } }
   function aliasExpand(q){
@@ -222,7 +272,6 @@
     if(hit(ST.identity && ST.identity.phrases)) return identityReply();
     return null;
   }
-
   function identityReply(){
     var C=cfg(), L=nowLang();
     var brand=C.brand||'Unser Restaurant', tag=C.tagline||'Authentische Küche in deiner Nähe.';
@@ -240,7 +289,6 @@
     var n=_norm(q);
     return /\b(gluecklich|glücklich|froh|happy|gut\s+drauf|super\s+stimmung)\b/.test(n);
   }
-
   function respondEmpathyLocal(){
     var L=nowLang();
     var txt=(L==='en')
@@ -254,7 +302,6 @@
     var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'empathy-suggest'}) : el('div',{'class':'ppx-bot'});
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
-
   function respondEmpathyPositive(){
     var L=nowLang();
     var txt=(L==='en')
@@ -269,7 +316,7 @@
     blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
 
-  // ---------- FAQ Strict Map -------------------------------------------------
+  // ---------- FAQ Strict Map + Lead -----------------------------------------
   function faqCategoryMapStrict(){
     var out=Object.create(null);
     try{
@@ -295,7 +342,29 @@
     return out;
   }
   function faqMatchFromTextStrict(txt){ var map=faqCategoryMapStrict(); var n=_norm(txt); if(!n) return null; return map[n]||null; }
-  // ---------- tool alias & openFlow -----------------------------------------
+  function faqLabelFromKey(catKey){
+    try{
+      var F=faqs(), L=nowLang(), cats = (F && Array.isArray(F.cats)) ? F.cats : [];
+      for(var i=0;i<cats.length;i++){
+        var c=cats[i]; if(!c) continue;
+        if(c.key===catKey){
+          if(L==='en' && c.title_en) return c.title_en;
+          return c.title || c.title_en || catKey || '';
+        }
+      }
+      return catKey || '';
+    }catch(e){ return String(catKey||''); }
+  }
+  function leadForFaq(catKey){
+    var lab = faqLabelFromKey(catKey)||catKey;
+    var L = nowLang();
+    var tpl = textOf('faqLead') || (L==='en'
+      ? 'Here are the Q&As for {{category}}. Hope that helps.'
+      : 'Hier findest du die Q&As zu „{{category}}“. Ich hoffe, das hilft dir weiter.');
+    say(tpl.replace('{{category}}', lab));
+  }
+
+  // ---------- tool alias & openFlow (Fix: contactform/faq Sonderfall) -------
   function toolAlias(n){ n=String(n||'').toLowerCase();
     if(n==='öffnungszeiten'||n==='oeffnungszeiten'||n==='hours') return 'hours';
     if(n==='reservieren'||n==='reserve') return 'reservieren';
@@ -306,14 +375,21 @@
   function cap(s){ s=String(s||''); return s? s.charAt(0).toUpperCase()+s.slice(1) : s; }
   function openFlow(tool,detail){
     try{
-      var tname=toolAlias(tool||''), fn=PPX.flows && (PPX.flows['step'+cap(tname)]);
+      var tname=toolAlias(tool||'');
+      // ---- Sonderfälle, weil die Step-Namen nicht 1:1 aus cap() folgen
+      if(tname==='contactform' && PPX.flows && typeof PPX.flows.stepContactForm==='function'){
+        PPX.flows.stepContactForm(detail||{}); moveThreadToEnd(); st().activeFlowId='contactform'; return true;
+      }
+      if(tname==='faq' && PPX.flows && typeof PPX.flows.stepQAs==='function'){
+        PPX.flows.stepQAs(detail||{}); moveThreadToEnd(); st().activeFlowId='faq'; return true;
+      }
+      var fn=PPX.flows && (PPX.flows['step'+cap(tname)]);
       if(typeof fn==='function'){ fn(detail||{}); moveThreadToEnd(); st().activeFlowId=tname; return true; }
       if(PPX.flows&&typeof PPX.flows.open==='function'){ PPX.flows.open(tname,detail||{}); moveThreadToEnd(); st().activeFlowId=tname; return true; }
     }catch(e){}
     try{ window.dispatchEvent(new CustomEvent('ppx:tool',{detail:{tool:toolAlias(tool||''),detail:detail||{}}})); }catch(e){}
     return false;
   }
-
   // ---------- open hours matching -------------------------------------------
   function matchesOpenHours(q){
     var n=aliasExpand(q);
@@ -341,70 +417,146 @@
       appendToView(bubble('bot', esc(msg)));
       var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
       var btnReserve=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn((L==='en'?'Reserve':'Reservieren'), function(){ openFlow('reservieren',{}); }, 'ppx-cta','🗓️'):el('button',{class:'ppx-b ppx-cta',onclick:function(){ openFlow('reservieren',{}); }}, (L==='en'?'Reserve':'Reservieren'));
-      var btnHours=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn((L==='en'?'Opening Hours':'Öffnungszeiten'), function(){ openFlow('öffnungszeiten',{}); }, 'ppx-secondary','⏰'):el('button',{class:'ppx-b ppx-secondary',onclick:function(){ openFlow('öffnungszeiten',{}); }}, (L==='en'?'Opening Hours':'Öffnungszeiten'));
+      var btnHours=(PPX.ui&&PPX.ui.btn)?PPX.ui.btn((L==='en'?'Opening Hours':'Öffnungszeiten'), function(){ openFlow('öffnungszeiten',{}); }, 'ppx-secondary','⏰'):el('button',{class:'ppX-b ppx-secondary',onclick:function(){ openFlow('öffnungszeiten',{}); }}, (L==='en'?'Opening Hours':'Öffnungszeiten'));
       row.appendChild(btnReserve); row.appendChild(btnHours);
       var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'openhours-choice'}) : el('div',{'class':'ppx-bot'});
       blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
     }catch(e){ openFlow('öffnungszeiten',{}); }
   }
 
-  // ---------- Out-of-scope & choices ----------------------------------------
+  // ---------- Out-of-scope ---------------------------------------------------
   function isOutOfScope(q){
     return /\b(wetter|news|nachrichten|politik|aktien|kurs|bitcoin|technik|programmiere|programmierung|heutiges wetter|vorhersage)\b/i.test(_norm(q));
   }
-  function offerMainMenuButton(){
+  function respondOutOfScope(){
     var L=nowLang();
-    var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
-    var backLbl=(L==='en'?'Back to main menu':'Zurück ins Hauptmenü');
-    var backBtn=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(backLbl,function(){ openFlow('home',{}); },'ppx-secondary','🏠') : el('button',{class:'ppX-b ppx-secondary',onclick:function(){ openFlow('home',{}); }}, backLbl);
-    row.appendChild(backBtn);
-    var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'back-home'}) : el('div',{'class':'ppx-bot'});
-    blk.appendChild(row); appendToView(blk);
-  }
-  function offerContactChoice(){
-    var L=nowLang();
-    var txt=textOf('unknownOnce')||(L==='en'
-      ? 'I don’t have info on that here. Should I open our contact form for you?'
-      : 'Dazu habe ich hier keine Infos. Soll ich dir unser Kontaktformular öffnen?');
-    appendToView(bubble('bot', esc(txt)));
-    var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
-    var yesLbl=(L==='en'?'Open contact form':'Kontaktformular öffnen');
-    var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(yesLbl,function(){ openContactEmail(); },'ppx-cta','✉️') : el('button',{class:'ppx-b ppx-cta',onclick:function(){ openContactEmail(); }}, yesLbl);
-    var noLbl=(L==='en'?'No, thanks':'Nein, danke');
-    var no=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(noLbl,function(){
-      appendToView(bubble('bot', esc(textOf('closing')||(L==='en'
-        ? 'All right! Feel free to ask something else. Or click here to return to the main menu!'
-        : 'Alles klar! Frag mich gern etwas anderes. Oder klick hier, um ins Hauptmenü zu kommen!'))));
-      offerMainMenuButton(); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
-    },'ppx-secondary','🙌') : el('button',{class:'ppx-b ppx-secondary',onclick:function(){
-      appendToView(bubble('bot', esc(textOf('closing')||'Alles klar! Frag mich gern etwas anderes. Oder klick hier, um ins Hauptmenü zu kommen!'))); offerMainMenuButton();
-    }}, noLbl);
-    row.appendChild(yes); row.appendChild(no);
-    var blk=(PPX.ui&&PPX.ui.block)? PPX.ui.block('',{maxWidth:'100%',blockKey:'unknown-choice'}) : el('div',{'class':'ppx-bot'});
-    blk.appendChild(row); appendToView(blk); PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
+    appendToView(bubble('bot', esc(
+      L==='en'
+        ? 'That’s outside my scope here. I can help with our menu, opening hours or a reservation.'
+        : 'Das liegt außerhalb meines Rahmens hier. Ich helfe dir gern mit Speisekarte, Öffnungszeiten oder Reservierung.'
+    )));
+    offerMainMenuButton();
+    PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
   }
 
-  // ---------- FAQ Lead (nur KI) ---------------------------------------------
-  function faqLabelFromKey(catKey){
-    try{
-      var F=faqs(), L=nowLang(), cats = (F && Array.isArray(F.cats)) ? F.cats : [];
-      for(var i=0;i<cats.length;i++){
-        var c=cats[i]; if(!c) continue;
-        if(c.key===catKey){
-          if(L==='en' && c.title_en) return c.title_en;
-          return c.title || c.title_en || catKey || '';
-        }
-      }
-      return catKey || '';
-    }catch(e){ return String(catKey||''); }
+  // ---------- Consent + Sende-Pipeline --------------------------------------
+  var _consented=false, _pendingQ=null, _consentBlockEl=null, $dock=null, $inp=null, $send=null;
+
+  async function send(){
+    ensureDock(); if(!$inp) return;
+    var raw=String($inp.value||''); var q=raw.trim(); if(!q) return;
+    $inp.value='';
+    _consented = (_consented===true) || loadConsent();
+    if(!_consented){
+      _pendingQ = q;
+      if(!_consentBlockEl || !_consentBlockEl.isConnected){ renderConsentBlock(); }
+      return;
+    }
+    if(processRulesMaybeFlow(q)) return;
+    userEcho(q);
+    processOnlyAi(q);
   }
-  function leadForFaq(catKey){
-    var lab = faqLabelFromKey(catKey)||catKey;
-    var L = nowLang();
-    var tpl = textOf('faqLead') || (L==='en'
-      ? 'Here are the Q&As for {{category}}. Hope that helps.'
-      : 'Hier findest du die Q&As zu „{{category}}“. Ich hoffe, das hilft dir weiter.');
-    say(tpl.replace('{{category}}', lab));
+
+  // ---------- Nur-AI Verarbeitung (nach Regeln) ------------------------------
+  function processOnlyAi(q){
+    try{
+      if(typeof doWorkerHybrid==='function'){ return doWorkerHybrid(q); }
+      var svc = PPX.services && PPX.services.aiWorker;
+      if(svc && typeof svc.process==='function'){ return svc.process(q); }
+    }catch(e){}
+    appendToView(bubble('bot', esc(nowLang()==='en'
+      ? "I can't answer that here. Would you like to contact us?"
+      : "Das kann ich hier nicht beantworten. Möchtest du uns eine Nachricht senden?")));
+    offerContactChoiceSecond(); // bewusst nutzergeführt
+  }
+
+  // ---------- Consent helpers ------------------------------------------------
+  function loadConsent(){ try{ return localStorage.getItem('ppx_ai_consent')==='true'; }catch(e){ return false; } }
+  function saveConsent(v){ try{ v?localStorage.setItem('ppx_ai_consent','true'):localStorage.removeItem('ppx_ai_consent'); }catch(e){} }
+
+  function renderConsentBlock(){
+    var A=aiCfg()||{}, C=A.compliance||{}, L=nowLang();
+
+    var lbls=((A.compliance&&A.compliance.labels)||{});
+    var LAB={
+      title: (L==='en'?'AI consent':'KI-Einwilligung'),
+      agree: (L==='en'?'Agree & continue':'Zustimmen & fortfahren'),
+      decline: (L==='en'?'Decline':'Ablehnen')
+    };
+    try{
+      if(lbls.title){ LAB.title = (L==='en'&&lbls.title.en)?lbls.title.en:(lbls.title.de||LAB.title); }
+      if(lbls.agree){ LAB.agree = (L==='en'&&lbls.agree.en)?lbls.agree.en:(lbls.agree.de||LAB.agree); }
+      if(lbls.decline){ LAB.decline = (L==='en'&&lbls.decline.en)?lbls.decline.en:(lbls.decline.de||LAB.decline); }
+    }catch(e){}
+
+    var title = LAB.title;
+    var msg   = C.consentText || (L==='en'
+      ? 'Your message will be sent to our AI service. Please avoid sensitive data.'
+      : 'Deine Frage wird an unseren KI-Dienst gesendet. Bitte keine sensiblen Daten eingeben.');
+
+    var privacyHref = (C.privacyUrl && String(C.privacyUrl).charAt(0)==='#') ? C.privacyUrl : '#datenschutz';
+    var imprintHref = (C.imprintUrl && String(C.imprintUrl).charAt(0)==='#') ? C.imprintUrl : '#impressum';
+
+    var links = [
+      '<a class="ppx-link" href="'+esc(privacyHref)+'">Datenschutz</a>',
+      '<a class="ppx-link" href="'+esc(imprintHref)+'">Impressum</a>',
+      esc(C.disclaimer || (L==='en'?'No legal or medical advice.':'Keine Rechts- oder Medizinberatung.'))
+    ].join(' · ');
+
+    var scopeIdx = (PPX.ui&&PPX.ui.getScopeIndex)? PPX.ui.getScopeIndex() : 0;
+    var blk=(PPX.ui&&PPX.ui.block) ? PPX.ui.block(title,{blockKey:'ai-consent',maxWidth:'640px'})
+                                   : appendToView(bubble('bot', esc(title)));
+    var content = el('div', {'class':'ppx-block-content'});
+    content.innerHTML = esc(msg)+' '+links;
+    blk.appendChild(content);
+
+    try{
+      var anchors = content.querySelectorAll('a.ppx-link[href^="#"]');
+      anchors.forEach(function(a){
+        a.addEventListener('click', function(e){
+          var id=a.getAttribute('href')||''; if(!id||id.charAt(0)!=='#') return;
+          var target=document.querySelector(id);
+          if(target){
+            e.preventDefault();
+            try{ target.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){ location.hash=id; }
+          }
+        });
+      });
+    }catch(e){}
+
+    var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
+    var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.agree, agreeConsent, 'ppx-cta','✅')
+                                : el('button',{class:'ppx-b ppx-cta',onclick:agreeConsent}, LAB.agree);
+    var no =(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.decline,  declineConsent, 'ppx-secondary','✖️')
+                                : el('button',{class:'ppx-b ppx-secondary',onclick:declineConsent}, LAB.decline);
+    row.appendChild(yes); row.appendChild(no);
+    blk.appendChild(row);
+
+    if (PPX.ui && typeof PPX.ui.navBottom === 'function') {
+      var nav = PPX.ui.navBottom(scopeIdx);
+      blk.appendChild(nav);
+    }
+
+    appendToView(blk);
+    _consentBlockEl = blk;
+    PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
+  }
+  function agreeConsent(){
+    saveConsent(true);
+    _consented = true;
+    if(_consentBlockEl && _consentBlockEl.parentNode) _consentBlockEl.parentNode.removeChild(_consentBlockEl);
+    if(_pendingQ){
+      var msg=_pendingQ; _pendingQ=null;
+      if($inp){ $inp.value = msg; setTimeout(send,0); }
+    }
+  }
+  function declineConsent(){
+    saveConsent(false);
+    _pendingQ=null;
+    if(_consentBlockEl && _consentBlockEl.parentNode) _consentBlockEl.parentNode.removeChild(_consentBlockEl);
+    appendToView(bubble('bot', esc(nowLang()==='en'
+      ? 'Okay! You can still use the site without the AI assistant.'
+      : 'Alles klar! Du kannst die Seite auch ohne KI-Assistent nutzen.')));
   }
 
   // ---------- Regeln/Flows (true = handled) ----------------------------------
@@ -498,19 +650,18 @@
       }
     }catch(e){}
 
-    // FAQ strikt (+ contains fallback) — NUR via KI mit Lead & Delay (dein Wunsch)
+    // FAQ strikt (+ contains fallback) — mit Lead & Delay
     try{
       var fc=faqMatchFromTextStrict(q);
       if(!fc){
         var map=faqCategoryMapStrict(), qN=_norm(q);
         if(qN && map){ for(var k in map){ if(qN.indexOf(k)>=0){ fc=map[k]; break; } } }
       }
-      if(fc){ 
+      if(fc){
         userEcho(q);
-        // >> Lead-Vornachricht NUR bei KI-Öffnung <<
         leadForFaq(fc);
-        queueFlowOpen('faq',{category:fc,behavior:'silent'}); // Flow erst nach Delay
-        resetUnknown(); resetOos(); dbgPush({type:'faq',q:q}); return true; 
+        queueFlowOpen('faq',{category:fc,behavior:'silent'});
+        resetUnknown(); resetOos(); dbgPush({type:'faq',q:q}); return true;
       }
     }catch(e){}
 
@@ -541,140 +692,12 @@
     // Out-of-scope
     if(isOutOfScope(q)){ userEcho(q); respondOutOfScope(q); resetUnknown(); dbgPush({type:'oos',q:q}); return true; }
 
-    return false;
-  }
-
-  // ---------- Out-of-scope response -----------------------------------------
-  function respondOutOfScope(){
-    var L=nowLang();
-    appendToView(bubble('bot', esc(
-      L==='en'
-        ? 'That’s outside my scope here. I can help with our menu, opening hours or a reservation.'
-        : 'Das liegt außerhalb meines Rahmens hier. Ich helfe dir gern mit Speisekarte, Öffnungszeiten oder Reservierung.'
-    )));
-    offerMainMenuButton();
-    PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
-  }
-  // ---------- Consent + Sende-Pipeline --------------------------------------
-  var _consented=false, _pendingQ=null, _consentBlockEl=null, $dock=null, $inp=null, $send=null;
-
-  async function send(){
-    ensureDock(); if(!$inp) return;
-    var raw=String($inp.value||''); var q=raw.trim(); if(!q) return;
-    $inp.value='';
-    _consented = (_consented===true) || loadConsent();
-    if(!_consented){
-      _pendingQ = q;
-      if(!_consentBlockEl || !_consentBlockEl.isConnected){ renderConsentBlock(); }
-      return;
-    }
-    if(processRulesMaybeFlow(q)) return;
+    // Unknown → Fallback 1/2 Kaskade
     userEcho(q);
-    processOnlyAi(q);
+    respondUnknownManual();
+    return true;
   }
 
-  // ---------- Nur-AI Verarbeitung (nach Regeln) ------------------------------
-  function processOnlyAi(q){
-    try{
-      if(typeof doWorkerHybrid==='function'){ return doWorkerHybrid(q); }
-      var svc = PPX.services && PPX.services.aiWorker;
-      if(svc && typeof svc.process==='function'){ return svc.process(q); }
-    }catch(e){}
-    appendToView(bubble('bot', esc(nowLang()==='en'
-      ? "I can't answer that here. Would you like to contact us?"
-      : "Das kann ich hier nicht beantworten. Möchtest du uns eine Nachricht senden?")));
-    offerContactChoice();
-  }
-
-  // ---------- Consent helpers ------------------------------------------------
-  function loadConsent(){ try{ return localStorage.getItem('ppx_ai_consent')==='true'; }catch(e){ return false; } }
-  function saveConsent(v){ try{ v?localStorage.setItem('ppx_ai_consent','true'):localStorage.removeItem('ppx_ai_consent'); }catch(e){} }
-
-  function renderConsentBlock(){
-    var A=aiCfg()||{}, C=A.compliance||{}, L=nowLang();
-
-    var lbls=((A.compliance&&A.compliance.labels)||{});
-    var LAB={
-      title: (L==='en'?'AI consent':'KI-Einwilligung'),
-      agree: (L==='en'?'Agree & continue':'Zustimmen & fortfahren'),
-      decline: (L==='en'?'Decline':'Ablehnen')
-    };
-    try{
-      if(lbls.title){ LAB.title = (L==='en'&&lbls.title.en)?lbls.title.en:(lbls.title.de||LAB.title); }
-      if(lbls.agree){ LAB.agree = (L==='en'&&lbls.agree.en)?lbls.agree.en:(lbls.agree.de||LAB.agree); }
-      if(lbls.decline){ LAB.decline = (L==='en'&&lbls.decline.en)?lbls.decline.en:(lbls.decline.de||LAB.decline); }
-    }catch(e){}
-
-    var title = LAB.title;
-    var msg   = C.consentText || (L==='en'
-      ? 'Your message will be sent to our AI service. Please avoid sensitive data.'
-      : 'Deine Frage wird an unseren KI-Dienst gesendet. Bitte keine sensiblen Daten eingeben.');
-
-    var privacyHref = (C.privacyUrl && String(C.privacyUrl).charAt(0)==='#') ? C.privacyUrl : '#datenschutz';
-    var imprintHref = (C.imprintUrl && String(C.imprintUrl).charAt(0)==='#') ? C.imprintUrl : '#impressum';
-
-    var links = [
-      '<a class="ppx-link" href="'+esc(privacyHref)+'">Datenschutz</a>',
-      '<a class="ppx-link" href="'+esc(imprintHref)+'">Impressum</a>',
-      esc(C.disclaimer || (L==='en'?'No legal or medical advice.':'Keine Rechts- oder Medizinberatung.'))
-    ].join(' · ');
-
-    var scopeIdx = (PPX.ui&&PPX.ui.getScopeIndex)? PPX.ui.getScopeIndex() : 0;
-    var blk=(PPX.ui&&PPX.ui.block) ? PPX.ui.block(title,{blockKey:'ai-consent',maxWidth:'640px'})
-                                   : appendToView(bubble('bot', esc(title)));
-    var content = el('div', {'class':'ppx-block-content'});
-    content.innerHTML = esc(msg)+' '+links;
-    blk.appendChild(content);
-
-    try{
-      var anchors = content.querySelectorAll('a.ppx-link[href^="#"]');
-      anchors.forEach(function(a){
-        a.addEventListener('click', function(e){
-          var id=a.getAttribute('href')||''; if(!id||id.charAt(0)!=='#') return;
-          var target=document.querySelector(id);
-          if(target){
-            e.preventDefault();
-            try{ target.scrollIntoView({behavior:'smooth',block:'start'}); }catch(_){ location.hash=id; }
-          }
-        });
-      });
-    }catch(e){}
-
-    var row=(PPX.ui&&PPX.ui.row)?PPX.ui.row():el('div',{'class':'ppx-row'});
-    var yes=(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.agree, agreeConsent, 'ppx-cta','✅')
-                                : el('button',{class:'ppx-b ppx-cta',onclick:agreeConsent}, LAB.agree);
-    var no =(PPX.ui&&PPX.ui.btn)? PPX.ui.btn(LAB.decline,  declineConsent, 'ppx-secondary','✖️')
-                                : el('button',{class:'ppx-b ppx-secondary',onclick:declineConsent}, LAB.decline);
-    row.appendChild(yes); row.appendChild(no);
-    blk.appendChild(row);
-
-    if (PPX.ui && typeof PPX.ui.navBottom === 'function') {
-      var nav = PPX.ui.navBottom(scopeIdx);
-      blk.appendChild(nav);
-    }
-
-    appendToView(blk);
-    _consentBlockEl = blk;
-    PPX.ui&&PPX.ui.keepBottom&&PPX.ui.keepBottom();
-  }
-
-  function agreeConsent(){
-    saveConsent(true);
-    _consented = true;
-    if(_consentBlockEl && _consentBlockEl.parentNode) _consentBlockEl.parentNode.removeChild(_consentBlockEl);
-    if(_pendingQ){
-      var msg=_pendingQ; _pendingQ=null;
-      if($inp){ $inp.value = msg; setTimeout(send,0); }
-    }
-  }
-  function declineConsent(){
-    saveConsent(false);
-    _pendingQ=null;
-    if(_consentBlockEl && _consentBlockEl.parentNode) _consentBlockEl.parentNode.removeChild(_consentBlockEl);
-    appendToView(bubble('bot', esc(nowLang()==='en'
-      ? 'Okay! You can still use the site without the AI assistant.'
-      : 'Alles klar! Du kannst die Seite auch ohne KI-Assistent nutzen.')));
-  }
   // ---------- Dock (Input/Send) ---------------------------------------------
   function ensureDock(){
     var panel=document.getElementById('ppx-panel'); if(!panel) return false;
