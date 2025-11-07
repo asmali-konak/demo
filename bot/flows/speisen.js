@@ -1,10 +1,11 @@
 /* ============================================================================
-   PPX Flow: Speisen (speisen.js) – v8.5.3
-   - KI-Fall mit detail:
-       • Wenn detail.category + detail.itemId -> direkt renderItem(...)
-       • Wenn nur detail.category            -> direkt renderCategory(...)
-   - Manuell (ohne detail): Intro → Root → Kategorien (unverändert)
-   - Timer-Handling: Delays werden gecancelt, um Doppel-Renders zu verhindern
+   PPX Flow: Speisen (speisen.js) – v8.5.4
+   Änderung (gezielt, sonst unverändert):
+   - Intro-Text angepasst:
+       DE: "Hier sind unsere Speisen-Kategorien:"
+       EN: "Here are our menu categories:"
+   - Intro wird jetzt als KI-Chatbubble gerendert (gleicher Stil wie AI-Nachricht),
+     bevor wie gehabt der Root (PDF + Kategorien) gerendert wird.
    ============================================================================ */
 (function () {
   'use strict';
@@ -28,7 +29,8 @@
   // I18N
   try { I.reg && I.reg({
     'speisen.head':   { de:'SPEISEN', en:'MENU' },
-    'speisen.intro':  { de:'Super Wahl 👍  Hier sind unsere Speisen-Kategorien:', en:'Great choice 👍  Here are our menu categories:' },
+    // Intro bewusst neutralisiert (kein "Super Wahl 👍")
+    'speisen.intro':  { de:'Hier sind unsere Speisen-Kategorien:', en:'Here are our menu categories:' },
     'speisen.pdf':    { de:'Speisekarte als PDF', en:'Menu as PDF' },
     'speisen.orPick': { de:'…oder wähle eine Kategorie:', en:'…or pick a category:' },
     'speisen.selFor': { de:'Gern! Hier ist die Auswahl für {cat}:', en:'Sure! Here is the selection for {cat}:' },
@@ -80,6 +82,22 @@
     return null;
   }
 
+  // --- Bubble-Helfer: Rendert wie AI-Nachricht (gleicher Stil) --------------
+  function _view(){ return D.getElementById('ppx-v'); }
+  function _appendAITextLine(text){
+    var v=_view(); if(!v) return;
+    var wrap=D.createElement('div'); wrap.setAttribute('class','ppx-ai-bwrap');
+    var b=D.createElement('div'); b.setAttribute('class','ppx-ai-bubble');
+    // Inline-Styles exakt wie in ai.js für Bot-Seite
+    Object.assign(b.style,{
+      display:'inline-block',margin:'8px 0',padding:'10px 12px',borderRadius:'12px',
+      border:'1px solid var(--ppx-bot-chip-border, rgba(255,255,255,.18))',
+      background:'var(--ppx-bot-chip, rgba(255,255,255,.06))',
+      color:'var(--ppx-bot-text,#fff)',maxWidth:'86%'
+    });
+    b.textContent=String(text||''); wrap.appendChild(b); v.appendChild(wrap);
+    try{ UI.keepBottom && UI.keepBottom(); }catch(e){}
+  }
   // Einstieg
   function stepSpeisen(detail){
     // KI-Fall: mit Detail -> Root-Timer stoppen und gezielt rendern
@@ -110,12 +128,13 @@
       // Letzter Rückfall: normal starten
     }
 
-    // Manueller Pfad: Intro → später Root
+    // Manueller Pfad: Intro als KI-Bubble → später Root
     var scopeIdx = UI.getScopeIndex ? UI.getScopeIndex() : 0;
-    var M = UI.block(null, { maxWidth:'100%' });
-    M.setAttribute('data-block','speisen-info');
-    var Cb = D.createElement('div'); Cb.className = 'ppx-body'; M.appendChild(Cb);
-    Cb.appendChild(UI.line(t('speisen.intro','Super Wahl 👍  Hier sind unsere Speisen-Kategorien:')));
+
+    // AI-Style Bubble mit neutralem Intro-Text (gleich wie KI-Look)
+    var introText = t('speisen.intro','Hier sind unsere Speisen-Kategorien:');
+    _appendAITextLine(introText);
+
     try { UI.keepBottom && UI.keepBottom(); } catch(e){}
     cancelTimers();
     T.introToRoot = delay(function(){ renderSpeisenRoot(scopeIdx); }, DLY.step || 450);
@@ -184,7 +203,6 @@
     C.appendChild(G);
     try { UI.keepBottom && UI.keepBottom(); } catch(e){}
   }
-
   // Item → Detail + „Reservieren?“
   function renderItem(catKey, item){
     var scopeIdx = UI.getScopeIndex ? UI.getScopeIndex() : 0;
