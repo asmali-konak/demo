@@ -1,5 +1,9 @@
 /* ============================================================================
-   Bot UI Shell (styles/bot.css) – v8.5.1 + stable height + home-width fix
+   Bot UI Shell (styles/bot.css) – v8.5.3
+   Änderungen in v8.5.3 (gezielt, rest unverändert):
+   - Stärkeres Targeting (mit #ppx-panel.ppx-v5 … + !important) für
+     Speisen-Root „frameless“ + PDF-Bubble, damit keine anderen Styles drüber
+     greifen können.
    ============================================================================ */
 
 :root{
@@ -130,3 +134,57 @@
 #ppx-panel.ppx-v5 #ppx-v [data-block=home].ppx-bot{max-width:100% !important;margin-left:0 !important;margin-right:0 !important;}
 #ppx-panel.ppx-v5 #ppx-v [data-block=home] .ppx-row{justify-content:flex-start !important;}
 #ppx-panel.ppx-v5 #ppx-v [data-block=home] .ppx-row > *{flex:1 1 100% !important;width:100% !important;}
+/* ============================================================================
+   Zusätzliche gezielte Fixes – Speisen-Flow (v8.5.3)
+   Entfernt den Rahmen + vereinheitlicht den Chat-Look
+   ============================================================================ */
+
+/* --- Rahmen komplett entfernen nur für den Speisen-Root ------------------- */
+#ppx-panel.ppx-v5 #ppx-v [data-block="speisen-root"].ppx-bot {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Kategorie-Container – leichtes Spacing beibehalten */
+#ppx-panel.ppx-v5 #ppx-v [data-block="speisen-root"] .ppx-body {
+  padding: 4px 0 0 0 !important;
+  background: transparent !important;
+}
+
+/* PDF-Button im Chat-Stil (leicht links eingerückt) */
+#ppx-panel.ppx-v5 #ppx-v [data-block="speisen-root"] .ppx-pill {
+  margin-left: 4px !important;
+  margin-top: 2px !important;
+  background: var(--ppx-bot-chip) !important;
+  border: 1px solid var(--ppx-bot-chip-border) !important;
+  display: inline-flex !important;
+  justify-content: flex-start !important;
+}
+
+/* Entfernt die Linien-/Blockrahmen anderer Ebenen im Speisenflow */
+#ppx-panel.ppx-v5 #ppx-v [data-block="speisen-cat"].ppx-bot,
+#ppx-panel.ppx-v5 #ppx-v [data-block="speisen-item"].ppx-bot,
+#ppx-panel.ppx-v5 #ppx-v [data-block="speisen-item-ask"].ppx-bot {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Bubble-Abstand justieren (Intro, oder wähle...) */
+.ppx-ai-bwrap {
+  margin-top: 8px !important;
+  margin-bottom: 4px !important;
+}
+
+/* Leichtes visuelles Polishing für Kategorien */
+#ppx-panel.ppx-v5 #ppx-v [data-block="speisen-root"] .ppx-grid {
+  margin-top: 8px !important;
+}
+
+/* Allgemein etwas mehr Luft nach unten */
+#ppx-panel.ppx-v5 #ppx-v [data-block="speisen-root"] .ppx-nav.ppx-bottom {
+  margin-top: 12px !important;
+}

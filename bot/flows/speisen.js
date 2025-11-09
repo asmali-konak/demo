@@ -1,11 +1,9 @@
 /* ============================================================================
-   PPX Flow: Speisen (speisen.js) – v8.5.4
-   Änderung (gezielt, sonst unverändert):
-   - Intro-Text angepasst:
-       DE: "Hier sind unsere Speisen-Kategorien:"
-       EN: "Here are our menu categories:"
-   - Intro wird jetzt als KI-Chatbubble gerendert (gleicher Stil wie AI-Nachricht),
-     bevor wie gehabt der Root (PDF + Kategorien) gerendert wird.
+   PPX Flow: Speisen (speisen.js) – v8.6.2 (fix)
+   Änderungen ggü. v8.6.1:
+   - Hinweis „…oder wähle eine Kategorie:“ wird nun im selben Block (C) gerendert,
+     dadurch steht er direkt über dem Kategorien-Grid (nicht mehr ganz unten).
+   - Rest unverändert; Header entfernt, PDF als Bubble.
    ============================================================================ */
 (function () {
   'use strict';
@@ -19,6 +17,8 @@
   var delay = U.delay || function(fn,ms){ return setTimeout(fn, ms); };
   var pretty= U.pretty || function(s){ return s; };
 
+  try { console.debug && console.debug('[PPX] speisen.js v8.6.2 loaded'); } catch(e){}
+
   // Timer-Tracker
   var T = { introToRoot:null, rootToCats:null };
 
@@ -29,7 +29,6 @@
   // I18N
   try { I.reg && I.reg({
     'speisen.head':   { de:'SPEISEN', en:'MENU' },
-    // Intro bewusst neutralisiert (kein "Super Wahl 👍")
     'speisen.intro':  { de:'Hier sind unsere Speisen-Kategorien:', en:'Here are our menu categories:' },
     'speisen.pdf':    { de:'Speisekarte als PDF', en:'Menu as PDF' },
     'speisen.orPick': { de:'…oder wähle eine Kategorie:', en:'…or pick a category:' },
@@ -82,25 +81,28 @@
     return null;
   }
 
-  // --- Bubble-Helfer: Rendert wie AI-Nachricht (gleicher Stil) --------------
+  // --- Bubble-Helfer ---------------------------------------------------------
   function _view(){ return D.getElementById('ppx-v'); }
-  function _appendAITextLine(text){
-    var v=_view(); if(!v) return;
+  function _makeAIBubble(text){
     var wrap=D.createElement('div'); wrap.setAttribute('class','ppx-ai-bwrap');
     var b=D.createElement('div'); b.setAttribute('class','ppx-ai-bubble');
-    // Inline-Styles exakt wie in ai.js für Bot-Seite
     Object.assign(b.style,{
       display:'inline-block',margin:'8px 0',padding:'10px 12px',borderRadius:'12px',
       border:'1px solid var(--ppx-bot-chip-border, rgba(255,255,255,.18))',
       background:'var(--ppx-bot-chip, rgba(255,255,255,.06))',
       color:'var(--ppx-bot-text,#fff)',maxWidth:'86%'
     });
-    b.textContent=String(text||''); wrap.appendChild(b); v.appendChild(wrap);
+    b.textContent=String(text||''); wrap.appendChild(b); return wrap;
+  }
+  // an Viewport anhängen (für die erste Intro-Zeile)
+  function _appendAITextLine(text){
+    var v=_view(); if(!v) return;
+    v.appendChild(_makeAIBubble(text));
     try{ UI.keepBottom && UI.keepBottom(); }catch(e){}
   }
+
   // Einstieg
   function stepSpeisen(detail){
-    // KI-Fall: mit Detail -> Root-Timer stoppen und gezielt rendern
     if (detail && (detail.category || detail.itemId)) {
       cancelTimers();
       var catKey = detail.category ? String(detail.category) : '';
@@ -109,13 +111,10 @@
       if (catKey && itemId){
         var it = findItem(catKey, itemId);
         if (it){ renderItem(catKey, it); return; }
-        // Fallback: wenn Item nicht gefunden, wenigstens Kategorie öffnen
         renderCategory(catKey); return;
       }
-      if (catKey){
-        renderCategory(catKey); return;
-      }
-      // Falls nur itemId käme (theoretisch), versuche Kategorie zu finden
+      if (catKey){ renderCategory(catKey); return; }
+
       try{
         var DSH = dishes();
         for (var k in DSH){
@@ -125,16 +124,11 @@
           }
         }
       }catch(e){}
-      // Letzter Rückfall: normal starten
     }
 
-    // Manueller Pfad: Intro als KI-Bubble → später Root
+    // Manueller Pfad: Intro-Bubble oben → dann Root
     var scopeIdx = UI.getScopeIndex ? UI.getScopeIndex() : 0;
-
-    // AI-Style Bubble mit neutralem Intro-Text (gleich wie KI-Look)
-    var introText = t('speisen.intro','Hier sind unsere Speisen-Kategorien:');
-    _appendAITextLine(introText);
-
+    _appendAITextLine(t('speisen.intro','Hier sind unsere Speisen-Kategorien:'));
     try { UI.keepBottom && UI.keepBottom(); } catch(e){}
     cancelTimers();
     T.introToRoot = delay(function(){ renderSpeisenRoot(scopeIdx); }, DLY.step || 450);
@@ -142,7 +136,8 @@
 
   // Root: PDF + Kategorien (nur manuell)
   function renderSpeisenRoot(scopeIdx){
-    var B = UI.block(t('speisen.head','SPEISEN'), { maxWidth:'100%' });
+    // Kein Titel → kein Header
+    var B = UI.block(null, { maxWidth:'100%' });
     B.setAttribute('data-block','speisen-root');
     var C = D.createElement('div'); C.className = 'ppx-body'; B.appendChild(C);
     B.appendChild(UI.navBottom ? UI.navBottom(scopeIdx) : D.createTextNode(''));
@@ -152,9 +147,13 @@
     var pdfUrl = (Cfg.menuPdf) || (Cfg.pdf && (Cfg.pdf.menu || Cfg.pdf.url)) || Cfg.menuPDF || 'speisekarte.pdf';
 
     var r = UI.row(); r.style.justifyContent = 'flex-start';
-    r.appendChild(UI.btn(t('speisen.pdf','Speisekarte als PDF'), function(){ try { window.open(pdfUrl, '_blank', 'noopener'); } catch(e){} }, '', '📄'));
+    r.appendChild(UI.btn(t('speisen.pdf','Speisekarte als PDF'), function(){
+      try { window.open(pdfUrl, '_blank', 'noopener'); } catch(e){}
+    }, 'ppx-pill', '📄'));
     C.appendChild(r);
-    C.appendChild(UI.line(t('speisen.orPick','…oder wähle eine Kategorie:')));
+
+    // → WICHTIG: Bubble jetzt im selben Block C, damit sie über dem Grid steht
+    C.appendChild(_makeAIBubble(t('speisen.orPick','…oder wähle eine Kategorie:')));
 
     cancelTimers();
     T.rootToCats = delay(function(){
@@ -174,7 +173,6 @@
       try { UI.keepBottom && UI.keepBottom(); } catch(e){}
     }, DLY.long || 1000);
   }
-
   // Kategorie → Items
   function renderCategory(catKey){
     var scopeIdx = UI.getScopeIndex ? UI.getScopeIndex() : 0;
@@ -189,7 +187,11 @@
     C.appendChild(UI.line(msg));
 
     var list = [];
-    try { var DISH = dishes(); list = Array.isArray(DISH[catKey]) ? DISH[catKey] : []; } catch(e){ list = []; }
+    try {
+      var DISH = dishes();
+      list = Array.isArray(DISH[catKey]) ? DISH[catKey] : [];
+    } catch(e){ list = []; }
+
     if (!list.length) list = [
       { name: pretty(catKey)+' Classic', name_en: pretty(catKey)+' Classic', price:'9,50 €' },
       { name: pretty(catKey)+' Special', name_en: pretty(catKey)+' Special', price:'12,90 €' }
@@ -203,6 +205,7 @@
     C.appendChild(G);
     try { UI.keepBottom && UI.keepBottom(); } catch(e){}
   }
+
   // Item → Detail + „Reservieren?“
   function renderItem(catKey, item){
     var scopeIdx = UI.getScopeIndex ? UI.getScopeIndex() : 0;
@@ -232,7 +235,11 @@
     Q.appendChild(UI.note(t('speisen.ask','Na, Appetit bekommen? 😍 Soll ich dir gleich einen Tisch reservieren?')));
     var r = UI.row(); r.style.justifyContent = 'flex-start';
     r.appendChild(UI.btn(t('speisen.yesReserve','Ja, bitte reservieren'), function(){
-      try { (PPX.flows && PPX.flows.stepReservieren) ? delay(PPX.flows.stepReservieren, DLY.step || 450) : null; } catch(e){}
+      try {
+        (PPX.flows && PPX.flows.stepReservieren)
+          ? delay(PPX.flows.stepReservieren, DLY.step || 450)
+          : null;
+      } catch(e){}
     }, 'ppx-cta', '🗓️'));
     r.appendChild(UI.btn(t('speisen.noHome','Nein, zurück ins Hauptmenü'), function(){
       try { UI.goHome && UI.goHome(); } catch(e){}
